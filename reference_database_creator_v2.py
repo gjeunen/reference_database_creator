@@ -24,7 +24,6 @@ from Bio.Align.Applications import MuscleCommandline
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceMatrix
 from Bio.Phylo.TreeConstruction import DistanceTreeConstructor
 
-print("hello")
 
 ## function: download sequencing data from NCBI
 def ncbi_download(args):
