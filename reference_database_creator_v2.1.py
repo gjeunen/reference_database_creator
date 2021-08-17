@@ -273,6 +273,7 @@ def db_download(args):
             ffile = ufile[:4] + '.fasta'
             fasta = []
             with open(ufile, 'r') as file:
+                print(f'\nformatting {ufile} to fasta format')
                 is_required = False
                 for line in file:
                     if line.startswith('AC'):
@@ -285,8 +286,13 @@ def db_download(args):
                     else:
                         is_required = 'SQ' in line 
             with open(ffile, 'w') as fa:
+                print(f'saving {ffile} to {directory}')
                 for element in fasta:
                     fa.write('{}\n'.format(element))
+        for file in gfiles:
+            os.remove(file)
+        for file in ufile:
+            os.remove(file)
 
     elif DB == 'mitofish':
         print('to be added')
