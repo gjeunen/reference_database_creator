@@ -225,22 +225,21 @@ def sintax_from_df(df, output_file_name):
 ###############################################
 ###### MAIN COMMANDS ##########################
 ## function: download sequencing data from NCBI
-def ncbi_download(args):
-    DB = args.database
+def db_download(args):
+    NCBI_DB = args.ncbi_db
     QUERY = args.query
     OUTPUT = args.output_filename
     EMAIL = args.email
 
-    #Entrez.email = EMAIL
     print('\nlooking up the number of sequences that match the query\n')
 
-    search_record = esearch_fasta(QUERY, DB, EMAIL)
+    search_record = esearch_fasta(QUERY, NCBI_DB, EMAIL)
     print('found {} matching sequences'.format(search_record['Count']))
     print('\nstarting the download\n')
     
     batch_size = 5000
 
-    fetch_seqs = efetch_seqs_from_webenv(search_record, DB, EMAIL, batch_size)
+    fetch_seqs = efetch_seqs_from_webenv(search_record, NCBI_DB, EMAIL, batch_size)
     
     sequences = seq_dict_from_seq_xml(fetch_seqs)
     num_sequences = fasta_file_from_seq_dict(sequences, OUTPUT)
@@ -648,9 +647,9 @@ def main():
     parser = argparse.ArgumentParser(description = 'creating a curated reference database')
     subparser = parser.add_subparsers()
 
-    ncbi_download_parser = subparser.add_parser('ncbi_download', description = 'downloading fasta sequence file from NCBI based on text query')
-    ncbi_download_parser.set_defaults(func = ncbi_download)
-    ncbi_download_parser.add_argument('--database', help = 'database used to download sequences. Example: "nucleotide"', dest = 'database', type = str, required = True)
+    ncbi_download_parser = subparser.add_parser('db_download', description = 'downloading fasta sequence file from NCBI based on text query')
+    ncbi_download_parser.set_defaults(func = db_download)
+    ncbi_download_parser.add_argument('--ncbi_db', help = 'NCBIdatabase used to download sequences. Example: "nucleotide"', dest = 'ncbi_db', type = str, required = True)
     ncbi_download_parser.add_argument('--query', help = 'query search to limit portion of database to be downloaded. Example: "18S[All Fields] NOT "uncultured"[All Fields] AND is_nuccore[filter] AND ("1"[SLEN] : "50000"[SLEN])"', dest = 'query', type = str, required = True)
     ncbi_download_parser.add_argument('--output', help = 'output filename. Example: "18S_fasta_NCBI_trial.fasta"', dest = 'output_filename', type = str, required = True)
     ncbi_download_parser.add_argument('--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str, required = True)
