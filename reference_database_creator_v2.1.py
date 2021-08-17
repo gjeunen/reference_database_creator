@@ -261,16 +261,19 @@ def db_download(args):
         result = sp.run(['wget', url], cwd = directory)
         os.chdir(directory)
         gfiles = [f for f in os.listdir() if not f.startswith('.')]
+        print(gfiles)
         ufiles = []
         for file in gfiles:
-            unzip = file[:3]
+            unzip = file[:-3]
+            print(file)
+            print(unzip)
             ufiles.append(unzip)
-            print(f'\nunzipping file: {unzip} ...')
+            print(f'unzipping file: {unzip} ...')
             with gzip.open(file, 'rb') as f_in:
                 with open(unzip, 'wb') as f_out:
                     shutil.copyfileobj(f_in, f_out)
         for ufile in ufiles:
-            ffile = ufile[:4] + '.fasta'
+            ffile = ufile[:-4] + '.fasta'
             fasta = []
             with open(ufile, 'r') as file:
                 print(f'\nformatting {ufile} to fasta format')
