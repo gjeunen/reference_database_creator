@@ -10,13 +10,15 @@ http.client.HTTPConnection._http_vsn = 10
 http.client.HTTPConnection._http_vsn_str = 'HTTP/1.0'
 import subprocess as sp
 import shutil
-import re
+import gzip
+from string import digits
 import pandas as pd
 from tqdm import tqdm
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
 import os
+from os import listdir
 import matplotlib
 import matplotlib.pyplot as plt
 from Bio import AlignIO
@@ -230,25 +232,62 @@ def db_download(args):
     QUERY = args.query
     OUTPUT = args.output_filename
     EMAIL = args.email
+    DIR = args.directory
+    EMBL_DB = args.embl_db
+    DB = args.database
 
-    print('\nlooking up the number of sequences that match the query\n')
-
-    search_record = esearch_fasta(QUERY, NCBI_DB, EMAIL)
-    print('found {} matching sequences'.format(search_record['Count']))
-    print('\nstarting the download\n')
+    if DB == 'ncbi':
+        print('\nlooking up the number of sequences that match the query\n')
+        search_record = esearch_fasta(QUERY, NCBI_DB, EMAIL)
+        print('found {} matching sequences'.format(search_record['Count']))
+        print('\nstarting the download\n')
+        batch_size = 5000
+        fetch_seqs = efetch_seqs_from_webenv(search_record, NCBI_DB, EMAIL, batch_size)
+        sequences = seq_dict_from_seq_xml(fetch_seqs)
+        num_sequences = fasta_file_from_seq_dict(sequences, OUTPUT)
+        print(num_sequences, ' sequences written to file:', OUTPUT)
+        acc_taxid  = get_taxid_from_seq_xml(fetch_seqs)
+        taxid_tab_name = OUTPUT+'.taxid_table.tsv'
+        num_accs = create_taxid_table(acc_taxid, taxid_tab_name)
+        print(num_accs, ' accessions written to file:', 'taxid_table.tsv')
     
-    batch_size = 5000
+    elif DB == 'embl':
+        directory = DIR 
+        try:
+            os.makedirs(directory, exist_ok = False)
+        except OSError as error:
+            print(f'Directory {directory} cannot be created')
+        url = 'ftp://ftp.ebi.ac.uk/pub/databases/embl/release/std/rel_std_' + EMBL_DB 
+        result = sp.run(['wget', url], cwd = directory)
+        os.chdir(directory)
+        gfiles = [f for f in os.listdir() if not f.startswith('.')]
+        ufiles = []
+        for file in gfiles:
+            unzip = file[:3]
+            ufiles.append(unzip)
+            print(f'\nunzipping file: {unzip} ...')
+            with gzip.open(file, 'rb') as f_in:
+                with open(unzip, 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+        for ufile in ufiles:
+            ffile = ufile[:4] + '.fasta'
+            fasta = []
+            with open(ufile, 'r') as file:
+                is_required = False
+                for line in file:
+                    if line.startswith('AC'):
+                        part = '>' + line.split('   ')[1].split(';')[0]
+                        fasta.append(part)
+                    elif is_required and line.startswith(' '):
+                        remove_digits = str.maketrans('', '', digits)
+                        seq = line.replace(' ', '').translate(remove_digits).upper().rstrip('\n')
+                        fasta.append(seq)
+                    else:
+                        is_required = 'SQ' in line 
+            with open(ffile, mode = 'wt', encoding = 'utf-8') as fa:
+                fa.write('\n'.join(fasta))
 
-    fetch_seqs = efetch_seqs_from_webenv(search_record, NCBI_DB, EMAIL, batch_size)
-    
-    sequences = seq_dict_from_seq_xml(fetch_seqs)
-    num_sequences = fasta_file_from_seq_dict(sequences, OUTPUT)
-    print(num_sequences, ' sequences written to file:', OUTPUT)
 
-    acc_taxid  = get_taxid_from_seq_xml(fetch_seqs)
-    taxid_tab_name = OUTPUT+'.taxid_table.tsv'
-    num_accs = create_taxid_table(acc_taxid, taxid_tab_name)
-    print(num_accs, ' accessions written to file:', 'taxid_table.tsv')
 
 
 
@@ -647,12 +686,16 @@ def main():
     parser = argparse.ArgumentParser(description = 'creating a curated reference database')
     subparser = parser.add_subparsers()
 
-    ncbi_download_parser = subparser.add_parser('db_download', description = 'downloading fasta sequence file from NCBI based on text query')
-    ncbi_download_parser.set_defaults(func = db_download)
-    ncbi_download_parser.add_argument('--ncbi_db', help = 'NCBIdatabase used to download sequences. Example: "nucleotide"', dest = 'ncbi_db', type = str, required = True)
-    ncbi_download_parser.add_argument('--query', help = 'query search to limit portion of database to be downloaded. Example: "18S[All Fields] NOT "uncultured"[All Fields] AND is_nuccore[filter] AND ("1"[SLEN] : "50000"[SLEN])"', dest = 'query', type = str, required = True)
-    ncbi_download_parser.add_argument('--output', help = 'output filename. Example: "18S_fasta_NCBI_trial.fasta"', dest = 'output_filename', type = str, required = True)
-    ncbi_download_parser.add_argument('--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str, required = True)
+    db_download_parser = subparser.add_parser('db_download', description = 'downloading fasta sequence file from NCBI based on text query')
+    db_download_parser.set_defaults(func = db_download)
+    db_download_parser.add_argument('--ncbi_db', help = 'NCBI database used to download sequences. Example: "nucleotide"', dest = 'ncbi_db', type = str, required = True)
+    db_download_parser.add_argument('--query', help = 'query search to limit portion of database to be downloaded. Example: "18S[All Fields] NOT "uncultured"[All Fields] AND is_nuccore[filter] AND ("1"[SLEN] : "50000"[SLEN])"', dest = 'query', type = str, required = True)
+    db_download_parser.add_argument('--output', help = 'output filename. Example: "18S_fasta_NCBI_trial.fasta"', dest = 'output_filename', type = str, required = True)
+    db_download_parser.add_argument('--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str, required = True)
+    db_download_parser.add_argument('--directory', help = 'directory to store EMBL database', dest = 'directory', type = str, required = True)
+    db_download_parser.add_argument('--embl_db', help = 'download EMBL database', dest = 'embl_db', type = str, required = True)
+    db_download_parser.add_argument('--database', help = 'database used to download sequences', dest = 'database', type = str, required = True)
+
 
     in_silico_pcr_parser = subparser.add_parser('in_silico_pcr', description = 'curating the downloaded reference sequences with an in silico PCR')
     in_silico_pcr_parser.set_defaults(func = in_silico_pcr)
