@@ -287,7 +287,11 @@ def db_download(args):
             with open(ffile, mode = 'wt', encoding = 'utf-8') as fa:
                 fa.write('\n'.join(fasta))
 
-
+    elif DB == 'mitofish':
+        print('to be added')
+    
+    else:
+        print('Only "NCBI", "EMBL", and "MitoFish" databases are currently supported. Please specify which database you would like to download in the "--database" parameter')
 
 
 
