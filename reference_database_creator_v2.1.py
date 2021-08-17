@@ -284,8 +284,9 @@ def db_download(args):
                         fasta.append(seq)
                     else:
                         is_required = 'SQ' in line 
-            with open(ffile, mode = 'wt', encoding = 'utf-8') as fa:
-                fa.write('\n'.join(fasta))
+            with open(ffile, 'w') as fa:
+                for element in fasta:
+                    fa.write('{}\n'.format(element))
 
     elif DB == 'mitofish':
         print('to be added')
