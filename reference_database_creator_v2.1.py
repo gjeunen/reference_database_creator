@@ -296,7 +296,7 @@ def db_download(args):
 
 
 ## function: in silico PCR
-def in_silico_pcr(args):
+def insilico_pcr(args):
     ## user input
     FWD = args.fwd
     REV = args.rev
@@ -692,17 +692,16 @@ def main():
 
     db_download_parser = subparser.add_parser('db_download', description = 'downloading fasta sequence file from NCBI based on text query')
     db_download_parser.set_defaults(func = db_download)
+    db_download_parser.add_argument('--database', help = 'database used to download sequences', dest = 'database', type = str, required = True)
     db_download_parser.add_argument('--ncbi_db', help = 'NCBI database used to download sequences. Example: "nucleotide"', dest = 'ncbi_db', type = str, required = True)
     db_download_parser.add_argument('--query', help = 'query search to limit portion of database to be downloaded. Example: "18S[All Fields] NOT "uncultured"[All Fields] AND is_nuccore[filter] AND ("1"[SLEN] : "50000"[SLEN])"', dest = 'query', type = str, required = True)
     db_download_parser.add_argument('--output', help = 'output filename. Example: "18S_fasta_NCBI_trial.fasta"', dest = 'output_filename', type = str, required = True)
     db_download_parser.add_argument('--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str, required = True)
-    db_download_parser.add_argument('--directory', help = 'directory to store EMBL database', dest = 'directory', type = str, required = True)
     db_download_parser.add_argument('--embl_db', help = 'download EMBL database', dest = 'embl_db', type = str, required = True)
-    db_download_parser.add_argument('--database', help = 'database used to download sequences', dest = 'database', type = str, required = True)
+    db_download_parser.add_argument('--directory', help = 'directory to store EMBL database', dest = 'directory', type = str, required = True)
 
-
-    in_silico_pcr_parser = subparser.add_parser('in_silico_pcr', description = 'curating the downloaded reference sequences with an in silico PCR')
-    in_silico_pcr_parser.set_defaults(func = in_silico_pcr)
+    in_silico_pcr_parser = subparser.add_parser('insilico_pcr', description = 'curating the downloaded reference sequences with an in silico PCR')
+    in_silico_pcr_parser.set_defaults(func = insilico_pcr)
     in_silico_pcr_parser.add_argument('--fwd', help = 'forward primer sequence in 5-3 direction', dest = 'fwd', type = str, required = True)
     in_silico_pcr_parser.add_argument('--rev', help = 'reverse primer sequence in 5-3 direction', dest = 'rev', type = str, required = True)
     in_silico_pcr_parser.add_argument('--assay', help = 'name of primer assay', dest = 'assay', type = str, required = True)
