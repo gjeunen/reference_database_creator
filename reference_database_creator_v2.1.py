@@ -236,6 +236,7 @@ def db_download(args):
     DIR = args.directory
     EMBL_DB = args.embl_db
     DB = args.database
+    MITO_OUT = args.out
 
     if DB == 'ncbi':
         print('\nlooking up the number of sequences that match the query\n')
@@ -316,7 +317,7 @@ def db_download(args):
                         parts = line.split('|')[3]
                     line = '>' + parts
                 reformat.append(line)
-        with open('structured_mitofish_database.fa', 'w') as out:
+        with open(MITO_OUT, 'w') as out:
             for element in reformat:
                 out.write(element + '\n')
         os.remove('complete_partial_mitogenomes.zip')
@@ -730,6 +731,7 @@ def main():
     db_download_parser.add_argument('--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str, required = True)
     db_download_parser.add_argument('--embl_db', help = 'download EMBL database', dest = 'embl_db', type = str, required = True)
     db_download_parser.add_argument('--directory', help = 'directory to store EMBL database', dest = 'directory', type = str, required = True)
+    db_download_parser.add_argument('--out', help = 'output file name', dest = 'out', type = str, required = True)
 
     in_silico_pcr_parser = subparser.add_parser('insilico_pcr', description = 'curating the downloaded reference sequences with an in silico PCR')
     in_silico_pcr_parser.set_defaults(func = insilico_pcr)
