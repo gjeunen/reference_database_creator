@@ -722,7 +722,7 @@ def main():
     parser = argparse.ArgumentParser(description = 'creating a curated reference database')
     subparser = parser.add_subparsers()
 
-    db_download_parser = subparser.add_parser('--db_download', description = 'downloading fasta sequence file from NCBI based on text query')
+    db_download_parser = subparser.add_parser('db_download', description = 'downloading fasta sequence file from NCBI based on text query')
     db_download_parser.set_defaults(func = db_download)
     db_download_parser.add_argument('--database', help = 'database used to download sequences', dest = 'database', type = str, required = True)
     db_download_parser.add_argument('--ncbi_db', help = 'NCBI database used to download sequences. Example: "nucleotide"', dest = 'ncbi_db', type = str, required = True)
