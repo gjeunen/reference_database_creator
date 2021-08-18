@@ -18,6 +18,7 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
 import os
+import zipfile
 from os import listdir
 import matplotlib
 import matplotlib.pyplot as plt
@@ -298,8 +299,28 @@ def db_download(args):
             os.remove(file)
 
     elif DB == 'mitofish':
-        print('to be added')
-    
+        directory = DIR 
+        if not os.path.exists(directory):
+            os.mkdir(directory)
+        os.chdir(directory)
+        result = sp.run(['wget', 'http://mitofish.aori.u-tokyo.ac.jp/files/complete_partial_mitogenomes.zip'])
+        with zipfile.ZipFile('complete_partial_mitogenomes.zip', 'r') as zip_ref:
+            zip_ref.extractall()
+        reformat = []
+        with open('complete_partial_mitogenomes.fa') as fasta:
+            for line in fasta:
+                line = line.rstrip('\n')
+                if line.startswith('>'):
+                    parts = line.split('|')[1]
+                    if parts.isdigit():
+                        parts = line.split('|')[3]
+                    line = '>' + parts
+                reformat.append(line)
+        with open('structured_mitofish_database.fa', 'w') as out:
+            for element in reformat:
+                out.write(element + '\n')
+        os.remove('complete_partial_mitogenomes.zip')
+        os.remove('complete_partial_mitogenomes.fa')
     else:
         print('Only "NCBI", "EMBL", and "MitoFish" databases are currently supported. Please specify which database you would like to download in the "--database" parameter')
 
