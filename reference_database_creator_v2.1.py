@@ -403,7 +403,7 @@ def ispcr(args):
 
 
 ## function: creating reference database with taxonomy
-def ref_database(args):
+def tax_assign(args):
     INPUT = args.input
     TABLE = args.taxid_table
     OUTPUT = args.output
@@ -774,8 +774,8 @@ def main():
     in_silico_pcr_parser.add_argument('-i', '--input', help = 'input filename', dest = 'input', type = str, required = True)
     in_silico_pcr_parser.add_argument('-e', '--error', help = 'number of errors allowed in primer-binding site. Default = 4.5', dest = 'error', type = str, default = '4.5')
 
-    ref_database_parser = subparser.add_parser('ref_database', description = 'creating the reference database with taxonomic information')
-    ref_database_parser.set_defaults(func = ref_database)
+    ref_database_parser = subparser.add_parser('tax_assign', description = 'creating the reference database with taxonomic information')
+    ref_database_parser.set_defaults(func = tax_assign)
     ref_database_parser.add_argument('-i', '--input', help = 'input file containing the curated fasta sequences after in silico PCR', dest = 'input', type = str, required = True)
     ref_database_parser.add_argument('-t', '--taxid_table', help = 'input taxid table containing the taxid for each accession', dest = 'taxid_table', type = str, required = True)
     ref_database_parser.add_argument('-o', '--output', help = 'curated reference database output file', dest = 'output', type = str, required = True)
