@@ -351,6 +351,7 @@ def ispcr(args):
     REV = args.rev
     ASSAY = args.assay
     INPUT = args.input
+    ERROR = args.error
 
     ## reverse complement reverse primer sequence
     REV_DNA = Seq(REV)
@@ -365,7 +366,6 @@ def ispcr(args):
     FINAL_TRIMMED = 'final_trimmed_' + ASSAY + '_' + INPUT
 
     OVERLAP = str(min([len(FWD), len(REV_CORRECT)]))
-    ERROR = str(round(min([3/len(FWD), 3/len(REV_CORRECT)]), 2))
     ADAPTER = FWD + '...' + REV_CORRECT
 
     ## run cutadapt on downloaded fasta file
@@ -768,10 +768,11 @@ def main():
 
     in_silico_pcr_parser = subparser.add_parser('ispcr', description = 'curating the downloaded reference sequences with an in silico PCR')
     in_silico_pcr_parser.set_defaults(func = ispcr)
-    in_silico_pcr_parser.add_argument('--fwd', help = 'forward primer sequence in 5-3 direction', dest = 'fwd', type = str, required = True)
-    in_silico_pcr_parser.add_argument('--rev', help = 'reverse primer sequence in 5-3 direction', dest = 'rev', type = str, required = True)
-    in_silico_pcr_parser.add_argument('--assay', help = 'name of primer assay', dest = 'assay', type = str, required = True)
-    in_silico_pcr_parser.add_argument('--input', help = 'input filename', dest = 'input', type = str, required = True)
+    in_silico_pcr_parser.add_argument('-f','--fwd', help = 'forward primer sequence in 5-3 direction', dest = 'fwd', type = str, required = True)
+    in_silico_pcr_parser.add_argument('-r','--rev', help = 'reverse primer sequence in 5-3 direction', dest = 'rev', type = str, required = True)
+    in_silico_pcr_parser.add_argument('-a','--assay', help = 'name of primer assay', dest = 'assay', type = str, required = True)
+    in_silico_pcr_parser.add_argument('-i','--input', help = 'input filename', dest = 'input', type = str, required = True)
+    in_silico_pcr_parser.add_argument('-e', '--error', help = 'number of errors allowed in primer-binding site. Default = 4.5', dest = 'error', type = str, default = '4.5')
 
     ref_database_parser = subparser.add_parser('ref_database', description = 'creating the reference database with taxonomic information')
     ref_database_parser.set_defaults(func = ref_database)
