@@ -343,10 +343,12 @@ def db_import(args):
     print('yet to be included')
     
 
+###############################################
+###### MODULE IN SILICO PCR ###################
+###############################################
 
 ## function: in silico PCR
 def ispcr(args):
-    ## user input
     FWD = args.fwd
     REV = args.rev
     ASSAY = args.assay
@@ -397,10 +399,13 @@ def ispcr(args):
     
     ## remove intermediary files
     files = [TRIMMED_INIT, UNTRIMMED_INIT, REVCOMP_UNTRIMMED_INIT, TRIMMED_REVCOMP, UNTRIMMED_REVCOMP]
-
     for file in files:
         os.remove(file)
 
+
+###############################################
+###### MODULE TAXONOMY ASSIGNMENT #############
+###############################################
 
 ## function: creating reference database with taxonomy
 def tax_assign(args):
@@ -422,15 +427,10 @@ def tax_assign(args):
             final_taxid_dict[k]=v 
     taxids = list(final_taxid_dict.values())
     uniq_taxid = list(set(taxids))
-
     print('\nfound {} accessions in input file'.format(len(final_accessions)))
- 
     print("\ndownloading {} taxonomic ID's from NCBI".format(len(uniq_taxid)))
-
     taxonomy_list = efetch_taxonomy_xml(uniq_taxid, EMAIL)
-
     lineage_df = dataframe_from_taxonomy(taxonomy_list)
-  
     
     #lineage_df = pd.DataFrame(lineage_info)
     taxid_colNames = ['taxid']
@@ -449,19 +449,19 @@ def tax_assign(args):
     sintax_from_df(all_df, OUTPUT)
 
 
-
+###############################################
+###### MODULE DATABASE CLEANUP ################
+###############################################
 
 ## function: dereplicating the database
 def dereplicate(args):
     INPUT = args.input
     OUTPUT = args.output
 
-    ## split sequence file into two dictionaries and define which species need dereplication
+    # split sequence file into two dictionaries and define which species need dereplication
     seq_file = INPUT
     seqs = fasta_to_dict_wDesc(seq_file)
-
     print('\nfound {} sequences in input file'.format(len(seqs)))
-
     seq_just_id = {}
     taxonly = {}
     for k,v in seqs.items():
@@ -470,9 +470,7 @@ def dereplicate(args):
         tax = parts[1]
         seq_just_id[seq_id] = v['sequence']
         taxonly.setdefault(tax, []).append(seq_id)
-    
     print('\ndatabase is comprised of {} unique taxa'.format(len(taxonly)))
-
     need_derep = []
     singletons = {}
     for k,v in taxonly.items():
@@ -480,17 +478,15 @@ def dereplicate(args):
             need_derep.append(k)
         else:
             singletons[v[0]] = k
-    
     print('\n{} taxa only occur once in the database'.format(len(singletons)))
     print('\n{} taxa occur multiple times in the database'.format(len(need_derep)))
-
     tax_index = {}
     for k,v in taxonly.items():
         if k in need_derep:
             for seqid in v:
                 tax_index[seqid] = k
     
-    ## dereplicate sequences for species represented more than once in the datbase
+    # dereplicate sequences for species represented more than once in the datbase
     all_dereps = {}
     for d in need_derep:
         temp_seq_dict = {}
@@ -503,7 +499,7 @@ def dereplicate(args):
             new_id = k+';tax='+tax_index[k]
             all_dereps[new_id] = v
     
-    ## combine species present only once in the database with the dereplicated dataset
+    # combine species present only once in the database with the dereplicated dataset
     all_new_seqs = {}
     for k,v in singletons.items():
         new_id = k + ';tax=' + v
@@ -511,16 +507,23 @@ def dereplicate(args):
         all_new_seqs[new_id] = seq
     for key, value in all_dereps.items():
         all_new_seqs[key] = value
-    
     print('\n{} sequences left after dereplication\n'.format(len(all_new_seqs)))
     
-    ## save the dereplicated database
+    # save the dereplicated database
     output = OUTPUT
     seqout = open(output, 'w')
     for k,v in all_new_seqs.items():
         seqout.write('>' + k + '\n' + v + '\n')
     seqout.close()
 
+
+## function: sequence cleanup
+
+
+
+###############################################
+###### MODULE VISUALISATIONS ##################
+###############################################
 
 ## function: phylogenetic tree builder
 def phylo(args):
@@ -536,7 +539,7 @@ def phylo(args):
     except OSError as error:
         print("Directory '%s' cannot be created" % directory)
 
-    ## read in the text file with species names
+    # read in the text file with species names
     species = []
     with open(SPECIES) as species_list:
         for spec in species_list:
@@ -544,11 +547,11 @@ def phylo(args):
             species.append(spec)
     print('\nfound ' + str(len(species)) + ' species of interest: ' + str(species) + '\n')
 
-    ## retrieve the lineage information for each species
-        ## first: uniq ID from species name
-        ## second: tax ID from uniq ID
-        ## third: taxonomic information from tax ID
-        ## fourth: format similar to database
+    # retrieve the lineage information for each species
+        # first: uniq ID from species name
+        # second: tax ID from uniq ID
+        # third: taxonomic information from tax ID
+        # fourth: format similar to database
     print('retrieving the taxonomic information from NCBI for ' + str(len(species)) + ' species of interest\n')
     uid = []
     for item in species:
@@ -585,7 +588,7 @@ def phylo(args):
     datafr = df['sintax']
     species_interest = datafr.values.tolist()
 
-    ## extract all entries from the database that share a family status with the species of interest
+    # extract all entries from the database that share a family status with the species of interest
     for record in SeqIO.parse(DATABASE, 'fasta'):
         family_rec = record.id.split(',')[4]
         genus_rec = record.id.split(',')[5]
@@ -605,7 +608,7 @@ def phylo(args):
                 with open(f'{directory}/{spec_int}_species.fasta', 'a') as f:
                     SeqIO.write(record, f, 'fasta')
 
-    ## extract information for data table from newly generated files
+    # extract information for data table from newly generated files
     newdict = {}
     for species in species_interest:
         spec_int = species.split(',')[6].split(':')[1]
@@ -638,7 +641,7 @@ def phylo(args):
             fam_list = ['NA']
         newdict[spec_int] = {'species': spec_int, 'species_occur': spec_num, 'species_gen': gen_list, 'gen_entries': gen_num, 'species_fam': fam_list, 'fam_entries': fam_num}
 
-    ## print information on which species are present in the database
+    # print information on which species are present in the database
     for species in species_interest:
         spec_int = species.split(',')[6].split(':')[1]
         if newdict[spec_int]['species_occur'] == 0:
@@ -646,17 +649,17 @@ def phylo(args):
         else:
             print(str(newdict[spec_int]['species']) + ': ' + str(newdict[spec_int]['species_occur']) + ' entries in the database\n')
 
-    ## output data table on species of interest
+    # output data table on species of interest
     df = pd.DataFrame.from_dict(newdict, orient = 'index')
     df = df[['species', 'species_occur', 'gen_entries', 'fam_entries', 'species_gen', 'species_fam']]
     df.to_csv(OUTPUT, sep = '\t', index = None)
 
-    ## generate phylogenetic trees for every species of interest based on number of entries in genus and family
-        ## first: check number of entries in if statement
-        ## second: shorten the headers of the sequences in the file, so that it can be printed on the figure
-        ## third: run muscle to generate alignment
-        ## fourth: calculate distance from alignment
-        ## fifth: generate tree figure 
+    # generate phylogenetic trees for every species of interest based on number of entries in genus and family
+        # first: check number of entries in if statement
+        # second: shorten the headers of the sequences in the file, so that it can be printed on the figure
+        # third: run muscle to generate alignment
+        # fourth: calculate distance from alignment
+        # fifth: generate tree figure 
     for species in species_interest:
         spec_int = species.split(',')[6].split(':')[1]
         if newdict[spec_int]['fam_entries'] > 50:
