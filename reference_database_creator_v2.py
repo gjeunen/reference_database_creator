@@ -98,13 +98,16 @@ def in_silico_pcr(args):
     FINAL_TRIMMED = 'final_trimmed_' + ASSAY + '_' + INPUT
 
     OVERLAP = str(min([len(FWD), len(REV_CORRECT)]))
-    ERROR = str(round(min([3/len(FWD), 3/len(REV_CORRECT)]), 2))
+    #ERROR = str(round(min([3/len(FWD), 3/len(REV_CORRECT)]), 2))
+    #print(ERROR)
+    ERROR = str(4.5)
     ADAPTER = FWD + '...' + REV_CORRECT
 
     ## run cutadapt on downloaded fasta file
     count_init = len(list(SeqIO.parse(INPUT, 'fasta')))
     print('\nrunning in silico PCR on fasta file containing {} sequences'.format(count_init))
-    cmnd_cutadapt_1 = ['cutadapt', '-g', ADAPTER, '-o', TRIMMED_INIT, INPUT, '--untrimmed-output', UNTRIMMED_INIT, '--no-indels', '-e', ERROR, '--overlap', OVERLAP, '--quiet']
+    #cmnd_cutadapt_1 = ['cutadapt', '-g', ADAPTER, '-o', TRIMMED_INIT, INPUT, '--untrimmed-output', UNTRIMMED_INIT, '--no-indels', '-e', ERROR, '--overlap', OVERLAP, '--quiet']
+    cmnd_cutadapt_1 = ['cutadapt', '-g', ADAPTER, '-o', TRIMMED_INIT, INPUT, '--untrimmed-output', UNTRIMMED_INIT, '--no-indels', '-e', ERROR, '--overlap', OVERLAP]
     sp.call(cmnd_cutadapt_1)
     count_trimmed_init = len(list(SeqIO.parse(TRIMMED_INIT, 'fasta')))
     print('\nfound primers in {} sequences'.format(count_trimmed_init))
