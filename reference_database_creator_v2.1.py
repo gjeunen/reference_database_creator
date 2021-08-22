@@ -117,7 +117,9 @@ def efetch_seqs_from_webenv(web_record, database, email, batch_size=5000):
                                             webenv=webenv, query_key=query_key)
                 success = True
                 record = Entrez.read(fetch_handle)
-                sequence_list.append(record)
+                ids = id_list[start:start+len(record)]
+                trial_dict = {ids[i]:record[i] for i in range(0,len(record))}
+                sequence_list.append(trial_dict)
                 
             except HTTPError as err:
                 if 500 <= err.code <= 599:
@@ -135,21 +137,35 @@ def get_taxid_from_seq_xml(seq_xml):
     accessions = {}
 
     for record in seq_xml:
-        for i in range(len(record)):
-            acc = record[i]['TSeq_accver']
-            taxid = record[i]['TSeq_taxid']
+        for k,v in record.items():
+            if 'TSeq_accver' in v:
+                acc = v['TSeq_accver']
+            else:
+                acc = k
+            taxid = v['TSeq_taxid']
             accessions[acc]=taxid
     
     return accessions 
 
 def seq_dict_from_seq_xml(seq_xml):
     sequence_dict = {}
+    no_accessions = []
 
     for record in seq_xml:
-        for i in range(len(record)):
-            acc = record[i]['TSeq_accver']
-            sequence_dict.setdefault(acc, {})['sequence']=record[i]['TSeq_sequence']
-            sequence_dict.setdefault(acc, {})['description']=record[i]['TSeq_defline']
+        for k,v in record.items():
+            if 'TSeq_accver' in v:
+                acc = v['TSeq_accver']
+            else:
+                acc = k
+                no_accessions.append(k)
+
+            sequence_dict.setdefault(acc, {})['sequence']=v['TSeq_sequence']
+            sequence_dict.setdefault(acc, {})['description']=v['TSeq_defline']
+    if len(no_accessions) > 0:
+        no_acc_out = open('record_uids_without_accession_version.txt', 'w')
+        for a in no_accessions:
+            no_acc_out.write(a+'\n')
+        no_acc_out.close()
 
     return sequence_dict
 
