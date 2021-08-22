@@ -560,7 +560,12 @@ def seq_cleanup(args):
 
 
 ## function: header cleanup
-
+    # delete sequences based on:
+        # (1) keyword: 'environmental'
+        # (2) number of missing taxonomic levels
+        # (3) specific taxonomic groups - still to add
+        # (4) specific missing taxonomic level - still to add
+        # (5) unspecified species name 'sp.'
 
 
 ###############################################
