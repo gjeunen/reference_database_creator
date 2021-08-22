@@ -17,6 +17,7 @@ from tqdm import tqdm
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
+from Bio.SeqIO import FastaIO
 import os
 import zipfile
 from os import listdir
@@ -518,6 +519,47 @@ def dereplicate(args):
 
 
 ## function: sequence cleanup
+def seq_cleanup(args):
+    MINLEN = args.minlen
+    MAXLEN = args.maxlen
+    MAXNS = args.maxns
+    INPUT = args.input
+    OUTPUT = args.output
+    DISCARD = args.discard
+
+    # read in input file and clean up given the parameters
+    clean_db = []
+    discard_db = []
+    count = 0
+    count_clean = 0
+    for seq_record in SeqIO.parse(INPUT, 'fasta'):
+        count = count + 1
+        sequence = str(seq_record.seq).upper()
+        if len(sequence) >= MINLEN and len(sequence) <= MAXLEN and sequence.count('N') <= MAXNS:
+            clean_db.append(seq_record)
+            count_clean = count_clean + 1
+        else:
+            discard_db.append(seq_record)
+    
+    # write cleaned database to file
+    cleaned = count - count_clean 
+    print(f'\nfound {count} number of sequences in database prior to cleanup')
+    print(f'\nremoved {cleaned} sequences during cleanup')
+    print(f'\n{count_clean} sequences left after cleanup\n')
+    clean_db_fa = [FastaIO.as_fasta_2line(record) for record in clean_db]
+    with open(OUTPUT, 'w') as file:
+        for item in clean_db_fa:
+            file.write(item)
+    
+    # write discarded sequences to file
+    if DISCARD != 'no':
+        discard_db_fa = [FastaIO.as_fasta_2line(record) for record in discard_db]
+        with open(DISCARD, 'w') as file:
+            for item in discard_db_fa:
+                file.write(item)
+
+
+## function: header cleanup
 
 
 
