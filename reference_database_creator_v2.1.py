@@ -323,7 +323,7 @@ def dl_embl(args):
 ## function: download sequencing data from MitoFish
 def dl_mitofish(args):
     DIR = args.directory
-    MITO_OUT = args.out
+    MITO_OUT = args.output
 
     directory = DIR 
     if not os.path.exists(directory):
