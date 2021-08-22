@@ -831,6 +831,15 @@ def main():
     dereplication_parser.add_argument('-i', '--input', help = 'filename of the curated reference database', dest = 'input', type = str, required = True)
     dereplication_parser.add_argument('-o', '--output', help = 'filename of the dereplicated curated reference database', dest = 'output', type = str, required = True)
 
+    seq_cleanup_parser = subparser.add_parser('seq_cleanup', description = 'cleaning database on sequence parameters')
+    seq_cleanup_parser.set_defaults(func = seq_cleanup)
+    seq_cleanup_parser.add_argument('-min', '--minlen', help = 'minimum sequence length to be retained in the database. Default = 100', dest = 'minlen', type = str, default = '100')
+    seq_cleanup_parser.add_argument('-max', '--maxlen', help = 'maximum sequence length to be retained in the database. Default = 500', dest = 'maxlen', type = str, default = '500')
+    seq_cleanup_parser.add_argument('-n', '--maxns', help = 'maximum number of ambiguous bases allowed in the sequence. Default = 0', dest = 'maxns', type = str, default = '0')
+    seq_cleanup_parser.add_argument('-i', '--input', help = 'input file name', dest = 'input', type = str, required = True)
+    seq_cleanup_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
+    seq_cleanup_parser.add_argument('-d', '--discard', help = 'file name of discarded sequences', dest = 'discard', type = str, default = 'no')
+
     phylo_parser = subparser.add_parser('phylo_build', description = 'generating phylogenetic trees for species of interest')
     phylo_parser.set_defaults(func = phylo)
     phylo_parser.add_argument('-s', '--species', help = 'text file containing list of species separated by newlines', dest = 'species', type = str, required = True)
