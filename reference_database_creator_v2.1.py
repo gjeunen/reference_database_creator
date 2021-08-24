@@ -576,12 +576,90 @@ def seq_cleanup(args):
 
 
 ## function: header cleanup
-    # delete sequences based on:
-        # (1) keyword: 'environmental'
-        # (2) number of missing taxonomic levels
         # (3) specific taxonomic groups - still to add
         # (4) specific missing taxonomic level - still to add
-        # (5) unspecified species name 'sp.'
+def header_cleanup(args):
+    ENV = args.env
+    SPEC = args.spec
+    NANS = args.nans
+    INPUT = args.input
+    OUTPUT = args.output
+
+    clean_db = []
+    # filter data on keyword 'environmental'
+    if ENV == 'yes':
+        env_count = 0
+        env_total = 0
+        for seq_record in SeqIO.parse(INPUT, 'fasta'):
+            env_total = env_total + 1
+            id = str(seq_record.id).upper()
+            if id.count('ENVIRONMENTAL') == 0:
+                env_count = env_count + 1
+                clean_db.append(seq_record)
+        env_removed = env_total - env_count
+        print(f'\nremoved {env_removed} environmental sequences from a total of {env_total} sequences in the database')
+    
+    # filter data if species name is not specified
+    if SPEC == 'yes':
+        if len(clean_db) == 0:
+            spec_count = 0
+            spec_total = 0
+            for seq_record in SeqIO.parse(INPUT, 'fasta'):
+                spec_total = spec_total + 1
+                id = str(seq_record.id).upper()
+                if id.count('_SP.') == 0:
+                    spec_count = spec_count + 1
+                    clean_db.append(seq_record)
+            spec_removed = spec_total - spec_count
+            print(f'\nremoved {spec_removed} entries from database not containing a species name from a total of {spec_total} sequences in the database')
+        else:
+            spec_db = []
+            spec_count = 0
+            spec_total = 0
+            for seq_record in clean_db:
+                spec_total = spec_total + 1
+                id = str(seq_record.id).upper()
+                if id.count('_SP.') == 0:
+                    spec_count = spec_count + 1
+                    spec_db.append(seq_record)
+            spec_removed = spec_total - spec_count
+            print(f'\nremoved {spec_removed} entries from database not containing a species name from a total of {spec_total} sequences in the database')
+            clean_db = []
+            clean_db = spec_db 
+    
+    # filter data on missing taxonomic levels
+    if NANS != 'nan':
+        if len(clean_db) == 0:
+            nans_count = 0
+            nans_total = 0
+            for seq_record in SeqIO.parse(INPUT, 'fasta'):
+                nans_total = nans_total + 1
+                id = str(seq_record.id).upper()
+                if id.count(':NAN') <= NANS:
+                    nans_count = nans_count + 1
+                    clean_db.append(seq_record)
+            nans_removed = nans_total - nans_count
+            print(f'\nremoved {nans_removed} entries from database with {NANS} missing taxonomic level info from a total of {nans_total} sequences in the database')
+        else:
+            nans_db = []
+            nans_count = 0
+            nans_total = 0
+            for seq_record in clean_db:
+                nans_total = nans_total + 1
+                id = str(seq_record.id).upper()
+                if id.count(':NAN') <= NANS:
+                    nans_count = nans_count + 1
+                    nans_db.append(seq_record)
+            nans_removed = nans_total - nans_count
+            print(f'\nremoved {nans_removed} entries from database with {NANS} missing taxonomic level info from a total of {nans_total} sequences in the database')
+            clean_db = []
+            clean_db = nans_db
+    
+    # write cleaned up database to output file
+    clean_db_fa = [FastaIO.as_fasta_2line(record) for record in clean_db]
+    with open(OUTPUT, 'w') as file:
+        for item in clean_db_fa:
+            file.write(item)
 
 
 ###############################################
