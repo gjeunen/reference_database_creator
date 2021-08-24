@@ -939,6 +939,14 @@ def main():
     seq_cleanup_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
     seq_cleanup_parser.add_argument('-d', '--discard', help = 'file name of discarded sequences', dest = 'discard', type = str, default = 'no')
 
+    header_cleanup_parser = subparser.add_parser('header_cleanup', description = 'cleaning database on header info')
+    header_cleanup_parser.set_defaults(func = header_cleanup)
+    header_cleanup_parser.add_argument('-i', '--input', help = 'input file name', dest = 'input', type = str, required = True)
+    header_cleanup_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
+    header_cleanup_parser.add_argument('-e', '--enviro', help = 'discard environmental sequences from the dataset. yes/no', dest = 'env', type = str, default = 'no')
+    header_cleanup_parser.add_argument('-s', '--species', help = 'discard sequences for which the species name is unspecified. yes/no', dest = 'spec', type = str, default = 'no')
+    header_cleanup_parser.add_argument('-n', '--nans', help = 'discard sequences with N number of unspecified taxonomic levels', dest = 'nans', type = str, default = 'nans')
+
     phylo_parser = subparser.add_parser('phylo_build', description = 'generating phylogenetic trees for species of interest')
     phylo_parser.set_defaults(func = phylo)
     phylo_parser.add_argument('-s', '--species', help = 'text file containing list of species separated by newlines', dest = 'species', type = str, required = True)
