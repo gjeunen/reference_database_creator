@@ -282,7 +282,7 @@ def db_download(args):
         print('downloading sequences from EMBL')
         if DATABASE:
             url = 'ftp://ftp.ebi.ac.uk/pub/databases/embl/release/std/rel_std_' + DATABASE
-            result = sp.run(['weget', url])
+            result = sp.run(['wget', url])
             gfiles = [f for f in os.listdir() if f.startswith('rel_std')]
             ufiles = []
             for file in gfiles:
@@ -883,7 +883,7 @@ def main():
     parser = argparse.ArgumentParser(description = 'creating a curated reference database')
     subparser = parser.add_subparsers()
 
-    db_download_parser = subparser.add_parser('dl_ncbi', description = 'downloading sequence data from online databases')
+    db_download_parser = subparser.add_parser('db_download', description = 'downloading sequence data from online databases')
     db_download_parser.set_defaults(func = db_download)
     db_download_parser.add_argument('-s', '--source', help = 'specify online database used to download sequences. Currently supported options are: (1) ncbi, (2) embl, (3) mitofish', dest = 'source', type = str, required = True)
     db_download_parser.add_argument('-db', '--database', help = 'Specific NCBI or EMBL database used to download sequences. Example NCBI: nucleotide. Example EMBL: mam*', dest = 'database', type = str)
