@@ -249,104 +249,100 @@ def sintax_from_df(df, output_file_name):
 ###### MODULE DATABASE DOWNLOAD ###############
 ###############################################
 
-## function: download sequencing data from NCBI
-def dl_ncbi(args):
-    NCBI_DB = args.database
+## function: download sequencing data from online databases
+def db_download(args):
+    SOURCE = args.source
+    DATABASE = args.database
     QUERY = args.query
     OUTPUT = args.output
     EMAIL = args.email
 
-    print('\nlooking up the number of sequences that match the query\n')
-    search_record = esearch_fasta(QUERY, NCBI_DB, EMAIL)
-    print('found {} matching sequences'.format(search_record['Count']))
-    print('\nstarting the download\n')
-    batch_size = 5000
-    fetch_seqs = efetch_seqs_from_webenv(search_record, NCBI_DB, EMAIL, batch_size)
-    sequences = seq_dict_from_seq_xml(fetch_seqs)
-    num_sequences = fasta_file_from_seq_dict(sequences, OUTPUT)
-    print(num_sequences, ' sequences written to file:', OUTPUT)
-    acc_taxid  = get_taxid_from_seq_xml(fetch_seqs)
-    taxid_tab_name = OUTPUT+'.taxid_table.tsv'
-    num_accs = create_taxid_table(acc_taxid, taxid_tab_name)
-    print(num_accs, ' accessions written to file:', 'taxid_table.tsv')
+    ## download sequencing data from NCBI
+    if SOURCE == 'ncbi':
+        print('\ndownloading sequences from NCBI')
+        if all(v is not None for v in [DATABASE, QUERY, OUTPUT, EMAIL]):
+            print('\nlooking up the number of sequences that match the query\n')
+            search_record = esearch_fasta(QUERY, DATABASE, EMAIL)
+            print('found {} matching sequences'.format(search_record['Count']))
+            print('\nstarting the download\n')
+            batch_size = 5000
+            fetch_seqs = efetch_seqs_from_webenv(search_record, DATABASE, EMAIL, batch_size)
+            sequences = seq_dict_from_seq_xml(fetch_seqs)
+            num_sequences = fasta_file_from_seq_dict(sequences, OUTPUT)
+            print(num_sequences, ' sequences written to file:', OUTPUT)
+            acc_taxid  = get_taxid_from_seq_xml(fetch_seqs)
+            taxid_tab_name = OUTPUT+'.taxid_table.tsv'
+            num_accs = create_taxid_table(acc_taxid, taxid_tab_name)
+            print(num_accs, ' accessions written to file:', 'taxid_table.tsv')
+        else:
+            print('parameter missing')
 
-## function: download sequencing data from EMBL
-def dl_embl(args):    
-    DIR = args.directory
-    EMBL_DB = args.database
+    ## download sequencing data from EMBL    
+    elif SOURCE == 'embl':
+        print('downloading sequences from EMBL')
+        if DATABASE:
+            url = 'ftp://ftp.ebi.ac.uk/pub/databases/embl/release/std/rel_std_' + DATABASE
+            result = sp.run(['weget', url])
+            gfiles = [f for f in os.listdir() if f.startswith('rel_std')]
+            ufiles = []
+            for file in gfiles:
+                unzip = file[:-3]
+                ufiles.append(unzip)
+                print(f'unzipping file: {unzip} ...')
+                with gzip.open(file, 'rb') as f_in:
+                    with open(unzip, 'wb') as f_out:
+                        shutil.copyfileobj(f_in, f_out)
+            for ufile in ufiles:
+                ffile = ufile[:-4] + '.fasta'
+                fasta = []
+                with open(ufile, 'r') as file:
+                    print(f'\nformatting {ufile} to fasta format')
+                    is_required = False
+                    for line in file:
+                        if line.startswith('AC'):
+                            part = '>' + line.split('   ')[1].split(';')[0]
+                            fasta.append(part)
+                        elif is_required and line.startswith(' '):
+                            remove_digits = str.maketrans('', '', digits)
+                            seq = line.replace(' ', '').translate(remove_digits).upper().rstrip('\n')
+                            fasta.append(seq)
+                        else:
+                            is_required = 'SQ' in line 
+                with open(ffile, 'w') as fa:
+                    print(f'saving {ffile}')
+                    for element in fasta:
+                        fa.write('{}\n'.format(element))
+            for file in gfiles:
+                os.remove(file)
+            for file in ufile:
+                os.remove(file)
+        else:
+            print('parameter missing')
 
-    directory = DIR 
-    try:
-        os.makedirs(directory, exist_ok = False)
-    except OSError as error:
-        print(f'Directory {directory} cannot be created')
-    url = 'ftp://ftp.ebi.ac.uk/pub/databases/embl/release/std/rel_std_' + EMBL_DB 
-    result = sp.run(['wget', url], cwd = directory)
-    os.chdir(directory)
-    gfiles = [f for f in os.listdir() if not f.startswith('.')]
-    print(gfiles)
-    ufiles = []
-    for file in gfiles:
-        unzip = file[:-3]
-        print(file)
-        print(unzip)
-        ufiles.append(unzip)
-        print(f'unzipping file: {unzip} ...')
-        with gzip.open(file, 'rb') as f_in:
-            with open(unzip, 'wb') as f_out:
-                shutil.copyfileobj(f_in, f_out)
-    for ufile in ufiles:
-        ffile = ufile[:-4] + '.fasta'
-        fasta = []
-        with open(ufile, 'r') as file:
-            print(f'\nformatting {ufile} to fasta format')
-            is_required = False
-            for line in file:
-                if line.startswith('AC'):
-                    part = '>' + line.split('   ')[1].split(';')[0]
-                    fasta.append(part)
-                elif is_required and line.startswith(' '):
-                    remove_digits = str.maketrans('', '', digits)
-                    seq = line.replace(' ', '').translate(remove_digits).upper().rstrip('\n')
-                    fasta.append(seq)
-                else:
-                    is_required = 'SQ' in line 
-        with open(ffile, 'w') as fa:
-            print(f'saving {ffile} to {directory}')
-            for element in fasta:
-                fa.write('{}\n'.format(element))
-    for file in gfiles:
-        os.remove(file)
-    for file in ufile:
-        os.remove(file)
-
-## function: download sequencing data from MitoFish
-def dl_mitofish(args):
-    DIR = args.directory
-    MITO_OUT = args.output
-
-    directory = DIR 
-    if not os.path.exists(directory):
-        os.mkdir(directory)
-    os.chdir(directory)
-    result = sp.run(['wget', 'http://mitofish.aori.u-tokyo.ac.jp/files/complete_partial_mitogenomes.zip'])
-    with zipfile.ZipFile('complete_partial_mitogenomes.zip', 'r') as zip_ref:
-        zip_ref.extractall()
-    reformat = []
-    with open('complete_partial_mitogenomes.fa') as fasta:
-        for line in fasta:
-            line = line.rstrip('\n')
-            if line.startswith('>'):
-                parts = line.split('|')[1]
-                if parts.isdigit():
-                    parts = line.split('|')[3]
-                line = '>' + parts
-            reformat.append(line)
-    with open(MITO_OUT, 'w') as out:
-        for element in reformat:
-            out.write(element + '\n')
-    os.remove('complete_partial_mitogenomes.zip')
-    os.remove('complete_partial_mitogenomes.fa')
+    ## download sequencing data from MitoFish    
+    elif SOURCE == 'mitofish':
+        print('downloading sequences from MITOFISH')
+        if OUTPUT:
+            result = sp.run(['wget', 'http://mitofish.aori.u-tokyo.ac.jp/files/complete_partial_mitogenomes.zip'])
+            with zipfile.ZipFile('complete_partial_mitogenomes.zip', 'r') as zip_ref:
+                zip_ref.extractall()
+            reformat = []
+            with open('complete_partial_mitogenomes.fa') as fasta:
+                for line in fasta:
+                    line = line.rstrip('\n')
+                    if line.startswith('>'):
+                        parts = line.split('|')[1]
+                        if parts.isdigit():
+                            parts = line.split('|')[3]
+                        line = '>' + parts
+                    reformat.append(line)
+            with open(OUTPUT, 'w') as out:
+                for element in reformat:
+                    out.write(element + '\n')
+            os.remove('complete_partial_mitogenomes.zip')
+            os.remove('complete_partial_mitogenomes.fa')
+    else:
+        print('Please specify a database to download sequences from using the "source" argument. Currently "NCBI", "EMBL", and "MITOFISH" databases are supported.')
 
 ## function: import existing or custom database
 def db_import(args):
@@ -358,6 +354,10 @@ def db_import(args):
     SPEC_DELIM = args.species_delim
     SPEC_PLACE = args.species_place
     print('yet to be included')
+
+## function: merge multiple databases
+def db_merge(args):
+    print('merging multiple databases')
     
 
 ###############################################
@@ -883,22 +883,13 @@ def main():
     parser = argparse.ArgumentParser(description = 'creating a curated reference database')
     subparser = parser.add_subparsers()
 
-    dl_ncbi_parser = subparser.add_parser('dl_ncbi', description = 'downloading sequence data from NCBI based on a text query')
-    dl_ncbi_parser.set_defaults(func = dl_ncbi)
-    dl_ncbi_parser.add_argument('-db', '--database', help = 'NCBI database used to download sequences. Default = nucleotide', dest = 'database', type = str, default = 'nucleotide')
-    dl_ncbi_parser.add_argument('-q', '--query', help = 'query search to limit portion of database to be downloaded. Example: "16S[All Fields] AND ("1"[SLEN] : "50000"[SLEN])"', dest = 'query', type = str, required = True)
-    dl_ncbi_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
-    dl_ncbi_parser.add_argument('-e', '--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str, required = True)
-
-    dl_embl_parser = subparser.add_parser('dl_embl', description = 'downloading sequence data from EMBL')
-    dl_embl_parser.set_defaults(func = dl_embl)
-    dl_embl_parser.add_argument('-db', '--database', help = 'EMBL database used to download sequences. Example: "vrt*"', dest = 'database', type = str, required = True)
-    dl_embl_parser.add_argument('-dir', '--directory', help = 'directory to store EMBL database. Default = embl', dest = 'directory', type = str, default = 'embl')
-
-    dl_mitofish_parser = subparser.add_parser('dl_mitofish', description = 'downloading sequence data from the MitoFish database')
-    dl_mitofish_parser.set_defaults(func = dl_mitofish)
-    dl_mitofish_parser.add_argument('-dir', '--directory', help = 'directory to store MitoFish database. Default = mitofish', dest = 'directory', type = str, default = 'mitofish')
-    dl_mitofish_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
+    db_download_parser = subparser.add_parser('dl_ncbi', description = 'downloading sequence data from online databases')
+    db_download_parser.set_defaults(func = db_download)
+    db_download_parser.add_argument('-s', '--source', help = 'specify online database used to download sequences. Currently supported options are: (1) ncbi, (2) embl, (3) mitofish', dest = 'source', type = str, required = True)
+    db_download_parser.add_argument('-db', '--database', help = 'Specific NCBI or EMBL database used to download sequences. Example NCBI: nucleotide. Example EMBL: mam*', dest = 'database', type = str)
+    db_download_parser.add_argument('-q', '--query', help = 'NCBI query search to limit portion of database to be downloaded. Example: "16S[All Fields] AND ("1"[SLEN] : "50000"[SLEN])"', dest = 'query', type = str)
+    db_download_parser.add_argument('-o', '--output', help = 'output file name option for NCBI and MITOFISH databases', dest = 'output', type = str)
+    db_download_parser.add_argument('-e', '--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str)
 
     db_import_parser = subparser.add_parser('db_import', description = 'import existing or curated database')
     db_import_parser.set_defaults(func = db_import)
