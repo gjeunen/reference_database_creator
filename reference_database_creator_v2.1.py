@@ -10,7 +10,6 @@ http.client.HTTPConnection._http_vsn = 10
 http.client.HTTPConnection._http_vsn_str = 'HTTP/1.0'
 import subprocess as sp
 import shutil
-import gzip
 from string import digits
 import pandas as pd
 from tqdm import tqdm
@@ -19,7 +18,6 @@ from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
 from Bio.SeqIO import FastaIO
 import os
-import json
 import zipfile
 from os import listdir
 import matplotlib
@@ -29,6 +27,16 @@ from Bio import Phylo
 from Bio.Align.Applications import MuscleCommandline
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceMatrix
 from Bio.Phylo.TreeConstruction import DistanceTreeConstructor
+from functions.module_1 import esearch_fasta
+from functions.module_1 import efetch_seqs_from_webenv
+from functions.module_1 import seq_dict_from_seq_xml
+from functions.module_1 import fasta_file_from_seq_dict
+from functions.module_1 import get_taxid_from_seq_xml
+from functions.module_1 import create_taxid_table
+from functions.module_1 import embl_download
+from functions.module_1 import embl_format
+from functions.module_1 import accession_list_from_fasta
+from functions.module_1 import taxid_table_from_accession
 
 #####################################################
 ## helper functions #################################
@@ -82,111 +90,6 @@ def derep_to_seq(derep_dict, size = 'no'):
         read_dict[base_id] = data['readlist']
         new_dict[base_id] = data['seq']
     return (new_dict, read_dict)
-
-# esearch
-def esearch_fasta(query, database, email):
-    Entrez.email = email
-    first_handle = Entrez.esearch(db=database, term=query, rettype='fasta')
-    first_record = Entrez.read(first_handle)
-    first_handle.close()
-    count = int(first_record['Count'])
-    # now, second round from first
-    second_handle = Entrez.esearch(db=database, term=query, retmax=count, rettype='fasta', usehistory = 'y')
-    second_record = Entrez.read(second_handle)
-    second_handle.close()
-    return second_record
-
-# efetch
-def efetch_seqs_from_webenv(web_record, database, email, batch_size=5000):
-    Entrez.email = email
-    id_list = web_record['IdList']
-    count = int(web_record['Count'])
-    assert(count == len(id_list))
-    webenv = web_record['WebEnv']
-    query_key = web_record['QueryKey']
-
-    sequence_list = []
-
-    for start in tqdm(range(0, count, batch_size)):
-        attempt = 1
-        success = False
-        while attempt <= 3 and not success:
-            attempt += 1
-            try:
-                fetch_handle = Entrez.efetch(db=database, rettype='fasta', retmode = 'xml',
-                                            retstart=start, retmax=batch_size,
-                                            webenv=webenv, query_key=query_key)
-                success = True
-                record = Entrez.read(fetch_handle)
-                ids = id_list[start:start+len(record)]
-                trial_dict = {ids[i]:record[i] for i in range(0,len(record))}
-                sequence_list.append(trial_dict)
-                
-            except HTTPError as err:
-                if 500 <= err.code <= 599:
-                    print(f"Received error from server {err}")
-                    print("Attempt {attempt} of 3")
-                    time.sleep(15)
-                else:
-                    raise
-        
-        fetch_handle.close()
-    
-    return sequence_list 
-
-def get_taxid_from_seq_xml(seq_xml):
-    accessions = {}
-
-    for record in seq_xml:
-        for k,v in record.items():
-            if 'TSeq_accver' in v:
-                acc = v['TSeq_accver']
-            else:
-                acc = k
-            taxid = v['TSeq_taxid']
-            accessions[acc]=taxid
-    
-    return accessions 
-
-def seq_dict_from_seq_xml(seq_xml):
-    sequence_dict = {}
-    no_accessions = []
-
-    for record in seq_xml:
-        for k,v in record.items():
-            if 'TSeq_accver' in v:
-                acc = v['TSeq_accver']
-            else:
-                acc = k
-                no_accessions.append(k)
-
-            sequence_dict.setdefault(acc, {})['sequence']=v['TSeq_sequence']
-            sequence_dict.setdefault(acc, {})['description']=v['TSeq_defline']
-    if len(no_accessions) > 0:
-        no_acc_out = open('record_uids_without_accession_version.txt', 'w')
-        for a in no_accessions:
-            no_acc_out.write(a+'\n')
-        no_acc_out.close()
-
-    return sequence_dict
-
-def fasta_file_from_seq_dict(sequence_dict, fasta_file_name):
-    #output = open(fasta_file_name, 'w')
-    sequence_records = []
-    for k,v in sequence_dict.items():
-        seq_record = SeqRecord(Seq(v['sequence']), id=k, description=v['description'])
-        sequence_records.append(seq_record)
-    SeqIO.write(sequence_records, fasta_file_name, "fasta")
-
-    return len(sequence_records)
-
-def create_taxid_table(taxid_dict, table_name):
-    output = open(table_name, 'w')
-    for k,v in taxid_dict.items():
-        output.write(k+'\t'+v+'\n')
-    output.close()
-
-    return len(taxid_dict)
 
 def read_taxid_table(taxid_table_name):
     table_file = open(taxid_table_name, 'r')
@@ -280,53 +183,26 @@ def db_download(args):
 
     ## download sequencing data from EMBL    
     elif SOURCE == 'embl':
-        print('downloading sequences from EMBL')
-        if DATABASE:
-            url = 'ftp://ftp.ebi.ac.uk/pub/databases/embl/release/std/rel_std_' + DATABASE
-            result = sp.run(['wget', url])
-            gfiles = [f for f in os.listdir() if f.startswith('rel_std')]
-            ufiles = []
-            for file in gfiles:
-                unzip = file[:-3]
-                ufiles.append(unzip)
-                print(f'unzipping file: {unzip} ...')
-                with gzip.open(file, 'rb') as f_in:
-                    with open(unzip, 'wb') as f_out:
-                        shutil.copyfileobj(f_in, f_out)
-            print(ufiles)
-            print(gfiles)
-            for ufile in ufiles:
-                ffile = ufile[:-4] + '.fasta'
-                fasta = []
-                with open(ufile, 'r') as file:
-                    print(f'\nformatting {ufile} to fasta format')
-                    is_required = False
-                    for line in file:
-                        if line.startswith('AC'):
-                            part = '>' + line.split('   ')[1].split(';')[0]
-                            fasta.append(part)
-                        elif is_required and line.startswith(' '):
-                            remove_digits = str.maketrans('', '', digits)
-                            seq = line.replace(' ', '').translate(remove_digits).upper().rstrip('\n')
-                            fasta.append(seq)
-                        else:
-                            is_required = 'SQ' in line 
-                with open(ffile, 'w') as fa:
-                    print(f'saving {ffile}')
-                    for element in fasta:
-                        fa.write('{}\n'.format(element))
-            
-            for gfile in gfiles:
-                os.remove(gfile)
-            for ufile in ufiles:
-                os.remove(ufile)
+        if all(v is not None for v in [DATABASE, EMAIL]):
+            print('\ndownloading sequences from EMBL')
+            dl_files = embl_download(DATABASE)
+            print('formatting downloaded files to fasta format')
+            fasta_files = embl_format(dl_files)
+            for fasta in fasta_files:
+                print(f'retrieving tax ID information for each accession in {fasta}')
+                acc_list = accession_list_from_fasta(fasta)
+                taxid_tab_name = fasta + '.taxid_table.tsv'
+                num_taxid = taxid_table_from_accession(acc_list, EMAIL, taxid_tab_name)
+                print(num_taxid, ' accessions and tax IDs written to file: ', taxid_tab_name) 
         else:
             print('parameter missing')
 
     ## download sequencing data from MitoFish    
     elif SOURCE == 'mitofish':
-        print('downloading sequences from MITOFISH')
-        if OUTPUT:
+        if all(v is not None for v in [OUTPUT, EMAIL]):
+            print('\ndownloading sequences from MITOFISH')
+            
+
             result = sp.run(['wget', 'http://mitofish.aori.u-tokyo.ac.jp/files/complete_partial_mitogenomes.zip'])
             with zipfile.ZipFile('complete_partial_mitogenomes.zip', 'r') as zip_ref:
                 zip_ref.extractall()
