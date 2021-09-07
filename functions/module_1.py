@@ -208,5 +208,23 @@ def mitofish_download(url):
     with zipfile.ZipFile('complete_partial_mitogenomes.zip', 'r') as zip_ref:
         zip_ref.extractall()
     fasta = 'complete_partial_mitogenomes.fa'
+    os.remove('complete_partial_mitogenomes.zip')
 
     return fasta
+
+def mitofish_format(fasta_file, name):
+    reformat = []
+    with open(fasta_file) as fasta:
+        for line in fasta:
+            line = line.rstrip('\n')
+            if line.startswith('>'):
+                parts = line.split('|')[1]
+                if parts.isdigit():
+                    parts = line.split('|')[3]
+                line = '>' + parts
+            reformat.append(line)
+    with open(name, 'w') as fout:
+        for element in reformat:
+            fout.write(element + '\n')
+    
+    os.remove(fasta_file)

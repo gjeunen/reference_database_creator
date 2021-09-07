@@ -37,6 +37,8 @@ from functions.module_1 import embl_download
 from functions.module_1 import embl_format
 from functions.module_1 import accession_list_from_fasta
 from functions.module_1 import taxid_table_from_accession
+from functions.module_1 import mitofish_download
+from functions.module_1 import mitofish_format
 
 #####################################################
 ## helper functions #################################
@@ -201,26 +203,17 @@ def db_download(args):
     elif SOURCE == 'mitofish':
         if all(v is not None for v in [OUTPUT, EMAIL]):
             print('\ndownloading sequences from MITOFISH')
-            
-
-            result = sp.run(['wget', 'http://mitofish.aori.u-tokyo.ac.jp/files/complete_partial_mitogenomes.zip'])
-            with zipfile.ZipFile('complete_partial_mitogenomes.zip', 'r') as zip_ref:
-                zip_ref.extractall()
-            reformat = []
-            with open('complete_partial_mitogenomes.fa') as fasta:
-                for line in fasta:
-                    line = line.rstrip('\n')
-                    if line.startswith('>'):
-                        parts = line.split('|')[1]
-                        if parts.isdigit():
-                            parts = line.split('|')[3]
-                        line = '>' + parts
-                    reformat.append(line)
-            with open(OUTPUT, 'w') as out:
-                for element in reformat:
-                    out.write(element + '\n')
-            os.remove('complete_partial_mitogenomes.zip')
-            os.remove('complete_partial_mitogenomes.fa')
+            url = 'http://mitofish.aori.u-tokyo.ac.jp/files/complete_partial_mitogenomes.zip'
+            dl_file = mitofish_download(url)
+            print(f'formatting {dl_file} to fasta format')
+            mitoformat = mitofish_format(dl_file, OUTPUT)
+            print(f'retrieving tax ID information for each accession in {OUTPUT}')
+            acc_list = accession_list_from_fasta(OUTPUT)
+            taxid_tab_name = OUTPUT + '.taxid_table.tsv'
+            num_taxid = taxid_table_from_accession(acc_list, EMAIL, taxid_tab_name)
+            print(num_taxid, ' accessions and tax IDs written to file: ', taxid_tab_name) 
+        else:
+            print('parameter missing')
     else:
         print('Please specify a database to download sequences from using the "source" argument. Currently "NCBI", "EMBL", and "MITOFISH" databases are supported.')
 
