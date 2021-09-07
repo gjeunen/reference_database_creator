@@ -19,6 +19,7 @@ from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
 from Bio.SeqIO import FastaIO
 import os
+import json
 import zipfile
 from os import listdir
 import matplotlib
@@ -292,6 +293,8 @@ def db_download(args):
                 with gzip.open(file, 'rb') as f_in:
                     with open(unzip, 'wb') as f_out:
                         shutil.copyfileobj(f_in, f_out)
+            print(ufiles)
+            print(gfiles)
             for ufile in ufiles:
                 ffile = ufile[:-4] + '.fasta'
                 fasta = []
@@ -357,8 +360,57 @@ def db_import(args):
 
 ## function: merge multiple databases
 def db_merge(args):
-    print('merging multiple databases')
+    INPUT = args.input
+    UNIQ = args.uniq
+    OUTPUT = args.output
+    FORMAT = args.format
+    DISCARD = args.discard
+
+    # merge database files
+    if FORMAT == 'db':
+        # merge based on unique accession numbers
+        if UNIQ != '':
+            print('\nmerging all fasta files and discarding duplicate accession numbers')
+            seqdict = {}
+            discard = []
+            for file in INPUT:
+                count = 0
+                added = 0
+                for record in SeqIO.parse(file, 'fasta'):
+                    count = count + 1
+                    id = '>' + record.id.split('.')[0] + '\n'
+                    seq = str(record.seq) + '\n'
+                    if id not in seqdict:
+                        added = added +1
+                        seqdict[id] = seq
+                    else:
+                        discard.append(id)
+                print(f'found {count} sequences in {file}')
+                print(f'added {added} sequences to {OUTPUT}')
+            with open(OUTPUT, 'w') as file:
+                for k,v in seqdict.items():
+                    file.write(k)
+                    file.write(v)
+            if DISCARD != '':
+                with open(DISCARD, 'w') as disc:
+                    for item in discard:
+                        disc.write(item)
+        # merge all sequences without filtering
+        else:
+            print('\nmerging all fasta files and keeping duplicate accession numbers')
+            with open(OUTPUT, 'w') as fout:
+                for file in INPUT:
+                    with open(file, 'r') as fin:
+                        for line in fin:
+                            fout.write(line)
     
+    # merge taxonomic ID tables
+    elif FORMAT == 'taxid':
+        print('merging taxid tables')
+    
+    else:
+        print('Please specify what format to be merged. Accepted options are "db" and "taxid"')
+        
 
 ###############################################
 ###### MODULE IN SILICO PCR ###################
@@ -900,6 +952,14 @@ def main():
     db_import_parser.add_argument('-s', '--species', help = 'species name available in header? yes/no. Default = no', dest = 'species', type = str, default = 'no')
     db_import_parser.add_argument('-sd', '--species_delim', help = 'delimiter to split header info and obtain species name', dest = 'species_delim', type = str, default = '')
     db_import_parser.add_argument('-sp', '--species_place', help = 'place of species after header split', dest = 'species_place', type = str, default = '')
+
+    db_merge_parser = subparser.add_parser('db_merge', description = 'merge multiple databases')
+    db_merge_parser.set_defaults(func = db_merge)
+    db_merge_parser.add_argument('-i', '--input', nargs = '+', help = 'list of files to be merged', dest = 'input', required = True)
+    db_merge_parser.add_argument('-u', '--uniq', help = 'keep only unique accession numbers', dest = 'uniq', type = str, default = '')
+    db_merge_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
+    db_merge_parser.add_argument('-f', '--format', help = 'data format to be merged, database (db) or tax ID table (taxid)', dest = 'format', type = str, required = True)
+    db_merge_parser.add_argument('-d', '--discard', help = 'file name for discarded duplicate accession numbers', dest = 'discard', type = str)
 
     in_silico_pcr_parser = subparser.add_parser('ispcr', description = 'curating the downloaded reference sequences with an in silico PCR')
     in_silico_pcr_parser.set_defaults(func = ispcr)
