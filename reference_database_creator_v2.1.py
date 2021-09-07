@@ -315,10 +315,11 @@ def db_download(args):
                     print(f'saving {ffile}')
                     for element in fasta:
                         fa.write('{}\n'.format(element))
-            for file in gfiles:
-                os.remove(file)
-            for file in ufile:
-                os.remove(file)
+            
+            for gfile in gfiles:
+                os.remove(gfile)
+            for ufile in ufiles:
+                os.remove(ufile)
         else:
             print('parameter missing')
 
