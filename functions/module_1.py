@@ -145,7 +145,7 @@ def embl_format(dat_format):
         ffiles.append(ffile)
         fasta = []
         with open(ufile, 'r') as file:
-            print(f'formatting {file} to fasta format')
+            print(f'formatting {ufile} to fasta format')
             is_required = False
             for line in file:
                 if line.startswith('AC'):
