@@ -13,6 +13,7 @@ import os
 import shutil
 import gzip
 from string import digits
+import zipfile
 
 
 ## functions NCBI
@@ -203,4 +204,9 @@ def taxid_table_from_accession(accession, email, name):
 
 ## functions mitofish
 def mitofish_download(url):
-    print('tset')
+    results = sp.run(['wget', url])
+    with zipfile.ZipFile('complete_partial_mitogenomes.zip', 'r') as zip_ref:
+        zip_ref.extractall()
+    fasta = 'complete_partial_mitogenomes.fa'
+
+    return fasta
