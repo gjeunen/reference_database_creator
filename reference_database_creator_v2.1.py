@@ -218,11 +218,11 @@ def db_download(args):
 
     ## download sequencing data from BOLD
     elif SOURCE == 'bold':
-        print('downloading sequences from BOLD')
+        print('\ndownloading sequences from BOLD')
     
     ## download taxonomy information
     elif SOURCE == 'taxonomy':
-        print('downloading taxonomy information')
+        print('\ndownloading taxonomy information')
         url_acc2taxid = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz'
         url_taxdump = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz'
         results = sp.run(['wget', url_acc2taxid])
@@ -233,6 +233,7 @@ def db_download(args):
         for file in files_to_remove:
             os.remove(file)
 
+    ## print statement if source information is missing
     else:
         print('Please specify a database to download sequences from using the "source" argument. Currently "NCBI", "EMBL", and "MITOFISH" databases are supported.')
 
