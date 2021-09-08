@@ -1,7 +1,8 @@
-#! /usr/env/python3
+#! /usr/bin/env python3
 
 ## import modules
 from Bio import Entrez
+from Bio.SeqIO.FastaIO import as_fasta_2line
 from tqdm import tqdm
 from urllib.error import HTTPError
 import time
@@ -228,3 +229,27 @@ def mitofish_format(fasta_file, name):
             fout.write(element + '\n')
     
     os.remove(fasta_file)
+
+
+## functions import
+def check_accession(file_in, file_out):
+    mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']
+    correct_accession = []
+    incorrect_accession = []
+    twoline_fasta = []
+    for record in SeqIO.parse(file_in, 'fasta'):
+        twoline_fasta.append(record)
+        acc = str(record.id)
+        if not any(mistake in acc for mistake in mistakes):
+            correct_accession.append(acc)
+        else:
+            incorrect_accession.append(acc)
+    twoline_db = [as_fasta_2line(record) for record in twoline_fasta]
+    with open(file_out, 'w') as fout:
+        for item in twoline_db:
+            fout.write(item)
+    
+    return incorrect_accession
+
+def add_primer_to_seq(fwd, rev, file_in, file_out):
+    print('test')

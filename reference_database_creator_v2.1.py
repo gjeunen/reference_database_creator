@@ -39,6 +39,7 @@ from functions.module_1 import accession_list_from_fasta
 from functions.module_1 import taxid_table_from_accession
 from functions.module_1 import mitofish_download
 from functions.module_1 import mitofish_format
+from functions.module_1 import check_accession
 
 #####################################################
 ## helper functions #################################
@@ -214,19 +215,68 @@ def db_download(args):
             print(num_taxid, ' accessions and tax IDs written to file: ', taxid_tab_name) 
         else:
             print('parameter missing')
+
+    ## download sequencing data from BOLD
+    elif SOURCE == 'bold':
+        print('downloading sequences from BOLD')
+    
+    ## download taxonomy information
+    elif SOURCE == 'taxonomy':
+        print('downloading taxonomy information')
+        url_acc2taxid = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz'
+        url_taxdump = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz'
+        results = sp.run(['wget', url_acc2taxid])
+        results = sp.run(['gunzip', 'nucl_gb.accession2taxid.gz'])
+        results = sp.ru(['wget', url_taxdump])
+        results = sp.run(['tar', '-zxvf', 'taxdump.tar.gz'])
+
+
+
     else:
         print('Please specify a database to download sequences from using the "source" argument. Currently "NCBI", "EMBL", and "MITOFISH" databases are supported.')
 
 ## function: import existing or custom database
 def db_import(args):
     INPUT = args.input
-    ACCESSION = args.accession
-    ACC_DELIM = args.accession_delim
-    ACC_PLACE = args.accession_place
-    SPECIES = args.species
-    SPEC_DELIM = args.species_delim
-    SPEC_PLACE = args.species_place
-    print('yet to be included')
+    HEADER = args.header
+    OUTPUT = args.output
+    EMAIL = args.email
+    FWD = args.fwd
+    REV = args.rev
+
+    if HEADER == 'accession':
+        # check for correct formatting of file
+        if all(v is not None for v in [INPUT, OUTPUT, EMAIL]):
+            print(f'\nchecking correct formatting of accession numbers in {INPUT}')
+            incorrect_accession = check_accession(INPUT, OUTPUT)
+            if len(incorrect_accession) != 0:
+                print('found incorrectly formatted accession numbers. Please check file: "incorrect_accession_numbers.txt"')
+                with open('incorrect_accession_numbers.txt', 'w') as fout:
+                    for item in incorrect_accession:
+                        fout.write(item + '\n')
+            # generate taxid table 
+            else:
+                print(f'found no formattign issues in {INPUT}')
+                print(f'retrieving tax ID information for each accession in {INPUT}')
+                acc_list = accession_list_from_fasta(OUTPUT)
+                taxid_tab_name = OUTPUT + '.taxid_table.tsv'
+                num_taxid = taxid_table_from_accession(acc_list, EMAIL, taxid_tab_name)
+                print(num_taxid, ' accessions and tax IDs written to file: ', taxid_tab_name)
+        else:
+            print('parameter missing')
+        # add primer sequences if option is chosen
+        if all(v is not None for v in [FWD, REV]):
+            print(f'appending primer sequences to each sequence in {OUTPUT}')
+            REV_DNA = Seq(REV)
+            REV_CORRECT = str(REV_DNA.reverse_complement())
+
+
+    
+    elif HEADER == 'species':
+        print('\ngenerating new accession numbers for spcies')
+    
+    else:
+        print('\nPlease specify header information. Currently supported header information: "accession" and "species"')
 
 ## function: merge multiple databases
 def db_merge(args):
@@ -816,12 +866,12 @@ def main():
     db_import_parser = subparser.add_parser('db_import', description = 'import existing or curated database')
     db_import_parser.set_defaults(func = db_import)
     db_import_parser.add_argument('-i', '--input', help = 'input database filename', dest = 'input', type = str, required = True)
-    db_import_parser.add_argument('-a', '--accession', help = 'accession number present in header? yes/no', dest = 'accession', type = str, required = True)
-    db_import_parser.add_argument('-ad', '--accession_delim', help = 'delimiter to split header info and obtain accession number', dest = 'accession_delim', type = str, default = '')
-    db_import_parser.add_argument('-ap', '--accession_place', help = 'place of accession number after header split', dest = 'accession_place', type = str, default = '')
-    db_import_parser.add_argument('-s', '--species', help = 'species name available in header? yes/no. Default = no', dest = 'species', type = str, default = 'no')
-    db_import_parser.add_argument('-sd', '--species_delim', help = 'delimiter to split header info and obtain species name', dest = 'species_delim', type = str, default = '')
-    db_import_parser.add_argument('-sp', '--species_place', help = 'place of species after header split', dest = 'species_place', type = str, default = '')
+    db_import_parser.add_argument('-s', '--seq_header', help = 'information provided in sequence header: "accession" or "species"', dest = 'header', type = str, required = True)
+    db_import_parser.add_argument('-o', '--output', help = 'output file name option', dest = 'output', type = str, required = True)
+    db_import_parser.add_argument('-e', '--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str, required = True)
+    db_import_parser.add_argument('-f', '--fwd', help = 'forward primer sequence in 5-3 direction', dest = 'fwd', type = str)
+    db_import_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest = 'rev', type = str)
+
 
     db_merge_parser = subparser.add_parser('db_merge', description = 'merge multiple databases')
     db_merge_parser.set_defaults(func = db_merge)
