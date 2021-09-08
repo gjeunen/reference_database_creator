@@ -229,8 +229,9 @@ def db_download(args):
         results = sp.run(['gunzip', 'nucl_gb.accession2taxid.gz'])
         results = sp.run(['wget', url_taxdump])
         results = sp.run(['tar', '-zxvf', 'taxdump.tar.gz'])
-
-
+        files_to_remove = ['citations.dmp', 'delnodes.dmp', 'division.dmp', 'gencode.dmp', 'merged.dmp', 'gc.prt', 'readme.txt', 'taxdump.tar.gz']
+        for file in files_to_remove:
+            os.remove(file)
 
     else:
         print('Please specify a database to download sequences from using the "source" argument. Currently "NCBI", "EMBL", and "MITOFISH" databases are supported.')
