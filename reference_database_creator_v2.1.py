@@ -227,7 +227,7 @@ def db_download(args):
         url_taxdump = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz'
         results = sp.run(['wget', url_acc2taxid])
         results = sp.run(['gunzip', 'nucl_gb.accession2taxid.gz'])
-        results = sp.ru(['wget', url_taxdump])
+        results = sp.run(['wget', url_taxdump])
         results = sp.run(['tar', '-zxvf', 'taxdump.tar.gz'])
 
 
