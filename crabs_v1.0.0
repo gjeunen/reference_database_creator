@@ -1,0 +1,218 @@
+#! /usr/bin/env python3
+
+################################################
+################ IMPORT MODULES ################
+################################################
+import argparse
+import subprocess as sp
+import os
+from function.module_1 import esearch_fasta
+from function.module_1 import efetch_seqs_from_webenv
+from function.module_1 import ncbi_formatting
+from function.module_1 import mitofish_download
+from function.module_1 import mitofish_format
+from function.module_1 import embl_download
+from function.module_1 import embl_fasta_format
+from function.module_1 import embl_crabs_format
+from function.module_1 import bold_download
+from function.module_1 import bold_format
+
+################################################
+########### MODULE DATABASE DOWNLOAD ###########
+################################################
+
+## function download data from online databases
+def db_download(args):
+    SOURCE = args.source
+    DATABASE = args.database
+    QUERY = args.query
+    OUTPUT = args.output
+    EMAIL = args.email
+    BATCHSIZE = args.batchsize
+
+    ## download taxonomy data from NCBI
+    if SOURCE == 'taxonomy':
+        print('\ndownloading taxonomy information')
+        url_acc2taxid = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz'
+        url_taxdump = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz'        
+        results = sp.run(['wget', url_acc2taxid])
+        results = sp.run(['gunzip', 'nucl_gb.accession2taxid.gz'])
+        results = sp.run(['wget', url_taxdump])
+        results = sp.run(['tar', '-zxvf', 'taxdump.tar.gz'])
+        print('removing intermediary files\n')
+        files_to_remove = ['citations.dmp', 'delnodes.dmp', 'division.dmp', 'gencode.dmp', 'merged.dmp', 'gc.prt', 'readme.txt', 'taxdump.tar.gz']
+        for file in files_to_remove:
+            os.remove(file)
+
+    ## download sequencing data from NCBI
+    elif SOURCE == 'ncbi':
+        if all(v is not None for v in [DATABASE, QUERY, OUTPUT, EMAIL]):
+            print('\ndownloading sequences from NCBI')
+            print('looking up the number of sequences that match the query')
+            search_record = esearch_fasta(QUERY, DATABASE, EMAIL)
+            print('found {} matching sequences'.format(search_record['Count']))
+            print('starting the download')
+            batch_size = BATCHSIZE
+            filename = 'CRABS_ncbi_download.fasta'
+            fetch_seqs = efetch_seqs_from_webenv(search_record, DATABASE, EMAIL, batch_size, filename)
+            print(f'downloaded {fetch_seqs} sequences from NCBI')
+            print('formatting the downloaded sequencing file to CRABS format')
+            format_seqs = ncbi_formatting(OUTPUT)
+            print(f'written {format_seqs} sequences to {OUTPUT}\n')
+        else:
+            print('\nnot all parameters have an input value\n')
+
+    ## download sequencing data from EMBL
+    elif SOURCE == 'embl':
+        if all(v is not None for v in [DATABASE, OUTPUT]):
+            print('\ndownloading sequences from EMBL')
+            dl_files = embl_download(DATABASE)
+            fasta_file = embl_fasta_format(dl_files)
+            print(f'formatting intermediary file to CRABS format')
+            crabs_file = embl_crabs_format(fasta_file, OUTPUT)
+            print(f'written {crabs_file} sequences to {OUTPUT}\n')
+        else:
+            print('\nnot all parameters have an input value\n')
+
+    ## download sequencing data from MitoFish
+    elif SOURCE == 'mitofish':
+        if all(v is not None for v in [OUTPUT]):
+            print('\ndownloading sequences from the MitoFish database')
+            url = 'http://mitofish.aori.u-tokyo.ac.jp/files/complete_partial_mitogenomes.zip'
+            dl_file = mitofish_download(url)
+            print(f'formatting {dl_file} to CRABS format')
+            mitoformat = mitofish_format(dl_file, OUTPUT)
+            print(f'written {mitoformat} sequences to {OUTPUT}\n')
+        else:
+            print('\nnot all parameters have an input value\n')
+
+    ## download sequencing data from BOLD
+    elif SOURCE == 'bold':
+        if all(v is not None for v in [DATABASE, OUTPUT]):
+            print('\ndownloading sequences from BOLD')
+            bold_file = bold_download(DATABASE)
+            print(f'downloaded {bold_file} sequences from BOLD')
+            print(f'formatting {bold_file} sequences to CRABS format')
+            boldformat = bold_format(OUTPUT)
+            print(f'written {boldformat} sequences to {OUTPUT}\n')
+        else:
+            print('\nnot all parameters have an input value\n')
+
+            
+
+## function: import existing or custom database
+
+
+
+## function: merge multiple databases
+
+
+################################################
+############# MODULE IN SILICO PCR #############
+################################################
+
+
+
+################################################
+########## MODULE TAXONOMY ASSIGNMENT ##########
+################################################
+
+
+
+################################################
+########### MODULE DATABASE CLEAN-UP ###########
+################################################
+
+
+
+
+################################################
+############# MODULE VISUALISATION #############
+################################################
+
+
+
+
+################################################
+################### ARGPARSE ###################
+################################################
+def main():
+    parser = argparse.ArgumentParser(description = 'creating a curated reference database')
+    subparser = parser.add_subparsers()
+
+    db_download_parser = subparser.add_parser('db_download', description = 'downloading sequence data from online databases')
+    db_download_parser.set_defaults(func = db_download)
+    db_download_parser.add_argument('-s', '--source', help = 'specify online database used to download sequences. Currently supported options are: (1) ncbi, (2) embl, (3) mitofish, (4) bold, (5) taxonomy', dest = 'source', type = str, required = True)
+    db_download_parser.add_argument('-db', '--database', help = 'specific database used to download sequences. Example NCBI: nucleotide. Example EMBL: mam*. Example BOLD: Actinopterygii', dest = 'database', type = str)
+    db_download_parser.add_argument('-q', '--query', help = 'NCBI query search to limit portion of database to be downloaded. Example: "16S[All Fields] AND ("1"[SLEN] : "50000"[SLEN])"', dest = 'query', type = str)
+    db_download_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str)
+    db_download_parser.add_argument('-e', '--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str)
+    db_download_parser.add_argument('-b', '--batchsize', help = 'number of sequences downloaded from NCBI per iteration. Default = 5000', dest = 'batchsize', type = int, default = 5000)
+
+#     db_import_parser = subparser.add_parser('db_import', description = 'import existing or curated database')
+#     db_import_parser.set_defaults(func = db_import)
+#     db_import_parser.add_argument('-i', '--input', help = 'input database filename', dest = 'input', type = str, required = True)
+#     db_import_parser.add_argument('-s', '--seq_header', help = 'information provided in sequence header: "accession" or "species"', dest = 'header', type = str, required = True)
+#     db_import_parser.add_argument('-o', '--output', help = 'output file name option', dest = 'output', type = str, required = True)
+#     db_import_parser.add_argument('-e', '--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str, required = True)
+#     db_import_parser.add_argument('-f', '--fwd', help = 'forward primer sequence in 5-3 direction', dest = 'fwd', type = str)
+#     db_import_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest = 'rev', type = str)
+
+
+#     db_merge_parser = subparser.add_parser('db_merge', description = 'merge multiple databases')
+#     db_merge_parser.set_defaults(func = db_merge)
+#     db_merge_parser.add_argument('-i', '--input', nargs = '+', help = 'list of files to be merged', dest = 'input', required = True)
+#     db_merge_parser.add_argument('-u', '--uniq', help = 'keep only unique accession numbers', dest = 'uniq', type = str, default = '')
+#     db_merge_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
+#     db_merge_parser.add_argument('-f', '--format', help = 'data format to be merged, database (db) or tax ID table (taxid)', dest = 'format', type = str, required = True)
+#     db_merge_parser.add_argument('-d', '--discard', help = 'file name for discarded duplicate accession numbers', dest = 'discard', type = str)
+
+#     in_silico_pcr_parser = subparser.add_parser('ispcr', description = 'curating the downloaded reference sequences with an in silico PCR')
+#     in_silico_pcr_parser.set_defaults(func = ispcr)
+#     in_silico_pcr_parser.add_argument('-f', '--fwd', help = 'forward primer sequence in 5-3 direction', dest = 'fwd', type = str, required = True)
+#     in_silico_pcr_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest = 'rev', type = str, required = True)
+#     in_silico_pcr_parser.add_argument('-a', '--assay', help = 'name of primer assay', dest = 'assay', type = str, required = True)
+#     in_silico_pcr_parser.add_argument('-i', '--input', help = 'input filename', dest = 'input', type = str, required = True)
+#     in_silico_pcr_parser.add_argument('-e', '--error', help = 'number of errors allowed in primer-binding site. Default = 4.5', dest = 'error', type = str, default = '4.5')
+
+#     ref_database_parser = subparser.add_parser('tax_assign', description = 'creating the reference database with taxonomic information')
+#     ref_database_parser.set_defaults(func = tax_assign)
+#     ref_database_parser.add_argument('-i', '--input', help = 'input file containing the curated fasta sequences after in silico PCR', dest = 'input', type = str, required = True)
+#     ref_database_parser.add_argument('-t', '--taxid_table', help = 'input taxid table containing the taxid for each accession', dest = 'taxid_table', type = str, required = True)
+#     ref_database_parser.add_argument('-o', '--output', help = 'curated reference database output file', dest = 'output', type = str, required = True)
+#     ref_database_parser.add_argument('-e', '--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str, required = True)
+
+#     dereplication_parser = subparser.add_parser('dereplicate', description = 'dereplicating the database')
+#     dereplication_parser.set_defaults(func = dereplicate)
+#     dereplication_parser.add_argument('-i', '--input', help = 'filename of the curated reference database', dest = 'input', type = str, required = True)
+#     dereplication_parser.add_argument('-o', '--output', help = 'filename of the dereplicated curated reference database', dest = 'output', type = str, required = True)
+
+#     seq_cleanup_parser = subparser.add_parser('seq_cleanup', description = 'cleaning database on sequence parameters')
+#     seq_cleanup_parser.set_defaults(func = seq_cleanup)
+#     seq_cleanup_parser.add_argument('-min', '--minlen', help = 'minimum sequence length to be retained in the database. Default = 100', dest = 'minlen', type = str, default = '100')
+#     seq_cleanup_parser.add_argument('-max', '--maxlen', help = 'maximum sequence length to be retained in the database. Default = 500', dest = 'maxlen', type = str, default = '500')
+#     seq_cleanup_parser.add_argument('-n', '--maxns', help = 'maximum number of ambiguous bases allowed in the sequence. Default = 0', dest = 'maxns', type = str, default = '0')
+#     seq_cleanup_parser.add_argument('-i', '--input', help = 'input file name', dest = 'input', type = str, required = True)
+#     seq_cleanup_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
+#     seq_cleanup_parser.add_argument('-d', '--discard', help = 'file name of discarded sequences', dest = 'discard', type = str, default = 'no')
+
+#     header_cleanup_parser = subparser.add_parser('header_cleanup', description = 'cleaning database on header info')
+#     header_cleanup_parser.set_defaults(func = header_cleanup)
+#     header_cleanup_parser.add_argument('-i', '--input', help = 'input file name', dest = 'input', type = str, required = True)
+#     header_cleanup_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
+#     header_cleanup_parser.add_argument('-e', '--enviro', help = 'discard environmental sequences from the dataset. yes/no', dest = 'env', type = str, default = 'no')
+#     header_cleanup_parser.add_argument('-s', '--species', help = 'discard sequences for which the species name is unspecified. yes/no', dest = 'spec', type = str, default = 'no')
+#     header_cleanup_parser.add_argument('-n', '--nans', help = 'discard sequences with N number of unspecified taxonomic levels', dest = 'nans', type = str, default = 'nans')
+
+#     phylo_parser = subparser.add_parser('phylo_build', description = 'generating phylogenetic trees for species of interest')
+#     phylo_parser.set_defaults(func = phylo)
+#     phylo_parser.add_argument('-s', '--species', help = 'text file containing list of species separated by newlines', dest = 'species', type = str, required = True)
+#     phylo_parser.add_argument('-db', '--database', help = 'curated reference database', dest = 'database', type = str, required = True)
+#     phylo_parser.add_argument('-e', '--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str, required = True)
+#     phylo_parser.add_argument('-o', '--output', help = 'filename for output table', dest = 'output', type = str, required = True)
+
+    args = parser.parse_args()
+    args.func(args)
+
+if __name__ == '__main__':
+    main()
