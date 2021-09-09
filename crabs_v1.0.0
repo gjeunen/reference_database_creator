@@ -197,28 +197,35 @@ def insilico_pcr(args):
     print('found primers in {} sequences'.format(count_trimmed_init))
 
     ## run vsearch to reverse complement untrimmed sequences
-    count_untrimmed_init = len(list(SeqIO.parse(UNTRIMMED_INIT, 'fasta')))
-    print('reverse complementing {} untrimmed sequences'.format(count_untrimmed_init))
-    cmnd_vsearch_revcomp = ['vsearch', '--fastx_revcomp', UNTRIMMED_INIT, '--fastaout', REVCOMP_UNTRIMMED_INIT, '--quiet']
-    sp.call(cmnd_vsearch_revcomp)
+    if count_trimmed_init < count_init:
+        count_untrimmed_init = len(list(SeqIO.parse(UNTRIMMED_INIT, 'fasta')))
+        print('reverse complementing {} untrimmed sequences'.format(count_untrimmed_init))
+        cmnd_vsearch_revcomp = ['vsearch', '--fastx_revcomp', UNTRIMMED_INIT, '--fastaout', REVCOMP_UNTRIMMED_INIT, '--quiet']
+        sp.call(cmnd_vsearch_revcomp)
 
-    ## run cutadapt on reverse complemented untrimmed sequences
-    print('running in silico PCR on {} reverse complemented untrimmed sequences'.format(count_untrimmed_init))
-    cmnd_cutadapt_2 = ['cutadapt', '-g', ADAPTER, '-o', TRIMMED_REVCOMP, REVCOMP_UNTRIMMED_INIT, '--untrimmed-output', UNTRIMMED_REVCOMP, '--no-indels', '-e', ERROR, '--overlap', OVERLAP, '--quiet']
-    sp.call(cmnd_cutadapt_2)
-    count_trimmed_second = len(list(SeqIO.parse(TRIMMED_REVCOMP, 'fasta')))
-    print('found primers in {} sequences\n'.format(count_trimmed_second))
+        ## run cutadapt on reverse complemented untrimmed sequences
+        print('running in silico PCR on {} reverse complemented untrimmed sequences'.format(count_untrimmed_init))
+        cmnd_cutadapt_2 = ['cutadapt', '-g', ADAPTER, '-o', TRIMMED_REVCOMP, REVCOMP_UNTRIMMED_INIT, '--untrimmed-output', UNTRIMMED_REVCOMP, '--no-indels', '-e', ERROR, '--overlap', OVERLAP, '--quiet']
+        sp.call(cmnd_cutadapt_2)
+        count_trimmed_second = len(list(SeqIO.parse(TRIMMED_REVCOMP, 'fasta')))
+        print('found primers in {} sequences\n'.format(count_trimmed_second))
 
-    ## concatenate both trimmed files
-    with open(OUTPUT, 'wb') as wfd:
-        for f in [TRIMMED_INIT, TRIMMED_REVCOMP]:
-            with open(f, 'rb') as fd:
-                shutil.copyfileobj(fd, wfd)
+        ## concatenate both trimmed files
+        with open(OUTPUT, 'wb') as wfd:
+            for f in [TRIMMED_INIT, TRIMMED_REVCOMP]:
+                with open(f, 'rb') as fd:
+                    shutil.copyfileobj(fd, wfd)
+        
+        ## remove intermediary files
+        files = [TRIMMED_INIT, UNTRIMMED_INIT, REVCOMP_UNTRIMMED_INIT, TRIMMED_REVCOMP, UNTRIMMED_REVCOMP]
+        for file in files:
+            os.remove(file)
     
-    ## remove intermediary files
-    files = [TRIMMED_INIT, UNTRIMMED_INIT, REVCOMP_UNTRIMMED_INIT, TRIMMED_REVCOMP, UNTRIMMED_REVCOMP]
-    for file in files:
-        os.remove(file)
+    ## don't run reverse complement when initial in silico PCR trims all sequences
+    else:
+        print('all sequences trimmed, no reverse complement step\n')
+        results = sp.run(['mv', TRIMMED_INIT, OUTPUT])
+        os.remove(UNTRIMMED_INIT)
 
 ################################################
 ########## MODULE TAXONOMY ASSIGNMENT ##########
