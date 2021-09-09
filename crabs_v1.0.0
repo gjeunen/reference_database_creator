@@ -6,6 +6,9 @@
 import argparse
 import subprocess as sp
 import os
+import shutil
+from Bio import SeqIO
+from Bio.Seq import Seq
 from function.module_1 import esearch_fasta
 from function.module_1 import efetch_seqs_from_webenv
 from function.module_1 import ncbi_formatting
@@ -109,7 +112,60 @@ def db_download(args):
 ############# MODULE IN SILICO PCR #############
 ################################################
 
+## function: in silico PCR
+def ispcr(args):
+    FWD = args.fwd
+    REV = args.rev
+    ASSAY = args.assay
+    INPUT = args.input
+    ERROR = args.error
 
+    ## reverse complement reverse primer sequence
+    REV_DNA = Seq(REV)
+    REV_CORRECT = str(REV_DNA.reverse_complement())
+
+    ## setting variable names using the info from user input
+    TRIMMED_INIT = 'init_trimmed_' + ASSAY + '_' + INPUT
+    UNTRIMMED_INIT = 'init_untrimmed_' + ASSAY + '_' + INPUT
+    REVCOMP_UNTRIMMED_INIT = 'revcomp_' + UNTRIMMED_INIT
+    TRIMMED_REVCOMP = 'revcomp_' + TRIMMED_INIT
+    UNTRIMMED_REVCOMP = 'untrimmed_' + REVCOMP_UNTRIMMED_INIT
+    FINAL_TRIMMED = 'final_trimmed_' + ASSAY + '_' + INPUT
+
+    OVERLAP = str(min([len(FWD), len(REV_CORRECT)]))
+    ADAPTER = FWD + '...' + REV_CORRECT
+
+    ## run cutadapt on downloaded fasta file
+    count_init = len(list(SeqIO.parse(INPUT, 'fasta')))
+    print('\nrunning in silico PCR on fasta file containing {} sequences'.format(count_init))
+    cmnd_cutadapt_1 = ['cutadapt', '-g', ADAPTER, '-o', TRIMMED_INIT, INPUT, '--untrimmed-output', UNTRIMMED_INIT, '--no-indels', '-e', ERROR, '--overlap', OVERLAP, '--quiet']
+    sp.call(cmnd_cutadapt_1)
+    count_trimmed_init = len(list(SeqIO.parse(TRIMMED_INIT, 'fasta')))
+    print('\nfound primers in {} sequences'.format(count_trimmed_init))
+
+    ## run vsearch to reverse complement untrimmed sequences
+    count_untrimmed_init = len(list(SeqIO.parse(UNTRIMMED_INIT, 'fasta')))
+    print('\nreverse complementing {} untrimmed sequences'.format(count_untrimmed_init))
+    cmnd_vsearch_revcomp = ['vsearch', '--fastx_revcomp', UNTRIMMED_INIT, '--fastaout', REVCOMP_UNTRIMMED_INIT, '--quiet']
+    sp.call(cmnd_vsearch_revcomp)
+
+    ## run cutadapt on reverse complemented untrimmed sequences
+    print('\nrunning in silico PCR on {} reverse complemented untrimmed sequences'.format(count_untrimmed_init))
+    cmnd_cutadapt_2 = ['cutadapt', '-g', ADAPTER, '-o', TRIMMED_REVCOMP, REVCOMP_UNTRIMMED_INIT, '--untrimmed-output', UNTRIMMED_REVCOMP, '--no-indels', '-e', ERROR, '--overlap', OVERLAP, '--quiet']
+    sp.call(cmnd_cutadapt_2)
+    count_trimmed_second = len(list(SeqIO.parse(TRIMMED_REVCOMP, 'fasta')))
+    print('\nfound primers in {} sequences'.format(count_trimmed_second))
+
+    ## concatenate both trimmed files
+    with open(FINAL_TRIMMED, 'wb') as wfd:
+        for f in [TRIMMED_INIT, TRIMMED_REVCOMP]:
+            with open(f, 'rb') as fd:
+                shutil.copyfileobj(fd, wfd)
+    
+    ## remove intermediary files
+    files = [TRIMMED_INIT, UNTRIMMED_INIT, REVCOMP_UNTRIMMED_INIT, TRIMMED_REVCOMP, UNTRIMMED_REVCOMP]
+    for file in files:
+        os.remove(file)
 
 ################################################
 ########## MODULE TAXONOMY ASSIGNMENT ##########
@@ -165,13 +221,13 @@ def main():
 #     db_merge_parser.add_argument('-f', '--format', help = 'data format to be merged, database (db) or tax ID table (taxid)', dest = 'format', type = str, required = True)
 #     db_merge_parser.add_argument('-d', '--discard', help = 'file name for discarded duplicate accession numbers', dest = 'discard', type = str)
 
-#     in_silico_pcr_parser = subparser.add_parser('ispcr', description = 'curating the downloaded reference sequences with an in silico PCR')
-#     in_silico_pcr_parser.set_defaults(func = ispcr)
-#     in_silico_pcr_parser.add_argument('-f', '--fwd', help = 'forward primer sequence in 5-3 direction', dest = 'fwd', type = str, required = True)
-#     in_silico_pcr_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest = 'rev', type = str, required = True)
-#     in_silico_pcr_parser.add_argument('-a', '--assay', help = 'name of primer assay', dest = 'assay', type = str, required = True)
-#     in_silico_pcr_parser.add_argument('-i', '--input', help = 'input filename', dest = 'input', type = str, required = True)
-#     in_silico_pcr_parser.add_argument('-e', '--error', help = 'number of errors allowed in primer-binding site. Default = 4.5', dest = 'error', type = str, default = '4.5')
+    in_silico_pcr_parser = subparser.add_parser('ispcr', description = 'curating the downloaded reference sequences with an in silico PCR')
+    in_silico_pcr_parser.set_defaults(func = ispcr)
+    in_silico_pcr_parser.add_argument('-f', '--fwd', help = 'forward primer sequence in 5-3 direction', dest = 'fwd', type = str, required = True)
+    in_silico_pcr_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest = 'rev', type = str, required = True)
+    in_silico_pcr_parser.add_argument('-a', '--assay', help = 'name of primer assay', dest = 'assay', type = str, required = True)
+    in_silico_pcr_parser.add_argument('-i', '--input', help = 'input filename', dest = 'input', type = str, required = True)
+    in_silico_pcr_parser.add_argument('-e', '--error', help = 'number of errors allowed in primer-binding site. Default = 4.5', dest = 'error', type = str, default = '4.5')
 
 #     ref_database_parser = subparser.add_parser('tax_assign', description = 'creating the reference database with taxonomic information')
 #     ref_database_parser.set_defaults(func = tax_assign)
