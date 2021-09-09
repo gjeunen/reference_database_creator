@@ -291,3 +291,49 @@ def bold_format(f_out):
     os.remove('CRABS_bold_download.fasta')
 
     return numseq
+
+
+## function: import
+def check_accession(file_in, file_out, delimiter):
+    mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']
+    newfile = []
+    header_info = {}
+    discarded = []
+    for record in SeqIO.parse(file_in, 'fasta'):
+        acc = str(record.description.split(delimiter)[0])
+        if not any(mistake in acc for mistake in mistakes):
+            header_info[acc] = record.description
+            record.description = acc 
+            record.id = record.description
+            newfile.append(record)
+        else:
+            discarded.append(acc)
+    newfile_db = [FastaIO.as_fasta_2line(record) for record in newfile]
+    with open(file_out, 'w') as fout:
+        for item in newfile_db:
+            fout.write(item)
+    header_file = file_out + '.taxid_table.tsv'
+    with open(header_file, 'w') as f_out:
+        for k, v in header_info.items():
+            f_out.write(k + '\t' + v + '\n')
+    numseq = len(list(SeqIO.parse(file_in, 'fasta')))
+    print(f'found {numseq} sequences in {file_in}')
+    print(f'found {len(newfile)} with correct format')
+    print(f'found {len(discarded)} incorrectly formatted accession numbers')
+
+    return discarded
+    
+def append_primer_seqs(file_in, fwd, rev):
+    rev_primer = str(Seq(rev).reverse_complement())
+    newfile = []
+    for record in SeqIO.parse(file_in, 'fasta'):
+        record.seq = fwd + record.seq + rev_primer
+        newfile.append(record)
+    newfile_db = [FastaIO.as_fasta_2line(record) for record in newfile]
+    with open('mid.fasta', 'w') as fout:
+        for item in newfile_db:
+            fout.write(item)
+    results = sp.run(['mv', 'mid.fasta', file_in])
+    
+    return len(newfile)
+    

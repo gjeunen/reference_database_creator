@@ -19,6 +19,8 @@ from function.module_1 import embl_fasta_format
 from function.module_1 import embl_crabs_format
 from function.module_1 import bold_download
 from function.module_1 import bold_format
+from function.module_1 import check_accession
+from function.module_1 import append_primer_seqs
 
 ################################################
 ########### MODULE DATABASE DOWNLOAD ###########
@@ -102,7 +104,50 @@ def db_download(args):
             print('\nnot all parameters have an input value\n')
 
 ## function: import existing or custom database
+def db_import(args):
+    INPUT = args.input
+    HEADER = args.header
+    OUTPUT = args.output
+    FWD = args.fwd
+    REV = args.rev
+    DELIM = args.delim
 
+    ## process file with accession number in header
+    if HEADER == 'accession':
+        if all(v is not None for v in [INPUT, OUTPUT, DELIM]):
+            print(f'\nchecking correct formatting of accession numbers in {INPUT}')
+            incorrect_accession = check_accession(INPUT, OUTPUT, DELIM)
+            if len(incorrect_accession) != 0:
+                print('found incorrectly formatted accession numbers, please check file: "incorrect_accession_numbers.txt"')
+                with open('incorrect_accession_numbers.txt', 'w') as fout:
+                    for item in incorrect_accession:
+                        fout.write(item + '\n')
+            if all(v is not None for v in [FWD, REV]):
+                print(f'appending primer sequences to {OUTPUT}')
+                numseq = append_primer_seqs(OUTPUT, FWD, REV)
+                print(f'added primers to {numseq} sequences in {OUTPUT}\n')
+            else:
+                print('')
+        else:
+            print('\nnot all parameters have an input value\n')
+
+
+    ## process file with species info in header
+    elif HEADER == 'species':
+        if all(v is not None for v in [INPUT, OUTPUT, DELIM]):
+            print(f'generating new sequence headers for {INPUT}')
+
+            if all(v is not None for v in [FWD, REV]):
+                print(f'appending primer sequences to {OUTPUT}')
+                numseq = append_primer_seqs(OUTPUT, FWD, REV)
+                print(f'added primers to {numseq} sequences in {OUTPUT}\n')
+            else:
+                print('')
+        else:
+            print('\nnot all parameters have an input value\n')
+
+    else:
+        print('\nplease specify header information: "accession" and "species"\n')
 
 
 ## function: merge multiple databases
@@ -203,15 +248,14 @@ def main():
     db_download_parser.add_argument('-e', '--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str)
     db_download_parser.add_argument('-b', '--batchsize', help = 'number of sequences downloaded from NCBI per iteration. Default = 5000', dest = 'batchsize', type = int, default = 5000)
 
-#     db_import_parser = subparser.add_parser('db_import', description = 'import existing or curated database')
-#     db_import_parser.set_defaults(func = db_import)
-#     db_import_parser.add_argument('-i', '--input', help = 'input database filename', dest = 'input', type = str, required = True)
-#     db_import_parser.add_argument('-s', '--seq_header', help = 'information provided in sequence header: "accession" or "species"', dest = 'header', type = str, required = True)
-#     db_import_parser.add_argument('-o', '--output', help = 'output file name option', dest = 'output', type = str, required = True)
-#     db_import_parser.add_argument('-e', '--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str, required = True)
-#     db_import_parser.add_argument('-f', '--fwd', help = 'forward primer sequence in 5-3 direction', dest = 'fwd', type = str)
-#     db_import_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest = 'rev', type = str)
-
+    db_import_parser = subparser.add_parser('db_import', description = 'import existing or curated database')
+    db_import_parser.set_defaults(func = db_import)
+    db_import_parser.add_argument('-i', '--input', help = 'input database filename', dest = 'input', type = str, required = True)
+    db_import_parser.add_argument('-s', '--seq_header', help = 'information provided in sequence header: "accession" or "species"', dest = 'header', type = str, required = True)
+    db_import_parser.add_argument('-o', '--output', help = 'output file name option', dest = 'output', type = str, required = True)
+    db_import_parser.add_argument('-f', '--fwd', help = 'forward primer sequence in 5-3 direction', dest = 'fwd', type = str)
+    db_import_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest = 'rev', type = str)
+    db_import_parser.add_argument('-d', '--delim', help = 'delimiter specifying species or accession', dest = 'delim', type = str, required = True)
 
 #     db_merge_parser = subparser.add_parser('db_merge', description = 'merge multiple databases')
 #     db_merge_parser.set_defaults(func = db_merge)
