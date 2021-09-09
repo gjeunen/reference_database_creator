@@ -265,7 +265,7 @@ def bold_format(f_out):
                 else:
                     discarded.append(record)
             else:
-                spec = str(record.description.split('|')[1])
+                spec = str(record.description.split('|')[1].replace(' ', '_'))
                 acc_crab = 'CRABS:' + spec 
                 header_info[acc_crab] = record.description
                 record.description = acc_crab
@@ -337,3 +337,22 @@ def append_primer_seqs(file_in, fwd, rev):
     
     return len(newfile)
     
+def generate_header(file_in, file_out, delimiter):
+    header_info = {}
+    newfile = []
+    for record in SeqIO.parse(file_in, 'fasta'):
+        spec = 'CRABS:' + str(record.description.split(delimiter)[0].replace(' ', '_'))
+        header_info[spec] = record.description
+        record.description = spec
+        record.id = record.description
+        newfile.append(record)
+    newfile_db = [FastaIO.as_fasta_2line(record) for record in newfile]
+    with open(file_out, 'w') as fout:
+        for item in newfile_db:
+            fout.write(item)
+    header_file = file_out + '.taxid_table.tsv'
+    with open(header_file, 'w') as f_out:
+        for k, v in header_info.items():
+            f_out.write(k + '\t' + v + '\n')
+            
+    return len(newfile)

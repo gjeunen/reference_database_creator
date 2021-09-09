@@ -9,18 +9,8 @@ import os
 import shutil
 from Bio import SeqIO
 from Bio.Seq import Seq
-from function.module_1 import esearch_fasta
-from function.module_1 import efetch_seqs_from_webenv
-from function.module_1 import ncbi_formatting
-from function.module_1 import mitofish_download
-from function.module_1 import mitofish_format
-from function.module_1 import embl_download
-from function.module_1 import embl_fasta_format
-from function.module_1 import embl_crabs_format
-from function.module_1 import bold_download
-from function.module_1 import bold_format
-from function.module_1 import check_accession
-from function.module_1 import append_primer_seqs
+from function.module_1 import esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format
+from function.module_1 import embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header
 
 ################################################
 ########### MODULE DATABASE DOWNLOAD ###########
@@ -131,12 +121,12 @@ def db_import(args):
         else:
             print('\nnot all parameters have an input value\n')
 
-
     ## process file with species info in header
     elif HEADER == 'species':
         if all(v is not None for v in [INPUT, OUTPUT, DELIM]):
-            print(f'generating new sequence headers for {INPUT}')
-
+            print(f'\ngenerating new sequence headers for {INPUT}')
+            num_header = generate_header(INPUT, OUTPUT, DELIM)
+            print(f'generated {num_header} headers for {OUTPUT}')
             if all(v is not None for v in [FWD, REV]):
                 print(f'appending primer sequences to {OUTPUT}')
                 numseq = append_primer_seqs(OUTPUT, FWD, REV)
@@ -145,10 +135,8 @@ def db_import(args):
                 print('')
         else:
             print('\nnot all parameters have an input value\n')
-
     else:
         print('\nplease specify header information: "accession" and "species"\n')
-
 
 ## function: merge multiple databases
 
