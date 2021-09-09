@@ -265,7 +265,7 @@ def bold_format(f_out):
                 else:
                     discarded.append(record)
             else:
-                spec = record.description.split('|')[1]
+                spec = str(record.description.split('|')[1])
                 acc_crab = 'CRABS:' + spec 
                 header_info[acc_crab] = record.description
                 record.description = acc_crab

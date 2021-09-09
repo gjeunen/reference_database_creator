@@ -98,8 +98,6 @@ def db_download(args):
         else:
             print('\nnot all parameters have an input value\n')
 
-            
-
 ## function: import existing or custom database
 
 
