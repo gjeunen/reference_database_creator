@@ -354,5 +354,23 @@ def generate_header(file_in, file_out, delimiter):
     with open(header_file, 'w') as f_out:
         for k, v in header_info.items():
             f_out.write(k + '\t' + v + '\n')
-            
+
     return len(newfile)
+
+def merge_databases(file_in, file_out):
+    seqdict = {}
+    for file in file_in:
+        num_file = len(list(SeqIO.parse(file, 'fasta')))
+        print(f'found {num_file} sequences in {file}')
+        for record in SeqIO.parse(file, 'fasta'):
+            id = '>' + record.id.split('.')[0] + '\n'
+            seq = str(record.seq) + '\n'
+            if id not in seqdict:
+                seqdict[id] = seq
+    with open(file_out, 'w') as fout:
+        for k, v in seqdict.items():
+            fout.write(k)
+            fout.write(v)
+    num_seq = len(list(SeqIO.parse(file_out, 'fasta')))
+
+    return num_seq

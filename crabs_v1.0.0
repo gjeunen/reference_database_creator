@@ -10,7 +10,7 @@ import shutil
 from Bio import SeqIO
 from Bio.Seq import Seq
 from function.module_1 import esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format
-from function.module_1 import embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header
+from function.module_1 import embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases
 
 ################################################
 ########### MODULE DATABASE DOWNLOAD ###########
@@ -139,6 +139,26 @@ def db_import(args):
         print('\nplease specify header information: "accession" and "species"\n')
 
 ## function: merge multiple databases
+def db_merge(args):
+    INPUT = args.input
+    UNIQ = args.uniq
+    OUTPUT = args.output
+
+    if UNIQ != '':
+        print('\nmerging all fasta files and discarding duplicate sequence headers')
+        num_uniq = merge_databases(INPUT, OUTPUT)
+        print(f'written {num_uniq} sequences to {OUTPUT}\n')
+    else:
+        print('\nmerging all fasta files and keeping duplicate sequence headers')
+        with open(OUTPUT, 'w') as fout:
+            for file in INPUT:
+                num = len(list(SeqIO.parse(file, 'fasta')))
+                print(f'found {num} sequences in {file}')
+                with open(file, 'r') as fin:
+                    for line in fin:
+                        fout.write(line)
+        num = len(list(SeqIO.parse(OUTPUT, 'fasta')))
+        print(f'written {num} sequences to {OUTPUT}\n')
 
 
 ################################################
@@ -245,14 +265,12 @@ def main():
     db_import_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest = 'rev', type = str)
     db_import_parser.add_argument('-d', '--delim', help = 'delimiter specifying species or accession', dest = 'delim', type = str, required = True)
 
-#     db_merge_parser = subparser.add_parser('db_merge', description = 'merge multiple databases')
-#     db_merge_parser.set_defaults(func = db_merge)
-#     db_merge_parser.add_argument('-i', '--input', nargs = '+', help = 'list of files to be merged', dest = 'input', required = True)
-#     db_merge_parser.add_argument('-u', '--uniq', help = 'keep only unique accession numbers', dest = 'uniq', type = str, default = '')
-#     db_merge_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
-#     db_merge_parser.add_argument('-f', '--format', help = 'data format to be merged, database (db) or tax ID table (taxid)', dest = 'format', type = str, required = True)
-#     db_merge_parser.add_argument('-d', '--discard', help = 'file name for discarded duplicate accession numbers', dest = 'discard', type = str)
-
+    db_merge_parser = subparser.add_parser('db_merge', description = 'merge multiple databases')
+    db_merge_parser.set_defaults(func = db_merge)
+    db_merge_parser.add_argument('-i', '--input', nargs = '+', help = 'list of files to be merged', dest = 'input', required = True)
+    db_merge_parser.add_argument('-u', '--uniq', help = 'keep only unique accession numbers', dest = 'uniq', type = str, default = '')
+    db_merge_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
+    
     in_silico_pcr_parser = subparser.add_parser('insilico_pcr', description = 'curating the downloaded reference sequences with an in silico PCR')
     in_silico_pcr_parser.set_defaults(func = insilico_pcr)
     in_silico_pcr_parser.add_argument('-f', '--fwd', help = 'forward primer sequence in 5-3 direction', dest = 'fwd', type = str, required = True)
