@@ -270,6 +270,7 @@ def bold_format(f_out):
                 header_info[acc_crab] = record.description
                 record.description = acc_crab
                 record.id = record.description
+                record.name = record.description
                 newfile.append(record)
     newfile_db = [FastaIO.as_fasta_2line(record) for record in newfile]
     with open(f_out, 'w') as fout:
