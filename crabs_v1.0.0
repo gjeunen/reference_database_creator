@@ -291,7 +291,26 @@ def dereplicate(args):
                 file_out.write(line)
 
     ## dereplicate single species (one sequence per species)
-
+    if METHOD == 'single_species':
+        print(f'\ndereplicating {INPUT}, only keeping a single sequence per species')
+        uniq_spec = {}
+        uniq_line = []
+        count = 0
+        added = 0
+        with open(INPUT, 'r') as file_in:
+            for line in file_in:
+                count = count + 1
+                lines = line.rstrip('\n')
+                species = lines.split('\t')[8].split(',')[2]
+                if species not in uniq_spec:
+                    added = added + 1
+                    uniq_spec[species] = species 
+                    uniq_line.append(line)
+        print(f'found {count} sequences in {INPUT}')
+        print(f'written {added} sequences to {OUTPUT}\n')
+        with open(OUTPUT, 'w') as file_out:
+            for line in uniq_line:
+                file_out.write(line)
 
     ## dereplicate unique species (all unique sequences per species)
 
