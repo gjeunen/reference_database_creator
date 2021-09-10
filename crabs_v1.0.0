@@ -341,7 +341,8 @@ def dereplicate(args):
                     file_out.write(i + '\n')
 
     ## dereplicate concensus species (generate concensus sequence for each species)
-
+    elif METHOD == 'consensus':
+        print('still to add...')
 
     ## unknown method specified
     else:
