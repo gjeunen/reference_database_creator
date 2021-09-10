@@ -348,7 +348,6 @@ def dereplicate(args):
     else:
         print('\nplease specify one of the accepted dereplication methods: "strict", "single_species", "uniq_species"\n')
 
-
 ## function: sequence cleanup
 
 
