@@ -11,6 +11,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from function.module_1 import esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format
 from function.module_1 import embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases
+from function.module_3 import tax2dict, get_accession, acc_to_dict, get_lineage, final_lineage_comb
 
 ################################################
 ########### MODULE DATABASE DOWNLOAD ###########
@@ -230,7 +231,34 @@ def insilico_pcr(args):
 ################################################
 ########## MODULE TAXONOMY ASSIGNMENT ##########
 ################################################
+## function: get taxonomic lineage for each accession number
+def assign_tax(args):
+    INPUT = args.input
+    OUTPUT = args.output
+    ACC2TAX = args.acc2tax
+    TAXID = args.taxid
+    NAME = args.name
 
+    ## process initial files
+    acc2tax, taxid, name = tax2dict(ACC2TAX, TAXID, NAME)
+    print(f'processed {len(acc2tax)} entries in {ACC2TAX}')
+    print(f'processed {len(taxid)} entries in {TAXID}')
+    print(f'processed {len(name)} entries in {NAME}')
+    print(f'retrieving accession numbers from {INPUT}')
+    accession = get_accession(INPUT)
+    print(f'found {len(accession)} accession numbers in {INPUT}')
+
+    ## get taxonomic lineage
+    print(f'assigning a tax ID number to {len(accession)} accession numbers from {INPUT}')
+    acc_taxid_dict, taxid_list = acc_to_dict(accession, acc2tax)
+    print(f'{len(acc_taxid_dict)} accession numbers resulted in {len(taxid_list)} unique tax ID numbers')
+    print(f'generating taxonomic lineages for {len(taxid_list)} tax ID numbers')
+    lineage = get_lineage(taxid_list, taxid, name)
+    print(f'assigning a taxonomic lineage to {len(accession)} accession numbers')
+    final_lineage = final_lineage_comb(acc_taxid_dict, lineage, INPUT, OUTPUT)
+    print(f'written {len(final_lineage)} entries to {OUTPUT}')
+
+    ## format the taxonomic lineage
 
 
 ################################################
@@ -287,13 +315,14 @@ def main():
     in_silico_pcr_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
     in_silico_pcr_parser.add_argument('-e', '--error', help = 'number of errors allowed in primer-binding site. Default = 4.5', dest = 'error', type = str, default = '4.5')
 
-#     ref_database_parser = subparser.add_parser('tax_assign', description = 'creating the reference database with taxonomic information')
-#     ref_database_parser.set_defaults(func = tax_assign)
-#     ref_database_parser.add_argument('-i', '--input', help = 'input file containing the curated fasta sequences after in silico PCR', dest = 'input', type = str, required = True)
-#     ref_database_parser.add_argument('-t', '--taxid_table', help = 'input taxid table containing the taxid for each accession', dest = 'taxid_table', type = str, required = True)
-#     ref_database_parser.add_argument('-o', '--output', help = 'curated reference database output file', dest = 'output', type = str, required = True)
-#     ref_database_parser.add_argument('-e', '--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str, required = True)
-
+    ref_database_parser = subparser.add_parser('assign_tax', description = 'creating the reference database with taxonomic information')
+    ref_database_parser.set_defaults(func = assign_tax)
+    ref_database_parser.add_argument('-i', '--input', help = 'input file containing the curated fasta sequences after in silico PCR', dest = 'input', type = str, required = True)
+    ref_database_parser.add_argument('-o', '--output', help = 'curated reference database output file', dest = 'output', type = str, required = True)
+    ref_database_parser.add_argument('-a', '--acc2tax', help = 'accession to taxid file name', dest = 'acc2tax', type = str, required = True)
+    ref_database_parser.add_argument('-t', '--taxid', help = 'taxid file name', dest = 'taxid', type = str, required = True)
+    ref_database_parser.add_argument('-n', '--name', help = 'phylogeny file name', dest = 'name', type = str, required = True)
+    
 #     dereplication_parser = subparser.add_parser('dereplicate', description = 'dereplicating the database')
 #     dereplication_parser.set_defaults(func = dereplicate)
 #     dereplication_parser.add_argument('-i', '--input', help = 'filename of the curated reference database', dest = 'input', type = str, required = True)
