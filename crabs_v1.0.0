@@ -485,12 +485,6 @@ def main():
     ref_database_parser.add_argument('-a', '--acc2tax', help = 'accession to taxid file name', dest = 'acc2tax', type = str, required = True)
     ref_database_parser.add_argument('-t', '--taxid', help = 'taxid file name', dest = 'taxid', type = str, required = True)
     ref_database_parser.add_argument('-n', '--name', help = 'phylogeny file name', dest = 'name', type = str, required = True)
-    
-    format_database_parser = subparser.add_parser('tax_format', description = 'formatting the database to various formats')
-    format_database_parser.set_defaults(func = tax_format)
-    format_database_parser.add_argument('-i', '--input', help = 'input file name', dest = 'input', type = str, required = True)
-    format_database_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
-    format_database_parser.add_argument('-f', '--format', help = 'process database to format: "sintax", "rdp", "qiif", "qiiz", "dad", "dads", "idt"', dest = 'format', type = str, required = True)
 
     dereplication_parser = subparser.add_parser('dereplicate', description = 'dereplicating the database')
     dereplication_parser.set_defaults(func = dereplicate)
@@ -514,6 +508,12 @@ def main():
 #     header_cleanup_parser.add_argument('-e', '--enviro', help = 'discard environmental sequences from the dataset. yes/no', dest = 'env', type = str, default = 'no')
 #     header_cleanup_parser.add_argument('-s', '--species', help = 'discard sequences for which the species name is unspecified. yes/no', dest = 'spec', type = str, default = 'no')
 #     header_cleanup_parser.add_argument('-n', '--nans', help = 'discard sequences with N number of unspecified taxonomic levels', dest = 'nans', type = str, default = 'nans')
+    
+    format_database_parser = subparser.add_parser('tax_format', description = 'formatting the database to various formats')
+    format_database_parser.set_defaults(func = tax_format)
+    format_database_parser.add_argument('-i', '--input', help = 'input file name', dest = 'input', type = str, required = True)
+    format_database_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
+    format_database_parser.add_argument('-f', '--format', help = 'process database to format: "sintax", "rdp", "qiif", "qiiz", "dad", "dads", "idt"', dest = 'format', type = str, required = True)
 
 #     phylo_parser = subparser.add_parser('phylo_build', description = 'generating phylogenetic trees for species of interest')
 #     phylo_parser.set_defaults(func = phylo)
