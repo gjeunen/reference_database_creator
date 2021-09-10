@@ -51,9 +51,9 @@ def acc_to_dict(acc_list, acc2taxid_dict):
         taxlist.append(acc2taxid_dict[item])
     taxlist = list(dict.fromkeys(taxlist))
 
-    with open('acctaxid_test.txt', 'w') as fout:
-        for k, v in acc_taxid_dict.items():
-            fout.write(k + '\t' + v + '\n')
+    # with open('acctaxid_test.txt', 'w') as fout:
+    #     for k, v in acc_taxid_dict.items():
+    #         fout.write(k + '\t' + v + '\n')
 
     return acc_taxid_dict, taxlist
 
@@ -84,13 +84,13 @@ def get_lineage(taxlist, taxid_dict, names_dict):
                 true_lineage[ktax].append([k, v, names_dict[v]])
             else:
                 true_lineage[ktax].append([k, v, 'nan'])
-    with open('save.txt', 'w') as fout:
-        for k, v in true_lineage.items():
-            fout.write(k)
-            for i in v:
-                joined_str = ','.join(i)
-                fout.write('\t' + joined_str)
-            fout.write('\n')
+    # with open('save.txt', 'w') as fout:
+    #     for k, v in true_lineage.items():
+    #         fout.write(k)
+    #         for i in v:
+    #             joined_str = ','.join(i)
+    #             fout.write('\t' + joined_str)
+    #         fout.write('\n')
     
     return true_lineage
 
