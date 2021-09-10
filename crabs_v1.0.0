@@ -262,6 +262,46 @@ def assign_tax(args):
 ########### MODULE DATABASE CLEAN-UP ###########
 ################################################
 
+## function: dereplicating the database
+def dereplicate(args):
+    INPUT = args.input
+    OUTPUT = args.output
+    METHOD = args.method
+
+    ## dereplicate strict (only unique sequences)
+    if METHOD == 'strict':
+        print(f'\nstrict dereplication of {INPUT}, only keeping unique sequences')
+        uniq_seqs = {}
+        uniq_line = []
+        count = 0
+        added = 0
+        with open(INPUT, 'r') as file_in:
+            for line in file_in:
+                count = count + 1
+                lines = line.rstrip('\n')
+                seq = lines.split('\t')[9]
+                if seq not in uniq_seqs:
+                    added = added + 1
+                    uniq_seqs[seq] = seq
+                    uniq_line.append(line)
+        print(f'found {count} sequences in {INPUT}')
+        print(f'written {added} sequences to {OUTPUT}\n')
+        with open(OUTPUT, 'w') as file_out:
+            for line in uniq_line:
+                file_out.write(line)
+
+    ## dereplicate single species (one sequence per species)
+
+
+    ## dereplicate unique species (all unique sequences per species)
+
+
+## function: sequence cleanup
+
+
+
+
+## function: header cleanup
 
 
 
@@ -341,10 +381,9 @@ def tax_format(args):
                     idt = '>' + line.split('\t')[2].split(',')[2] + ';' + line.split('\t')[3].split(',')[2] + ';' + line.split('\t')[4].split(',')[2] + ';' + line.split('\t')[5].split(',')[2] + ';' + line.split('\t')[6].split(',')[2] + ';' + line.split('\t')[7].split(',')[2] + ';' + line.split('\t')[8].split(',')[2] + '\n' + line.split('\t')[9]
                     f_out.write(idt)
 
+    ## unknown format specified
     else:
         print('\nplease specify one of the accepted formats: "sintax", "rdp", "qiif", "qiiz", "dad", "dads", "idt"\n')
-
-
 
 ################################################
 ################### ARGPARSE ###################
@@ -400,10 +439,11 @@ def main():
     format_database_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
     format_database_parser.add_argument('-f', '--format', help = 'process database to format: "sintax", "rdp", "qiif", "qiiz", "dad", "dads", "idt"', dest = 'format', type = str, required = True)
 
-#     dereplication_parser = subparser.add_parser('dereplicate', description = 'dereplicating the database')
-#     dereplication_parser.set_defaults(func = dereplicate)
-#     dereplication_parser.add_argument('-i', '--input', help = 'filename of the curated reference database', dest = 'input', type = str, required = True)
-#     dereplication_parser.add_argument('-o', '--output', help = 'filename of the dereplicated curated reference database', dest = 'output', type = str, required = True)
+    dereplication_parser = subparser.add_parser('dereplicate', description = 'dereplicating the database')
+    dereplication_parser.set_defaults(func = dereplicate)
+    dereplication_parser.add_argument('-i', '--input', help = 'filename of the curated reference database', dest = 'input', type = str, required = True)
+    dereplication_parser.add_argument('-o', '--output', help = 'filename of the dereplicated curated reference database', dest = 'output', type = str, required = True)
+    dereplication_parser.add_argument('-m', '--method', help = 'method of dereplication: "strict", "single_species", "uniq_species"', dest = 'method', type = str, required = True)
 
 #     seq_cleanup_parser = subparser.add_parser('seq_cleanup', description = 'cleaning database on sequence parameters')
 #     seq_cleanup_parser.set_defaults(func = seq_cleanup)
