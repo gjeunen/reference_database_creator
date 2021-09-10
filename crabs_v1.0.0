@@ -7,6 +7,7 @@ import argparse
 import subprocess as sp
 import os
 import shutil
+import collections
 from Bio import SeqIO
 from Bio.Seq import Seq
 from function.module_1 import esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format
@@ -291,7 +292,7 @@ def dereplicate(args):
                 file_out.write(line)
 
     ## dereplicate single species (one sequence per species)
-    if METHOD == 'single_species':
+    elif METHOD == 'single_species':
         print(f'\ndereplicating {INPUT}, only keeping a single sequence per species')
         uniq_spec = {}
         uniq_line = []
@@ -313,6 +314,38 @@ def dereplicate(args):
                 file_out.write(line)
 
     ## dereplicate unique species (all unique sequences per species)
+    elif METHOD == 'uniq_species':
+        print(f'\ndereplicating {INPUT}, keeping all unique sequences per species')
+        mydict = collections.defaultdict(list)
+        count = 0
+        added = 0
+        with open(INPUT, 'r') as file_in:
+            for line in file_in:
+                count = count + 1
+                lines = line.rstrip('\n')
+                spec = lines.split('\t')[8].split(',')[2]
+                seq = lines.split('\t')[9]
+                line_id = lines
+                seq_dicts = []
+                for item in mydict[spec]:
+                    seq_dict = item.rsplit('\t', 1)[1]
+                    seq_dicts.append(seq_dict)
+                if seq not in seq_dicts:
+                    added = added + 1
+                    mydict[spec].append(line_id)
+        print(f'found {count} sequences in {INPUT}')
+        print(f'written {added} sequences to {OUTPUT}\n')
+        with open(OUTPUT, 'w') as file_out:
+            for k, v in mydict.items():
+                for i in v:
+                    file_out.write(i + '\n')
+
+    ## dereplicate concensus species (generate concensus sequence for each species)
+
+
+    ## unknown method specified
+    else:
+        print('\nplease specify one of the accepted dereplication methods: "strict", "single_species", "uniq_species"\n')
 
 
 ## function: sequence cleanup
