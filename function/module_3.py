@@ -45,6 +45,8 @@ def acc_to_dict(acc_list, acc2taxid_dict):
     acc_taxid_dict = {}
     taxlist = []
     for item in acc_list:
+        if item.startswith('CRABS:'):
+            print('need to incorporate a function for sequences that do not have accession numbers. Look up taxid from names file.')
         acc_taxid_dict[item] = acc2taxid_dict[item]
         taxlist.append(acc2taxid_dict[item])
     taxlist = list(dict.fromkeys(taxlist))
