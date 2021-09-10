@@ -277,7 +277,7 @@ def tax_format(args):
 
     ## format database to sintax
     if FORMAT == 'sintax':
-        print(f'\nformatting {INPUT} to sintax format')
+        print(f'\nformatting {INPUT} to sintax format\n')
         with open(OUTPUT, 'w') as f_out:
             with open(INPUT, 'r') as f_in:
                 for line in f_in:
@@ -286,7 +286,7 @@ def tax_format(args):
 
     ## format database to RDP
     elif FORMAT == 'rdp':
-        print(f'\nformatting {INPUT} to RDP format')
+        print(f'\nformatting {INPUT} to RDP format\n')
         with open(OUTPUT, 'w') as f_out:
             with open(INPUT, 'r') as f_in:
                 for line in f_in:
@@ -295,7 +295,7 @@ def tax_format(args):
 
     ## format database to QIIf
     elif FORMAT == 'qiif':
-        print(f'\nformatting {INPUT} to QIIf format')
+        print(f'\nformatting {INPUT} to QIIf format\n')
         fasta_f = OUTPUT + '.fasta'
         txt_f = OUTPUT + '.txt'
         with open(fasta_f, 'w') as f_out:
@@ -316,7 +316,7 @@ def tax_format(args):
     
     ## format database to DAD
     elif FORMAT == 'dad':
-        print(f'\nformatting {INPUT} to DAD format')
+        print(f'\nformatting {INPUT} to DAD format\n')
         with open(OUTPUT, 'w') as f_out:
             with open(INPUT, 'r') as f_in:
                 for line in f_in:
@@ -325,7 +325,7 @@ def tax_format(args):
 
     ## format database to DADs
     elif FORMAT == 'dads':
-        print(f'\nformatting {INPUT} to DADs format')
+        print(f'\nformatting {INPUT} to DADs format\n')
         with open(OUTPUT, 'w') as f_out:
             with open(INPUT, 'r') as f_in:
                 for line in f_in:
@@ -334,7 +334,7 @@ def tax_format(args):
     
     ## format database to IDT
     elif FORMAT == 'idt':
-        print(f'\nformatting {INPUT} to IDT format')
+        print(f'\nformatting {INPUT} to IDT format\n')
         with open(OUTPUT, 'w') as f_out:
             with open(INPUT, 'r') as f_in:
                 for line in f_in:
