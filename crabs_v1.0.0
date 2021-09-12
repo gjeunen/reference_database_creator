@@ -13,7 +13,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from function.module_1 import esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format, embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases
 from function.module_3 import tax2dict, get_accession, acc_to_dict, get_lineage, final_lineage_comb
-from function.module_5 import split_db_by_taxgroup, num_spec_seq_taxgroup, horizontal_barchart, get_amp_length, amplength_figure
+from function.module_5 import split_db_by_taxgroup, num_spec_seq_taxgroup, horizontal_barchart, get_amp_length, amplength_figure, file_dmp_to_dict, species_to_taxid, lineage_retrieval
 
 ################################################
 ########### MODULE DATABASE DOWNLOAD ###########
@@ -424,6 +424,8 @@ def visualization(args):
     METHOD = args.method
     LEVEL = args.level
     SPECIES = args.species
+    TAXID = args.taxid
+    NAME = args.name
 
     ## horizontal barchart
     if METHOD == 'diversity':
@@ -441,12 +443,33 @@ def visualization(args):
     ## phylogenetic tree
     elif METHOD == 'phylo':
         print('test')
-    
+
+        ## read in the text file with species names
+        species_list = []
+        with open(SPECIES, 'r') as species_file:
+            for line in species_file:
+                species = line.rstrip('\n').replace(' ', '_')
+                species_list.append(species)
+        print(f'\nfound {len(species_list)} species of interest in {SPECIES}: {species_list}')
+
+        ## retrieve taxonomic lineage
+        print(f'generating taxonomic lineage for {len(species_list)} species')
+        name, node, taxid = file_dmp_to_dict(NAME, TAXID)
+        species_taxid_dict, taxid_list = species_to_taxid(species_list, taxid)
+        lineage = lineage_retrieval(taxid_list, node, name)
+        print(lineage)
+        final_dict = collections.defaultdict(list)
+        for k, v in species_taxid_dict.items():
+            final_dict[k] = lineage[v]
+        # for k, v in final_dict.items():
+        #     print(k)
+        #     print(v[0])
+
+
 
     ## incorrect parameter
     else:
         print('\nplease specify method of visualization: "diversity", "amplicon_length", "phylo"\n')
-
 
 ## format the taxonomic lineage
 def tax_format(args):
@@ -603,13 +626,8 @@ def main():
     visualization_parser.add_argument('-m', '--method', help = 'method of visualization: "diversity", "amplicon_lenght", "phylo"', dest = 'method', type = str, required = True)
     visualization_parser.add_argument('-l', '--level', help = 'taxonomic level to split the database: "superkingdom", "phylum", "class", "order", "family", "genus", "species"', dest = 'level', type = str, required = True)
     visualization_parser.add_argument('-s', '--species', help = 'list of species of interest for phylo method', dest = 'species', type = str)
-
-#     phylo_parser = subparser.add_parser('phylo_build', description = 'generating phylogenetic trees for species of interest')
-#     phylo_parser.set_defaults(func = phylo)
-#     phylo_parser.add_argument('-s', '--species', help = 'text file containing list of species separated by newlines', dest = 'species', type = str, required = True)
-#     phylo_parser.add_argument('-db', '--database', help = 'curated reference database', dest = 'database', type = str, required = True)
-#     phylo_parser.add_argument('-e', '--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str, required = True)
-#     phylo_parser.add_argument('-o', '--output', help = 'filename for output table', dest = 'output', type = str, required = True)
+    visualization_parser.add_argument('-t', '--taxid', help = 'taxid file name for phylo method', dest = 'taxid', type = str)
+    visualization_parser.add_argument('-n', '--name', help = 'phylogeny file name for phylo method', dest = 'name', type = str)
 
     args = parser.parse_args()
     args.func(args)

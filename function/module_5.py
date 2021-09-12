@@ -104,6 +104,68 @@ def amplength_figure(amp_length_dict):
 
     plt.show()
 
+def file_dmp_to_dict(name, taxid):
+    print(f'converting {name} to dictionary')
+    names = {}
+    rev_names = {}
+    with open(name, 'r') as n_in:
+        for line in n_in:
+            sc = line.split('\t')[6]
+            if sc == 'scientific name':
+                taxid_name = line.split('\t|\t')[0]
+                name = line.split('\t|\t')[1].replace(' ', '_')
+                names[taxid_name] = name
+                rev_names[name] = taxid_name
+    print(f'converting {taxid} to dictionary')
+    taxids = {}
+    with open(taxid, 'r') as f_in:
+        for line in f_in:
+            taxs = line.split('\t|\t')[0]
+            taxup = line.split('\t|\t')[1]
+            rank = line.split('\t|\t')[2]
+            taxids[taxs] = [rank, taxup]    
+    
+    return names, taxids, rev_names
 
+def species_to_taxid(species_list, taxid):
+    species_taxid_dict = {}
+    taxid_list = []
+    for species in species_list:
+        if species in taxid:
+            species_taxid_dict[species] = taxid[species]
+            taxid_list.append(species_taxid_dict[species])
+    
+    taxid_list = list(dict.fromkeys(taxid_list))
 
+    return species_taxid_dict, taxid_list
+
+def lineage_retrieval(taxid_list, node, name):
+    ranks = {'superkingdom' : 'yes', 'phylum' : 'yes', 'class' : 'yes', 'order' : 'yes', 'family' : 'yes', 'genus' : 'yes', 'species' : 'yes'}
+    true_lineage = collections.defaultdict(list)
+    for tax in taxid_list:
+        lineage = {}
+        tax_line = {}
+        correct_order_lineage = {}
+        ktax = tax
+        for i in range(10000):
+            if tax in node:
+                lineage[node[tax][0]] = tax 
+                if node[tax][0] in ranks:
+                    tax_line[node[tax][0]] = tax 
+                if tax == node[tax][1]:
+                    break 
+                else:
+                    tax = node[tax][1]
+        for key in ranks:
+            if key in tax_line:
+                correct_order_lineage[key] = tax_line[key]
+            else:
+                correct_order_lineage[key] = 'nan'
+        for k, v in correct_order_lineage.items():
+            if v in name:
+                true_lineage[ktax].append(name[v])
+            else:
+                true_lineage[ktax].append('nan')
+    
+    return true_lineage
 
