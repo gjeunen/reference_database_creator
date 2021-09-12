@@ -177,15 +177,14 @@ def insilico_pcr(args):
     OUTPUT = args.output
 
     ## reverse complement reverse primer sequence
-    REV_DNA = Seq(REV)
-    REV_CORRECT = str(REV_DNA.reverse_complement())
+    REV_CORRECT = str(Seq(REV).reverse_complement())
 
     ## setting variable names using the info from user input
-    TRIMMED_INIT = 'init_trimmed_' + ASSAY + '_' + INPUT
-    UNTRIMMED_INIT = 'init_untrimmed_' + ASSAY + '_' + INPUT
-    REVCOMP_UNTRIMMED_INIT = 'revcomp_' + UNTRIMMED_INIT
-    TRIMMED_REVCOMP = 'revcomp_' + TRIMMED_INIT
-    UNTRIMMED_REVCOMP = 'untrimmed_' + REVCOMP_UNTRIMMED_INIT
+    TRIMMED_INIT = 'init_trimmed.fasta'
+    UNTRIMMED_INIT = 'init_untrimmed.fasta'
+    REVCOMP_UNTRIMMED_INIT = 'revcomp_untrimmed.fasta'
+    TRIMMED_REVCOMP = 'revcomp_trimmed.fasta'
+    UNTRIMMED_REVCOMP = 'untrimmed_revcomp.fasta'
 
     OVERLAP = str(min([len(FWD), len(REV_CORRECT)]))
     ADAPTER = FWD + '...' + REV_CORRECT
