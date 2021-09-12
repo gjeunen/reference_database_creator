@@ -240,7 +240,9 @@ def bold_format(f_out, original):
                 if not any(mistake in acc for mistake in mistakes):
                     record.description = acc
                     record.id = record.description
-                    newfile.append(record)
+                    record.seq = record.seq.strip('-')
+                    if record.seq.count('-') == 0:
+                        newfile.append(record)
                 else:
                     discarded.append(record)
             else:
@@ -249,7 +251,9 @@ def bold_format(f_out, original):
                 record.description = acc_crab
                 record.id = record.description
                 record.name = record.description
-                newfile.append(record)
+                record.seq = record.seq.strip('-')
+                if record.seq.count('-') == 0:
+                    newfile.append(record)
     newfile_db = [FastaIO.as_fasta_2line(record) for record in newfile]
     with open(f_out, 'w') as fout:
         for item in newfile_db:
