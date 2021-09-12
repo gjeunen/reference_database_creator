@@ -7,14 +7,10 @@ from tqdm import tqdm
 from urllib.error import HTTPError
 import time
 from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 import subprocess as sp
 import os
-import shutil
-import gzip
 from string import digits
-import zipfile
 import codecs
 
 
@@ -65,15 +61,13 @@ def efetch_seqs_from_webenv(web_record, database, email, batch_size, output):
 
     return numseq
 
-def ncbi_formatting(file):
+def ncbi_formatting(file, original):
     mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']
     newfile = []
-    header_info = {}
     discarded = []
     for record in SeqIO.parse('CRABS_ncbi_download.fasta', 'fasta'):
         acc = str(record.description.split('.')[0])
         if not any(mistake in acc for mistake in mistakes):
-            header_info[acc] = record.description
             record.description = acc
             record.id = record.description
             newfile.append(record)
@@ -88,13 +82,10 @@ def ncbi_formatting(file):
     with open(discarded_file, 'w') as fbad:
         for item in discarded_db:
             fbad.write(item)
-    header_file = file + '.taxid_table.tsv'
-    with open(header_file, 'w') as f_out:
-        for k, v in header_info.items():
-            f_out.write(k + '\t' + v + '\n')
     numdiscard = len(discarded)
     print(f'found {numdiscard} sequences with incorrect accession format')
-    os.remove('CRABS_ncbi_download.fasta')
+    if original != 'yes':
+        os.remove('CRABS_ncbi_download.fasta')
     numseq = len(newfile)
 
     return numseq
@@ -108,17 +99,15 @@ def mitofish_download(website):
 
     return fasta
 
-def mitofish_format(file_in, file_out):
+def mitofish_format(file_in, file_out, original):
     mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']
     newfile = []
-    header_info = {}
     discarded = []
     for record in SeqIO.parse(file_in, 'fasta'):
         acc = str(record.description.split('|')[1])
         if acc.isdigit():
             acc = str(record.description.split('|')[3])
         if not any(mistake in acc for mistake in mistakes):
-            header_info[acc] = record.description
             record.description = acc
             record.id = record.description
             newfile.append(record)
@@ -133,14 +122,11 @@ def mitofish_format(file_in, file_out):
     with open(discarded_file, 'w') as fbad:
         for item in discarded_db:
             fbad.write(item)
-    header_file = file_out + '.taxid_table.tsv'
-    with open(header_file, 'w') as f_out:
-        for k, v in header_info.items():
-            f_out.write(k + '\t' + v + '\n')
     numdiscard = len(discarded)
     print(f'found {numdiscard} sequences with incorrect accession format')
     numseq = len(newfile)
-    os.remove(file_in)
+    if original != 'yes':
+        os.remove(file_in)
 
     return numseq
 
@@ -194,15 +180,13 @@ def embl_fasta_format(dat_format):
         os.remove(f)
     return intermediary_file
 
-def embl_crabs_format(f_in, f_out):
+def embl_crabs_format(f_in, f_out, original):
     mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']
     newfile = []
-    header_info = {}
     discarded = []
     for record in SeqIO.parse(f_in, 'fasta'):
         acc = str(record.id)
         if not any(mistake in acc for mistake in mistakes):
-            header_info[acc] = record.description
             record.description = acc
             record.id = record.description
             newfile.append(record)
@@ -217,14 +201,11 @@ def embl_crabs_format(f_in, f_out):
     with open(discarded_file, 'w') as fbad:
         for item in discarded_db:
             fbad.write(item)
-    header_file = f_out + '.taxid_table.tsv'
-    with open(header_file, 'w') as f_out:
-        for k, v in header_info.items():
-            f_out.write(k + '\t' + v + '\n')
     numdiscard = len(discarded)
     print(f'found {numdiscard} sequences with incorrect accession format')
     numseq = len(newfile)
-    os.remove(f_in)
+    if original != 'yes':
+        os.remove(f_in)
 
     return numseq
 
@@ -246,10 +227,9 @@ def bold_download(entry):
     
     return num_bold
 
-def bold_format(f_out):
+def bold_format(f_out, original):
     mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']
     newfile = []
-    header_info = {}
     discarded = []
     for record in SeqIO.parse('CRABS_bold_download.fasta', 'fasta'):
         if record.description.split('-')[-1] == 'SUPPRESSED':
@@ -258,7 +238,6 @@ def bold_format(f_out):
             if len(record.description.split('|')) == 4:
                 acc = str(record.description.split('|')[3].split('.')[0])
                 if not any(mistake in acc for mistake in mistakes):
-                    header_info[acc] = record.description
                     record.description = acc
                     record.id = record.description
                     newfile.append(record)
@@ -267,7 +246,6 @@ def bold_format(f_out):
             else:
                 spec = str(record.description.split('|')[1].replace(' ', '_'))
                 acc_crab = 'CRABS:' + spec 
-                header_info[acc_crab] = record.description
                 record.description = acc_crab
                 record.id = record.description
                 record.name = record.description
@@ -281,14 +259,11 @@ def bold_format(f_out):
     with open(discarded_file, 'w') as fbad:
         for item in discarded_db:
             fbad.write(item)
-    header_file = f_out + '.taxid_table.tsv'
-    with open(header_file, 'w') as f_out:
-        for k, v in header_info.items():
-            f_out.write(k + '\t' + v + '\n')
     numdiscard = len(discarded)
     print(f'found {numdiscard} sequences with incorrect accession format')
     numseq = len(newfile)
-    os.remove('CRABS_bold_download.fasta')
+    if original != 'yes':
+        os.remove('CRABS_bold_download.fasta')
 
     return numseq
 
@@ -297,12 +272,10 @@ def bold_format(f_out):
 def check_accession(file_in, file_out, delimiter):
     mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']
     newfile = []
-    header_info = {}
     discarded = []
     for record in SeqIO.parse(file_in, 'fasta'):
         acc = str(record.description.split(delimiter)[0])
         if not any(mistake in acc for mistake in mistakes):
-            header_info[acc] = record.description
             record.description = acc 
             record.id = record.description
             newfile.append(record)
@@ -312,10 +285,6 @@ def check_accession(file_in, file_out, delimiter):
     with open(file_out, 'w') as fout:
         for item in newfile_db:
             fout.write(item)
-    header_file = file_out + '.taxid_table.tsv'
-    with open(header_file, 'w') as f_out:
-        for k, v in header_info.items():
-            f_out.write(k + '\t' + v + '\n')
     numseq = len(list(SeqIO.parse(file_in, 'fasta')))
     print(f'found {numseq} sequences in {file_in}')
     print(f'found {len(newfile)} with correct format')
@@ -338,11 +307,9 @@ def append_primer_seqs(file_in, fwd, rev):
     return len(newfile)
     
 def generate_header(file_in, file_out, delimiter):
-    header_info = {}
     newfile = []
     for record in SeqIO.parse(file_in, 'fasta'):
         spec = 'CRABS:' + str(record.description.split(delimiter)[0].replace(' ', '_'))
-        header_info[spec] = record.description
         record.description = spec
         record.id = record.description
         newfile.append(record)
@@ -350,10 +317,6 @@ def generate_header(file_in, file_out, delimiter):
     with open(file_out, 'w') as fout:
         for item in newfile_db:
             fout.write(item)
-    header_file = file_out + '.taxid_table.tsv'
-    with open(header_file, 'w') as f_out:
-        for k, v in header_info.items():
-            f_out.write(k + '\t' + v + '\n')
 
     return len(newfile)
 

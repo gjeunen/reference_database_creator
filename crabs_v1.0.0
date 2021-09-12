@@ -10,8 +10,7 @@ import shutil
 import collections
 from Bio import SeqIO
 from Bio.Seq import Seq
-from function.module_1 import esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format
-from function.module_1 import embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases
+from function.module_1 import esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format, embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases
 from function.module_3 import tax2dict, get_accession, acc_to_dict, get_lineage, final_lineage_comb
 
 ################################################
@@ -24,6 +23,7 @@ def db_download(args):
     DATABASE = args.database
     QUERY = args.query
     OUTPUT = args.output
+    ORIG = args.orig
     EMAIL = args.email
     BATCHSIZE = args.batchsize
 
@@ -54,7 +54,7 @@ def db_download(args):
             fetch_seqs = efetch_seqs_from_webenv(search_record, DATABASE, EMAIL, batch_size, filename)
             print(f'downloaded {fetch_seqs} sequences from NCBI')
             print('formatting the downloaded sequencing file to CRABS format')
-            format_seqs = ncbi_formatting(OUTPUT)
+            format_seqs = ncbi_formatting(OUTPUT, ORIG)
             print(f'written {format_seqs} sequences to {OUTPUT}\n')
         else:
             print('\nnot all parameters have an input value\n')
@@ -66,7 +66,7 @@ def db_download(args):
             dl_files = embl_download(DATABASE)
             fasta_file = embl_fasta_format(dl_files)
             print(f'formatting intermediary file to CRABS format')
-            crabs_file = embl_crabs_format(fasta_file, OUTPUT)
+            crabs_file = embl_crabs_format(fasta_file, OUTPUT, ORIG)
             print(f'written {crabs_file} sequences to {OUTPUT}\n')
         else:
             print('\nnot all parameters have an input value\n')
@@ -78,7 +78,7 @@ def db_download(args):
             url = 'http://mitofish.aori.u-tokyo.ac.jp/files/complete_partial_mitogenomes.zip'
             dl_file = mitofish_download(url)
             print(f'formatting {dl_file} to CRABS format')
-            mitoformat = mitofish_format(dl_file, OUTPUT)
+            mitoformat = mitofish_format(dl_file, OUTPUT, ORIG)
             print(f'written {mitoformat} sequences to {OUTPUT}\n')
         else:
             print('\nnot all parameters have an input value\n')
@@ -90,7 +90,7 @@ def db_download(args):
             bold_file = bold_download(DATABASE)
             print(f'downloaded {bold_file} sequences from BOLD')
             print(f'formatting {bold_file} sequences to CRABS format')
-            boldformat = bold_format(OUTPUT)
+            boldformat = bold_format(OUTPUT, ORIG)
             print(f'written {boldformat} sequences to {OUTPUT}\n')
         else:
             print('\nnot all parameters have an input value\n')
@@ -505,6 +505,7 @@ def main():
     db_download_parser.add_argument('-db', '--database', help = 'specific database used to download sequences. Example NCBI: nucleotide. Example EMBL: mam*. Example BOLD: Actinopterygii', dest = 'database', type = str)
     db_download_parser.add_argument('-q', '--query', help = 'NCBI query search to limit portion of database to be downloaded. Example: "16S[All Fields] AND ("1"[SLEN] : "50000"[SLEN])"', dest = 'query', type = str)
     db_download_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str)
+    db_download_parser.add_argument('-k', '--keep_original', help = 'keep original downloaded file, default = "no"', dest = 'orig', type = str, default = 'no')
     db_download_parser.add_argument('-e', '--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str)
     db_download_parser.add_argument('-b', '--batchsize', help = 'number of sequences downloaded from NCBI per iteration. Default = 5000', dest = 'batchsize', type = int, default = 5000)
 
