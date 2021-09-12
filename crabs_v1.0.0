@@ -8,10 +8,12 @@ import subprocess as sp
 import os
 import shutil
 import collections
+from collections import Counter
 from Bio import SeqIO
 from Bio.Seq import Seq
 from function.module_1 import esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format, embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases
 from function.module_3 import tax2dict, get_accession, acc_to_dict, get_lineage, final_lineage_comb
+from function.module_5 import split_db_by_taxgroup, num_spec_seq_taxgroup, horizontal_barchart
 
 ################################################
 ########### MODULE DATABASE DOWNLOAD ###########
@@ -415,6 +417,38 @@ def db_filter(args):
 ############# MODULE VISUALISATION #############
 ################################################
 
+## figure output
+def visualization(args):
+    INPUT = args.input
+    OUTPUT = args.output
+    METHOD = args.method
+    LEVEL = args.level
+    SPECIES = args.species
+
+    ## horizontal barchart
+    if METHOD == 'diversity':
+        tax_group_list, uniq_tax_group_list, species_dict = split_db_by_taxgroup(INPUT, LEVEL)
+        sequence_counter = Counter(tax_group_list)
+        list_info_dict = num_spec_seq_taxgroup(uniq_tax_group_list, species_dict, sequence_counter)
+        sorted_info = sorted(list_info_dict, key = lambda i: (i['sequence']))
+        figure = horizontal_barchart(sorted_info)
+    
+
+    ## length distribution
+    elif METHOD == 'amplicon_length':
+        print('test')
+    
+
+    ## phylogenetic tree
+    elif METHOD == 'phylo':
+        print('test')
+    
+
+    ## incorrect parameter
+    else:
+        print('\nplease specify method of visualization: "diversity", "amplicon_length", "phylo"\n')
+
+
 ## format the taxonomic lineage
 def tax_format(args):
     INPUT = args.input
@@ -562,6 +596,14 @@ def main():
     format_database_parser.add_argument('-i', '--input', help = 'input file name', dest = 'input', type = str, required = True)
     format_database_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
     format_database_parser.add_argument('-f', '--format', help = 'process database to format: "sintax", "rdp", "qiif", "qiiz", "dad", "dads", "idt"', dest = 'format', type = str, required = True)
+
+    visualization_parser = subparser.add_parser('visualization', description = 'figure displaying various aspects of the reference database')
+    visualization_parser.set_defaults(func = visualization)
+    visualization_parser.add_argument('-i', '--input', help = 'input file name', dest = 'input', type = str, required = True)
+    visualization_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
+    visualization_parser.add_argument('-m', '--method', help = 'method of visualization: "diversity", "amplicon_lenght", "phylo"', dest = 'method', type = str, required = True)
+    visualization_parser.add_argument('-l', '--level', help = 'taxonomic level to split the database: "superkingdom", "phylum", "class", "order", "family", "genus", "species"', dest = 'level', type = str, required = True)
+    visualization_parser.add_argument('-s', '--species', help = 'list of species of interest for phylo method', dest = 'species', type = str)
 
 #     phylo_parser = subparser.add_parser('phylo_build', description = 'generating phylogenetic trees for species of interest')
 #     phylo_parser.set_defaults(func = phylo)
