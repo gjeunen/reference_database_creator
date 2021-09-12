@@ -84,7 +84,6 @@ def get_amp_length(file_in, tax_level):
     return final_dict
 
 def amplength_figure(amp_length_dict):
-    print('est')
     for item in amp_length_dict.items():
         amplicon_size = []
         frequency = []

@@ -435,7 +435,6 @@ def visualization(args):
     
     ## length distribution
     elif METHOD == 'amplicon_length':
-        print('test')
         amp_length_dict = get_amp_length(INPUT, LEVEL)
         figure = amplength_figure(amp_length_dict)
     
