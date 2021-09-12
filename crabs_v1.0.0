@@ -171,7 +171,6 @@ def db_merge(args):
 def insilico_pcr(args):
     FWD = args.fwd
     REV = args.rev
-    ASSAY = args.assay
     INPUT = args.input
     ERROR = args.error
     OUTPUT = args.output
@@ -240,17 +239,18 @@ def assign_tax(args):
     NAME = args.name
 
     ## process initial files
-    acc2tax, taxid, name = tax2dict(ACC2TAX, TAXID, NAME)
+    print(f'\nretrieving accession numbers from {INPUT}')
+    accession = get_accession(INPUT)
+    print(f'found {len(accession)} accession numbers in {INPUT}')
+    acc2tax, taxid, name, no_acc = tax2dict(ACC2TAX, TAXID, NAME, accession)
     print(f'processed {len(acc2tax)} entries in {ACC2TAX}')
     print(f'processed {len(taxid)} entries in {TAXID}')
     print(f'processed {len(name)} entries in {NAME}')
-    print(f'retrieving accession numbers from {INPUT}')
-    accession = get_accession(INPUT)
-    print(f'found {len(accession)} accession numbers in {INPUT}')
+
 
     ## get taxonomic lineage
     print(f'assigning a tax ID number to {len(accession)} accession numbers from {INPUT}')
-    acc_taxid_dict, taxid_list = acc_to_dict(accession, acc2tax)
+    acc_taxid_dict, taxid_list = acc_to_dict(accession, acc2tax, no_acc)
     print(f'{len(acc_taxid_dict)} accession numbers resulted in {len(taxid_list)} unique tax ID numbers')
     print(f'generating taxonomic lineages for {len(taxid_list)} tax ID numbers')
     lineage = get_lineage(taxid_list, taxid, name)
@@ -527,7 +527,6 @@ def main():
     in_silico_pcr_parser.set_defaults(func = insilico_pcr)
     in_silico_pcr_parser.add_argument('-f', '--fwd', help = 'forward primer sequence in 5-3 direction', dest = 'fwd', type = str, required = True)
     in_silico_pcr_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest = 'rev', type = str, required = True)
-    in_silico_pcr_parser.add_argument('-a', '--assay', help = 'name of primer assay', dest = 'assay', type = str, required = True)
     in_silico_pcr_parser.add_argument('-i', '--input', help = 'input filename', dest = 'input', type = str, required = True)
     in_silico_pcr_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
     in_silico_pcr_parser.add_argument('-e', '--error', help = 'number of errors allowed in primer-binding site. Default = 4.5', dest = 'error', type = str, default = '4.5')

@@ -231,6 +231,7 @@ def bold_format(f_out, original):
     mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']
     newfile = []
     discarded = []
+    count = 0
     for record in SeqIO.parse('CRABS_bold_download.fasta', 'fasta'):
         if record.description.split('-')[-1] == 'SUPPRESSED':
             discarded.append(record)
@@ -246,8 +247,9 @@ def bold_format(f_out, original):
                 else:
                     discarded.append(record)
             else:
+                count = count +1
                 spec = str(record.description.split('|')[1].replace(' ', '_'))
-                acc_crab = 'CRABS:' + spec 
+                acc_crab = 'CRABS_' + str(count) + ':' + spec 
                 record.description = acc_crab
                 record.id = record.description
                 record.name = record.description
