@@ -3,6 +3,8 @@
 ## import modules
 import collections
 import numpy as np
+from collections import Counter
+from itertools import islice
 from matplotlib import pyplot as plt
 
 ## functions: visualizations
@@ -58,5 +60,51 @@ def horizontal_barchart(sorted_info):
     plt.tight_layout()
     plt.show()
 
-            
-            
+def get_amp_length(file_in, tax_level):
+    ranks = ['superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
+    count = 1
+    for item in ranks:
+        count = count + 1
+        if item == tax_level:
+            break
+    amplength_dict = collections.defaultdict(list)
+    with open(file_in, 'r') as f_in:
+        for line in f_in:
+            l = line.rstrip('\n')
+            seq_len = len(l.rsplit('\t', 1)[1])
+            taxgroup = l.split('\t')[count].split(',')[2]
+            amplength_dict['overall'].append(seq_len)
+            amplength_dict[taxgroup].append(seq_len)
+    sorted_dict = sorted(amplength_dict.items(), key = lambda item: len(item[1]), reverse = True)
+    final_dict = {}
+    for item in islice(sorted_dict, 6):
+        length = sorted(Counter(item[1]).most_common(), key = lambda tup: tup[0])
+        final_dict[item[0]] = length
+    
+    return final_dict
+
+def amplength_figure(amp_length_dict):
+    print('est')
+    for item in amp_length_dict.items():
+        amplicon_size = []
+        frequency = []
+        for i in item[1]:
+            amplicon_size.append(i[0])
+            frequency.append(i[1])
+        label = str(item[0]) + '; ' + str(sum(frequency)) + ' seqs'
+        if item[0] == 'overall':
+            plt.plot(amplicon_size, frequency, color = '#444444', linestyle = '--', linewidth = 0)
+            plt.fill_between(amplicon_size, frequency, color = '#444444', interpolate = True, alpha = 0.25, label = label)
+        else:
+            plt.plot(amplicon_size, frequency, label = label)
+
+    plt.legend()
+    plt.title('Amplicon size distribution')
+    plt.xlabel('amplicon size')
+    plt.ylabel('number of sequences')
+
+    plt.show()
+
+
+
+

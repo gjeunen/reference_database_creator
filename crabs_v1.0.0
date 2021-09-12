@@ -13,7 +13,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from function.module_1 import esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format, embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases
 from function.module_3 import tax2dict, get_accession, acc_to_dict, get_lineage, final_lineage_comb
-from function.module_5 import split_db_by_taxgroup, num_spec_seq_taxgroup, horizontal_barchart
+from function.module_5 import split_db_by_taxgroup, num_spec_seq_taxgroup, horizontal_barchart, get_amp_length, amplength_figure
 
 ################################################
 ########### MODULE DATABASE DOWNLOAD ###########
@@ -433,12 +433,12 @@ def visualization(args):
         sorted_info = sorted(list_info_dict, key = lambda i: (i['sequence']))
         figure = horizontal_barchart(sorted_info)
     
-
     ## length distribution
     elif METHOD == 'amplicon_length':
         print('test')
+        amp_length_dict = get_amp_length(INPUT, LEVEL)
+        figure = amplength_figure(amp_length_dict)
     
-
     ## phylogenetic tree
     elif METHOD == 'phylo':
         print('test')
