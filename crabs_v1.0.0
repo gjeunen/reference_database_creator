@@ -602,8 +602,7 @@ def visualization(args):
                 axes = fig.add_subplot(1, 1, 1)
                 Phylo.draw(tree, axes=axes, do_show = False)
                 fig.savefig(f'{species}_tree_figure.pdf')
-
-
+                print()
 
     ## incorrect parameter
     else:
