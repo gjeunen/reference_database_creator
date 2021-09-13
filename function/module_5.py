@@ -134,6 +134,8 @@ def species_to_taxid(species_list, taxid):
         if species in taxid:
             species_taxid_dict[species] = taxid[species]
             taxid_list.append(species_taxid_dict[species])
+        else:
+            print(f'did not find a taxonomic ID for {species}, please check for spelling mistakes, or synonym names.')
     
     taxid_list = list(dict.fromkeys(taxid_list))
 
