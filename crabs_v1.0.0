@@ -388,7 +388,7 @@ def db_filter(args):
         print('keeping sequences with missing taxonomic information')
     else:
         nans = int(NANS)
-        print(f'removing sequences with missing information for {NANS} taxonomic levels')
+        print(f'removing sequences with missing information for more than {NANS} taxonomic levels')
     
     ## read the input file and clean up given the parameters
     clean_db = []
