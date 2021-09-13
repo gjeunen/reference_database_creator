@@ -56,8 +56,11 @@ def acc_to_dict(acc_list, acc2taxid_dict, no_acc):
             else:
                 print(f'no tax ID found for {species_name}, most likely due to spelling mistake.')
         else:
-            acc_taxid_dict[item] = acc2taxid_dict[item]
-            taxlist.append(acc_taxid_dict[item])
+            if item in acc2taxid_dict:
+                acc_taxid_dict[item] = acc2taxid_dict[item]
+                taxlist.append(acc_taxid_dict[item])
+            else:
+                print(f'did not find {item} in accession file')
     taxlist = list(dict.fromkeys(taxlist))
 
     return acc_taxid_dict, taxlist
