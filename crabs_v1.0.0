@@ -9,9 +9,16 @@ import pandas as pd
 import os
 import shutil
 import collections
+import matplotlib
+import matplotlib.pyplot as plt
+from Bio.Align.Applications import MuscleCommandline
+from pathlib import Path
 from collections import Counter
 from Bio import SeqIO
+from Bio import AlignIO
+from Bio import Phylo
 from Bio.Seq import Seq
+from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceMatrix, DistanceTreeConstructor
 from function.module_1 import esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format, embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases
 from function.module_3 import tax2dict, get_accession, acc_to_dict, get_lineage, final_lineage_comb
 from function.module_5 import split_db_by_taxgroup, num_spec_seq_taxgroup, horizontal_barchart, get_amp_length, amplength_figure, file_dmp_to_dict, species_to_taxid, lineage_retrieval
@@ -441,7 +448,7 @@ def visualization(args):
         amp_length_dict = get_amp_length(INPUT, LEVEL)
         figure = amplength_figure(amp_length_dict)
     
-    ## phylogenetic tree
+    ## completeness table
     elif METHOD == 'db_completeness':
 
         ## read in the text file with species names
@@ -460,6 +467,7 @@ def visualization(args):
         final_dict = collections.defaultdict(list)
         for k, v in species_taxid_dict.items():
             final_dict[k] = lineage[v]
+        print(f'gathering data for {len(final_dict)} species\n')
 
         ## retrieve information about potential number of taxa shared with species of interest on genus and family level based on NCBI taxonomy files
         table_info_dict = collections.defaultdict(dict)
@@ -520,7 +528,83 @@ def visualization(args):
         df['Completeness_family'] = df['family_num_ref_DB'] / df['family_num_ncbi'] * 100
         df = df[['species', 'species_in_ref_DB', 'genus_num_ref_DB', 'genus_num_ncbi', 'Completeness_genus', 'family_num_ref_DB', 'family_num_ncbi', 'Completeness_family', 'genus_list_ref_DB', 'family_list_ref_DB']]
         df.to_csv(OUTPUT, sep = '\t', index = None)
+    
+    ## phylogenetic tree
+    elif METHOD == 'phylo':
+        ## read in the text file with species names
+        species_list = []
+        with open(SPECIES, 'r') as species_file:
+            for line in species_file:
+                species = line.rstrip('\n').replace(' ', '_')
+                species_list.append(species)
+        print(f'\nfound {len(species_list)} species of interest in {SPECIES}: {species_list}')
+
+        ## retrieve taxonomic lineage
+        print(f'generating taxonomic lineage for {len(species_list)} species')
+        name, node, taxid = file_dmp_to_dict(NAME, TAXID)
+        species_taxid_dict, taxid_list = species_to_taxid(species_list, taxid)
+        lineage = lineage_retrieval(taxid_list, node, name)
+        final_dict = collections.defaultdict(list)
+        for k, v in species_taxid_dict.items():
+            final_dict[k] = lineage[v]
+        print(f'gathering data for {len(final_dict)} species')
+
+        ## gather sequences from database that share taxonomic rank
+        ranks = ['superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
+        count = 0
+        for item in ranks:
+            if item == LEVEL:
+                break
+            else:
+                count = count + 1
+        for k, v in final_dict.items():
+            species = k
+            taxrank = v[count]
+            species_file = []
+            try:
+                os.remove(f'{species}_phylo.fasta')
+            except OSError:
+                pass
+            with open(INPUT, 'r') as file_in:
+                for line in file_in:
+                    rank = line.split('\t')[count + 2].split(',')[2]
+                    #print(rank)
+                    if rank == taxrank:
+                        species_file.append(line)
+            for item in species_file:
+                if len(species_file) < 2:
+                    print(f'only {len(species_file)} sequence in database that shares the {LEVEL} taxonomic rank with {species}, omitted from phylogenetic analysis.')
+                elif len(species_file) > 100:
+                    print(f'{len(species_file)} sequences in database that share the {LEVEL} taxonomic rank with {species}, omitted from phylogenetic analysis')
+                else:
+                    header = '>' + item.split('\t')[0] + '_' + item.split('\t')[8].split(',')[2]
+                    seq = item.rsplit('\t', 1)[1]
+                    with open(f'{species}_phylo.fasta', 'a') as file_out:
+                        file_out.write(header + '\n')
+                        file_out.write(seq)
             
+        for species in species_list:
+            my_file = Path(f'{species}_phylo.fasta')
+            if my_file.is_file():
+                print(f'generating phylogenetic tree for {species}')
+                muscle_cline = MuscleCommandline(input = my_file, out = f'{species}_align.clw', diags = True, maxiters = 1, log = f'{species}_align_log.txt', clw = True)
+                muscle_cline()
+                with open(f'{species}_align.clw', 'r') as aln:
+                    alignment = AlignIO.read(aln, 'clustal')
+                calculator = DistanceCalculator('identity')
+                Distance_matrix = calculator.get_distance(alignment)
+                constructor = DistanceTreeConstructor(calculator, 'nj')
+                tree = constructor.build_tree(alignment)
+                fig = plt.figure(figsize = (25,15), dpi = 100)
+                matplotlib.rc('font', size=12)   
+                matplotlib.rc('xtick', labelsize=10)   
+                matplotlib.rc('ytick', labelsize=10)    
+                axes = fig.add_subplot(1, 1, 1)
+                Phylo.draw(tree, axes=axes, do_show = False)
+                fig.savefig(f'{species}_tree_figure.pdf')
+
+
+
     ## incorrect parameter
     else:
         print('\nplease specify method of visualization: "diversity", "amplicon_length", "db_completeness", "phylo"\n')
