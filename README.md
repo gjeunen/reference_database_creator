@@ -6,6 +6,12 @@ What to do now.
 
 ## Installing CRABS
 
+To check if installation was successful, type in the following command to pull up the help information.
+
+```
+./crabs_v1.0.0 -h
+```
+
 ## Running CRABS
 
 CRABS includes nine modules:
@@ -20,4 +26,6 @@ CRABS includes nine modules:
 8. visualize the output of the reference database using '*visualization*'
 9. export the reference database in six different formats using '*tax_format*'
 
-### *db_download*
+### 1. *db_download*
+
+Initial sequencing data can be downloaded from
