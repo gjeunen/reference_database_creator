@@ -75,7 +75,7 @@ Example code:
 
 BOLD sequence data is downloaded through the BOLD website (<http://v3.boldsystems.org/index.php/resources/api?type=webservices#sequenceParameters>) by specifying one or multiple taxonomic groups in the '*--database*' parameter. When multiple taxonomic groups are of interest, names should be separated by '|'.
 
-Example code
+Example code:
 
 ```bash
 ./crabs_v1.0.0 db_download --source bold --database 'Actinopterygii|Aves' --output bold_actinopterygii_aves.fasta --keep_original yes
@@ -92,3 +92,35 @@ Example code:
 ```
 
 #### 1.5. *taxonomy*
+
+To assign a taxonomic lineage to each sequence in the reference database (see section 5. *assign_tax*), the taxonomic information needs to be downloaded. CRABS utilizes NCBI's taxonomy and downloads three specific files to your computer: (i) a file linking accession numbers to taxonomic IDs, (ii) a file containing information about the phylogenetic name associated with each taxonomic ID, and (iii) a file containing information how taxonomic IDs are linked.
+
+Example code:
+
+```bash
+./crabs_v1.0.0 db_download --source taxonomy
+```
+
+### 2. *db_import*
+
+
+### 3. *db_merge*
+
+
+### 4. *insilico_pcr*
+
+
+
+### 5. *assign_tax*
+
+
+### 6. *dereplicate*
+
+
+### 7. *seq_cleanup*
+
+
+### 8. *visualization*
+
+
+### 9. *tax_format*
