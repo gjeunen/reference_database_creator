@@ -210,10 +210,23 @@ Example code:
 
 #### 8.3. *db_completeness*
 
+The db_completeness method will output a tab-delimited table (parameter: '*--output*') with information about a list of species of interest. This list of species of interest can be imported using the '*--species*' parameter and consists of a normal .txt file with a single species name on each line. A taxonomic lineage will be generated for each species of interest using the '*names.dmp*' and '*nodes.dmp*' files downloaded in section 1.5. *taxonomy* using the '*--name*' and '*--taxid*' parameters, respectively. The output table will have 10 columns providing the following information:
+
+1. name of the species of interest
+2. if species is present in the reference database (indicated by a 1 or 0)
+3. number of species in the reference database that share the same genus
+4. number of species in the genus according to the NCBI taxonomy
+5. percentage of species in the genus present in the reference database
+6. number of species in the reference database that share the same family
+7. number of species in the family according to the NCBI taxonomy
+8. percentage of species in the family present in the reference database
+9. list of species sharing the same genus in the reference database
+10. list of species sharing the same family in the reference database
+
 Example code:
 
 ```bash
-./crabs_v1.0.0 visualization
+./crabs_v1.0.0 visualization --method db_completeness --input input.tsv --species species.txt --taxid nodes.dmp --name names.dmp
 ```
 
 #### 8.4. *phylo*
