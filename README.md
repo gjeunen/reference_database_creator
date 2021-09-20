@@ -6,6 +6,8 @@ TBA
 
 ## Installing CRABS
 
+CRABS is exclusively written in python3. However, CRABS makes use of the subprocess module in python to run several commands in bash format to circumvent python-specific idiosyncrasies and increase execution speed.
+
 To check if installation was successful, type in the following command to pull up the help information.
 
 ```bash
@@ -188,10 +190,12 @@ Once the final reference database is curated, four visualization methods can be 
 
 #### 8.1. *diversity*
 
+The diversity method produces a horizontal bar plot with number of species (in blue) and number of sequences (in orange) per for each taxonomic group in the reference database. The user can specify the taxonomic rank to split up the reference database with the '*--level*' parameter. The horizontal bar plot will automatically be generated and be saved from the preview window to allow for correct dimensions.
+
 Example code:
 
 ```bash
-./crabs_v1.0.0 visualization
+./crabs_v1.0.0 visualization --method diversity --input input.tsv --level class
 ```
 
 #### 8.2. *amplicon_length*
