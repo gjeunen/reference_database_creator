@@ -231,10 +231,12 @@ Example code:
 
 #### 8.4. *phylo*
 
+The phylo method will generate an alignment file and produce a phylogenetic tree for a list of species of interest. This list of species of interest can be imported using the '*--species*' parameter and consists of a normal .txt file with a single species name on each line. A taxonomic lineage will be generated for each species of interest using the '*names.dmp*' and '*nodes.dmp*' files downloaded in section 1.5. *taxonomy* using the '*--name*' and '*--taxid*' parameters, respectively. For each species of interest, sequences will be extracted from the reference database that share a user-defined taxonomic rank (parameter: '*--level*') with the species of interest. An alignment file and phylogenetic tree will be generated using MUSCLE and saved using the species name as output file names.
+
 Example code:
 
 ```bash
-./crabs_v1.0.0 visualization
+./crabs_v1.0.0 visualization --method phylo --input input.tsv --level family --species species.txt --taxid nodes.dmp --name names.dmp
 ```
 
 ### 9. *tax_format*
