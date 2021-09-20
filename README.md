@@ -8,7 +8,7 @@ What to do now.
 
 To check if installation was successful, type in the following command to pull up the help information.
 
-```
+```bash
 ./crabs_v1.0.0 -h
 ```
 
@@ -41,7 +41,7 @@ To download sequences from NCBI, CRABS utilizes the '*Entrez*' module in Biopyth
 
 Example code:
 
-```
+```bash
 ./crabs_v1.0.0 db_download --source ncbi --database nucleotide --query '16S[All Fields] AND ("1"[SLEN] : "50000"[SLEN])' --output 16S_ncbi_1_50000.fasta --keep_original yes --email johndoe@gmail.com --batchsize 5000
 ```
 
@@ -67,11 +67,20 @@ Sequences from EMBL are downloaded through the FTP site (<ftp://ftp.ebi.ac.uk/pu
 
 Example code:
 
-```
+```bash
 ./crabs_v1.0.0 db_download --source embl --database mam* --output embl_mam.fasta --keep_original yes 
 ```
 
 #### 1.3. *BOLD*
 
+BOLD sequence data is downloaded through the BOLD website (<http://v3.boldsystems.org/index.php/resources/api?type=webservices#sequenceParameters>) by specifying one or multiple taxonomic groups in the '*--database*' parameter. When multiple taxonomic groups are of interest, names should be separated by '|'.
+
+Example code
+
+```bash
+./crabs_v1.0.0 db_download --source bold --database Actinopterygii|Aves --output bold_actinopterygii_aves.fasta --keep_original yes
+```
+
 #### 1.4. *MitoFish*
 
+#### 1.5. *taxonomy*
