@@ -6,7 +6,23 @@ CRABS (Creating Reference databases for Amplicon-Based Sequencing) is a versatil
 
 ## Installing CRABS
 
-CRABS is exclusively written in python3. However, CRABS makes use of the subprocess module in python to run several commands in bash format to circumvent python-specific idiosyncrasies and increase execution speed.
+CRABS is a command-line only toolkit running on typical Unix/Linux environments and is exclusively written in python3. However, CRABS makes use of the subprocess module in python to run several commands in bash syntax to circumvent python-specific idiosyncrasies and increase execution speed. Additionally, CRABS makes use of the following three programs through the subprocess module in python, which are required to be installed and globally accessible:
+
+1. CUTADAPT 3.4 or compatible (<https://cutadapt.readthedocs.io/en/stable/index.html>)
+2. VSEARCH 2.13.3 or compatible (<https://github.com/torognes/vsearch>)
+3. MUSCLE 3.8.31 or compatible (<https://www.drive5.com/muscle/downloads.htm>)
+
+Furthermore, CRABS requires access to the following python version and modules:
+
+1. python 3.6.10 or compatible
+2. argparse 1.1 or compatible
+3. biopython 1.78 or compatible
+4. tqdm 4.59.0 or compatible
+5. numpy 1.19.1 or compatible
+6. matplotlib 3.3.1 or compatible
+7. pandas 0.23.4 or compatible
+
+Thus far, CRABS is not incorporated in a pip or conda package and can be installed by downloading the files from GitHub. Files to download are '*crabs_v1.0.0*' and the folder '*function*', plus all files contained within. The '*function*' folder should be placed in the same directory as the '*crabs_v1.0.0*' file on your personal computer. Depending on your settings, files might need to be made executable by running the '*chmod +x crabs_v1.0.0* command.
 
 To check if installation was successful, type in the following command to pull up the help information.
 
