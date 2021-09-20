@@ -141,9 +141,9 @@ Example code:
 
 A taxonomic lineage can be generated for each sequence in the reference database using the '*assign_tax'* module. This module requires the three taxonomy files from section 1.5. *taxonomy*, which are specified by the '*--acc2tax*', '*--taxid*', and '*--name*' parameters. The output file is a tab-delimited file, whereby each line represents a sequence in the reference database with following information:
 
-accession    taxonomic ID   rank_1,taxID,name   rank_2,taxID,name   rank_3,taxID,name    rank_4,taxID,name    rank_5,taxID,name   rank_6,taxID,name    rank_7,taxID,name    sequence
+accession    taxID   rank_1,taxID,name   rank_2,taxID,name   rank_3,taxID,name    rank_4,taxID,name    rank_5,taxID,name   rank_6,taxID,name    rank_7,taxID,name    sequence
 
-Currently, CRABS will include the following seven ranks: domain, phylum, class, order, family, genus, species.
+Currently, CRABS will include the following seven ranks: domain, phylum, class, order, family, genus, and species.
 
 Example code:
 
@@ -153,10 +153,16 @@ Example code:
 
 ### 6. *dereplicate*
 
+The reference database can be dereplicated using one of three methods (parameter: '*--method*') in the '*dereplicate*' module:
+
+1. strict: only unique sequences will be retained, irrespective of taxonomy
+2. single_species: for each species in the database, a single sequence is retained
+3. uniq_species: for each species in the database, all unique sequences are retained
+
 Example code:
 
 ```bash
-./crabs_v1.0.0 dereplicate
+./crabs_v1.0.0 dereplicate --input input.tsv --output output.tsv --method uniq_species
 ```
 
 ### 7. *seq_cleanup*
