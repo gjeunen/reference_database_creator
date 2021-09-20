@@ -2,7 +2,7 @@
 
 ## Introduction
 
-What to do now.
+TBA
 
 ## Installing CRABS
 
@@ -139,10 +139,46 @@ Example code:
 
 ### 5. *assign_tax*
 
+A taxonomic lineage can be generated for each sequence in the reference database using the '*assign_tax'* module. This module requires the three taxonomy files from section 1.5. *taxonomy*, which are specified by the '*--acc2tax*', '*--taxid*', and '*--name*' parameters. The output file is a tab-delimited file, whereby each line represents a sequence in the reference database with following information:
+
+accession    taxonomic ID   rank_1,taxID,name   rank_2,taxID,name   rank_3,taxID,name    rank_4,taxID,name    rank_5,taxID,name   rank_6,taxID,name    rank_7,taxID,name    sequence
+
+Currently, CRABS will include the following seven ranks: domain, phylum, class, order, family, genus, species.
+
+Example code:
+
+```bash
+./crabs_v1.0.0 assign_tax --input input.fasta --output output.tsv --acc2tax nucl_gb.accession2taxid --taxid nodes.dmp --name names.dmp
+```
+
 ### 6. *dereplicate*
+
+Example code:
+
+```bash
+./crabs_v1.0.0 dereplicate
+```
 
 ### 7. *seq_cleanup*
 
+Example code:
+
+```bash
+./crabs_v1.0.0 seq_cleanup
+```
+
 ### 8. *visualization*
 
+Example code:
+
+```bash
+./crabs_v1.0.0 visualization
+```
+
 ### 9. *tax_format*
+
+Example code:
+
+```bash
+./crabs_v1.0.0 tax_format
+```
