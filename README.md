@@ -241,8 +241,17 @@ Example code:
 
 ### 9. *tax_format*
 
+Once the reference database is curated by sections 6. *dereplicate* and 7. *seq_cleanup*, the reference database can be exported to six different fasta formats to accomodate specifications required by most software tools assigning taxonomy to metagenomic data. The format can be specified with the '*--format*' parameter. Included formats are:
+
+1. sintax: incorporated in VSEARCH and USEARCH
+2. rdp: incorporated in the RDP classifier
+3. qiif: incorporated in QIIME and QIIME2
+4. dad: incorporated in DADA2
+5. dads: incorporated in DADA2
+6. idt: incorporated in IDTAXA
+
 Example code:
 
 ```bash
-./crabs_v1.0.0 tax_format
+./crabs_v1.0.0 tax_format --input input.tsv --output output.fasta --format sintax
 ```
