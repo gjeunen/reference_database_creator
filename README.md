@@ -200,10 +200,12 @@ Example code:
 
 #### 8.2. *amplicon_length*
 
+The amplicon_length method produces a line graph displaying the range of the amplicon length. The overall range in amplicon length is displayed in a shaded grey color, while the top 5 most abundant taxonomic groups are overlayed by coloured lines. Additionally, the legend displays the number of sequences assigned to each of the taxonomic groups and the total number of sequences in the reference database. he user can specify the taxonomic rank to split up the reference database with the '*--level*' parameter. The line graph will automatically be generated and be saved from the preview window to allow for correct dimensions.
+
 Example code:
 
 ```bash
-./crabs_v1.0.0 visualization
+./crabs_v1.0.0 visualization --method amplicon_length --input input.tsv --level class
 ```
 
 #### 8.3. *db_completeness*
