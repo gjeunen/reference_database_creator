@@ -129,6 +129,14 @@ Example code:
 
 ### 4. *insilico_pcr*
 
+CRABS extracts the amplicon region of the primer set by conducting an *in silico* PCR. CRABS uses CUTADAPT and VSEARCH for this process to increase speed of execution over traditional python code. Input and output file names can be specified using the '*--input*' and '*--output*' parameters, respectively. Both the forward and reverse primer should be provided in 5'-3' direction using the '*--fwd*' and '*--rev*' parameters, respectively. CRABS will reverse complement the reverse primer. The *in silico* PCR will be executed twice. During the first iteration, amplicon regions will be retained if both forward and reverse primers are found in the sequence. Then, all sequences will be reverse complemented for which primers were not found and a second *in silico* PCR will be executed. This is to ensure sequences are incorporated into the final output when deposited in the opposite direction in the online repository. The maximum allowed number of errors found in the primer sequences can be specified using the '*--error*' parameter, with a default setting of 4.5.
+
+Example code:
+
+```bash
+./crabs_v1.0.0 insilico_pcr --input input.fasta --output output.fasta --fwd AGTC --rev ACTG --error 4.5
+```
+
 ### 5. *assign_tax*
 
 ### 6. *dereplicate*
