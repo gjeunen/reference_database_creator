@@ -167,10 +167,19 @@ Example code:
 
 ### 7. *seq_cleanup*
 
+The reference database can be further curated, using the '*seq_cleanup*' module. Sequences can be filtered on six parameters:
+
+1. minimum length: '*--minlen*'
+2. maximum length: '*--maxlen*'
+3. number of ambiguous bases: '*--maxns*'
+4. environmental sequences: '*--enviro*'
+5. unspecified species name: '*--species*'
+6. missing taxonomic information: '*--nans*'
+
 Example code:
 
 ```bash
-./crabs_v1.0.0 seq_cleanup
+./crabs_v1.0.0 seq_cleanup --input input.tsv --output output.tsv --minlen 100 --maxlen 500 --maxns 0 --enviro yes --species yes --nans 0
 ```
 
 ### 8. *visualization*
