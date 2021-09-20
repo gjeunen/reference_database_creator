@@ -68,7 +68,7 @@ Sequences from EMBL are downloaded through the FTP site (<ftp://ftp.ebi.ac.uk/pu
 Example code:
 
 ```bash
-./crabs_v1.0.0 db_download --source embl --database mam* --output embl_mam.fasta --keep_original yes 
+./crabs_v1.0.0 db_download --source embl --database 'mam*' --output embl_mam.fasta --keep_original yes 
 ```
 
 #### 1.3. *BOLD*
@@ -82,5 +82,13 @@ Example code
 ```
 
 #### 1.4. *MitoFish*
+
+To download the MitoFish database (<http://mitofish.aori.u-tokyo.ac.jp>), no additional parameters are needed. CRABS will download the whole database and format accordingly.
+
+Example code:
+
+```bash
+./crabs_v1.0.0 db_download --source mitofish --output mitofish.fasta --keep_original yes
+```
 
 #### 1.5. *taxonomy*
