@@ -44,3 +44,34 @@ Example code:
 ```
 ./crabs_v1.0.0 db_download --source ncbi --database nucleotide --query '16S[All Fields] AND ("1"[SLEN] : "50000"[SLEN])' --output 16S_ncbi_1_50000.fasta --keep_original yes --email johndoe@gmail.com --batchsize 5000
 ```
+
+#### 1.2. *EMBL*
+
+Sequences from EMBL are downloaded through the FTP site (<ftp://ftp.ebi.ac.uk/pub/databases/embl/release/std/>). EMBL files will be downloaded in a '.dat' format and automatically transformed to the two-line fasta format. The database can be specified using the '*--database*' parameter. To download the whole EMBL database (not recommended, due to large storage requirements, pass option '*') Options for databases are:
+
+1. env*: environmental
+2. fun*: fungi
+3. hum*: human
+4. inv*: invertebrate
+5. mam*: mammal
+6. mus*: mouse
+7. phg*:
+8. pln*: plant
+9. pro*: prokaryote
+10. rod*: rodent
+11. syn*:
+12. tgn*:
+13. unc*:
+14. vrl*:
+15. vrt*: vertebrate
+
+Example code:
+
+```
+./crabs_v1.0.0 db_download --source embl --database mam* --output embl_mam.fasta --keep_original yes 
+```
+
+#### 1.3. *BOLD*
+
+#### 1.4. *MitoFish*
+
