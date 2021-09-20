@@ -78,7 +78,7 @@ BOLD sequence data is downloaded through the BOLD website (<http://v3.boldsystem
 Example code
 
 ```bash
-./crabs_v1.0.0 db_download --source bold --database Actinopterygii|Aves --output bold_actinopterygii_aves.fasta --keep_original yes
+./crabs_v1.0.0 db_download --source bold --database 'Actinopterygii|Aves' --output bold_actinopterygii_aves.fasta --keep_original yes
 ```
 
 #### 1.4. *MitoFish*
