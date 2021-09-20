@@ -184,6 +184,34 @@ Example code:
 
 ### 8. *visualization*
 
+Once the final reference database is curated, four visualization methods can be run to provide information on the contents of the reference database, including (i) diversity, (ii) amplicon_length, (iii) db_completeness, and (iv) phylo. The visualization method can be specified with the '*--method*' parameter.
+
+#### 8.1. *diversity*
+
+Example code:
+
+```bash
+./crabs_v1.0.0 visualization
+```
+
+#### 8.2. *amplicon_length*
+
+Example code:
+
+```bash
+./crabs_v1.0.0 visualization
+```
+
+#### 8.3. *db_completeness*
+
+Example code:
+
+```bash
+./crabs_v1.0.0 visualization
+```
+
+#### 8.4. *phylo*
+
 Example code:
 
 ```bash
