@@ -119,21 +119,22 @@ Example code:
 
 ### 3. *db_merge*
 
+When sequencing data from multiple databases are downloaded or being supplemented by in-house generated data, sequencing files can be merged using the '*db_merge*' module. CRABS can take a list of sequencing files to be merged using the '*--input*' parameter. As list can be of unspecified length, '*--input*' should be specified as the last parameter. The '*--uniq*' parameter provides the option to only keep unique accession numbers in the merged output file, since online repositories can be partially overlapping and duplicate sequences are unnecessary to retain.
+
+Example code:
+
+```bash
+./crabs_v1.0.0 db_merge --output output.fasta --uniq yes --input input_1.fasta input_2.fasta input_3.fasta
+```
 
 ### 4. *insilico_pcr*
 
-
-
 ### 5. *assign_tax*
-
 
 ### 6. *dereplicate*
 
-
 ### 7. *seq_cleanup*
 
-
 ### 8. *visualization*
-
 
 ### 9. *tax_format*
