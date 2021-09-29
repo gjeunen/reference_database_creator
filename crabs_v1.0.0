@@ -19,7 +19,7 @@ from Bio import AlignIO
 from Bio import Phylo
 from Bio.Seq import Seq
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceMatrix, DistanceTreeConstructor
-from function.module_1 import esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format, embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases
+from function.module_1 import wget_ncbi, esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format, embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases
 from function.module_3 import tax2dict, get_accession, acc_to_dict, get_lineage, final_lineage_comb
 from function.module_5 import split_db_by_taxgroup, num_spec_seq_taxgroup, horizontal_barchart, get_amp_length, amplength_figure, file_dmp_to_dict, species_to_taxid, lineage_retrieval
 
@@ -55,14 +55,7 @@ def db_download(args):
     elif SOURCE == 'ncbi':
         if all(v is not None for v in [DATABASE, QUERY, OUTPUT, EMAIL]):
             print('\ndownloading sequences from NCBI')
-            print('looking up the number of sequences that match the query')
-            search_record = esearch_fasta(QUERY, DATABASE, EMAIL)
-            print('found {} matching sequences'.format(search_record['Count']))
-            print('starting the download')
-            batch_size = BATCHSIZE
-            filename = 'CRABS_ncbi_download.fasta'
-            fetch_seqs = efetch_seqs_from_webenv(search_record, DATABASE, EMAIL, batch_size, filename)
-            print(f'downloaded {fetch_seqs} sequences from NCBI')
+            ncbi_download = wget_ncbi(QUERY, DATABASE, EMAIL, BATCHSIZE)
             print('formatting the downloaded sequencing file to CRABS format')
             format_seqs = ncbi_formatting(OUTPUT, ORIG)
             print(f'written {format_seqs} sequences to {OUTPUT}\n')

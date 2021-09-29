@@ -15,6 +15,36 @@ import codecs
 
 
 ## functions NCBI
+def wget_ncbi(query, database, email, batchsize):
+    print('looking up the number of sequences that match the query')
+    url_esearch = f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db={database}&usehistory=y&email={email}&term={query}'
+    result = sp.run(['wget', url_esearch, '-O', 'esearch_output.txt'], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
+    with open('esearch_output.txt', 'r') as file_in:
+        for line in file_in:
+            if line.startswith('<eSearchResult>'):
+                seqcount = line.split('Count>')[1].rstrip('</')
+                print(f'found {seqcount} number of sequences matching the query')
+                print('starting the download')
+                querykey = line.split('QueryKey>')[1].rstrip('</')
+                webenv = line.split('WebEnv>')[1].rstrip('</')
+    
+    count = 0
+    for i in tqdm(range(0, int(seqcount), batchsize)):
+        count = count+1
+        url2 = f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db={database}&email={email}&query_key={querykey}&WebEnv={webenv}&rettype=fasta&retstart={i}&retmax={batchsize}'
+        results = sp.run(['wget', url2, '-O', f'efetch_output_{count}.fasta'], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
+    
+    tempfiles = [f for f in os.listdir() if f.startswith('efetch_output_')]
+    with open('CRABS_ncbi_download.fasta', 'a') as file_out:
+        for tempfile in tempfiles:
+            with open(tempfile, 'r') as infile:
+                for line in infile:
+                    file_out.write(line)
+    
+    os.remove('esearch_output.txt')
+    for tempfile in tempfiles:
+        os.remove(tempfile)
+
 def esearch_fasta(query, database, email):
     Entrez.email = email
     first_handle = Entrez.esearch(db=database, term=query, rettype='fasta')
