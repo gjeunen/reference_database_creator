@@ -613,7 +613,8 @@ def tax_format(args):
         with open(OUTPUT, 'w') as f_out:
             with open(INPUT, 'r') as f_in:
                 for line in f_in:
-                    sintax = '>' + line.split('\t')[0] + ';tax=d:' + line.split('\t')[2].split(',')[2] + ',p:' + line.split('\t')[3].split(',')[2] + ',c:' + line.split('\t')[4].split(',')[2] + ',o:' + line.split('\t')[5].split(',')[2] + ',f:' + line.split('\t')[6].split(',')[2] + ',g:' + line.split('\t')[7].split(',')[2] + ',s:' + line.split('\t')[8].split(',')[2] + '\n' + line.split('\t')[9]
+                    line = line.rstrip('\n')
+                    sintax = '>' + line.split('\t')[0] + ';tax=d:' + line.split('\t')[2].split(',')[2] + ',p:' + line.split('\t')[3].split(',')[2] + ',c:' + line.split('\t')[4].split(',')[2] + ',o:' + line.split('\t')[5].split(',')[2] + ',f:' + line.split('\t')[6].split(',')[2] + ',g:' + line.split('\t')[7].split(',')[2] + ',s:' + line.split('\t')[8].split(',')[2] + '\n' + line.split('\t')[9] + '\n'
                     f_out.write(sintax)
 
     ## format database to RDP
@@ -622,7 +623,8 @@ def tax_format(args):
         with open(OUTPUT, 'w') as f_out:
             with open(INPUT, 'r') as f_in:
                 for line in f_in:
-                    rdp = '>' + line.split('\t')[0] + '\t' + 'root;' + line.split('\t')[2].split(',')[2] + ';' + line.split('\t')[3].split(',')[2] + ';' + line.split('\t')[4].split(',')[2] + ';' + line.split('\t')[5].split(',')[2] + ';' + line.split('\t')[6].split(',')[2] + ';' + line.split('\t')[7].split(',')[2] + ';' + line.split('\t')[8].split(',')[2] + '\n' + line.split('\t')[9]
+                    line = line.rstrip('\n')
+                    rdp = '>' + line.split('\t')[0] + '\t' + 'root;' + line.split('\t')[2].split(',')[2] + ';' + line.split('\t')[3].split(',')[2] + ';' + line.split('\t')[4].split(',')[2] + ';' + line.split('\t')[5].split(',')[2] + ';' + line.split('\t')[6].split(',')[2] + ';' + line.split('\t')[7].split(',')[2] + ';' + line.split('\t')[8].split(',')[2] + '\n' + line.split('\t')[9] + '\n'
                     f_out.write(rdp)
 
     ## format database to QIIf
@@ -633,7 +635,8 @@ def tax_format(args):
         with open(fasta_f, 'w') as f_out:
             with open(INPUT, 'r') as f_in:
                 for line in f_in:
-                    fasta = '>' + line.split('\t')[0] + '\n' + line.split('\t')[9]
+                    line = line.rstrip('\n')
+                    fasta = '>' + line.split('\t')[0] + '\n' + line.split('\t')[9] + '\n'
                     f_out.write(fasta)
         with open(txt_f, 'w') as f_out:
             with open(INPUT, 'r') as f_in:
@@ -652,7 +655,8 @@ def tax_format(args):
         with open(OUTPUT, 'w') as f_out:
             with open(INPUT, 'r') as f_in:
                 for line in f_in:
-                    dad = '>' + line.split('\t')[2].split(',')[2] + ';' + line.split('\t')[3].split(',')[2] + ';' + line.split('\t')[4].split(',')[2] + ';' + line.split('\t')[5].split(',')[2] + ';' + line.split('\t')[6].split(',')[2] + ';' + line.split('\t')[7].split(',')[2] + '\n' + line.split('\t')[9]
+                    line = line.rstrip('\n')
+                    dad = '>' + line.split('\t')[2].split(',')[2] + ';' + line.split('\t')[3].split(',')[2] + ';' + line.split('\t')[4].split(',')[2] + ';' + line.split('\t')[5].split(',')[2] + ';' + line.split('\t')[6].split(',')[2] + ';' + line.split('\t')[7].split(',')[2] + '\n' + line.split('\t')[9] + '\n'
                     f_out.write(dad)
 
     ## format database to DADs
@@ -661,7 +665,8 @@ def tax_format(args):
         with open(OUTPUT, 'w') as f_out:
             with open(INPUT, 'r') as f_in:
                 for line in f_in:
-                    dads = '>' + line.split('\t')[0] + ' ' + line.split('\t')[7].split(',')[2] + ' ' + line.split('\t')[8].split(',')[2] + '\n' + line.split('\t')[9]
+                    line = line.rstrip('\n')
+                    dads = '>' + line.split('\t')[0] + ' ' + line.split('\t')[7].split(',')[2] + ' ' + line.split('\t')[8].split(',')[2] + '\n' + line.split('\t')[9] + '\n'
                     f_out.write(dads)
     
     ## format database to IDT
@@ -670,7 +675,8 @@ def tax_format(args):
         with open(OUTPUT, 'w') as f_out:
             with open(INPUT, 'r') as f_in:
                 for line in f_in:
-                    idt = '>' + line.split('\t')[2].split(',')[2] + ';' + line.split('\t')[3].split(',')[2] + ';' + line.split('\t')[4].split(',')[2] + ';' + line.split('\t')[5].split(',')[2] + ';' + line.split('\t')[6].split(',')[2] + ';' + line.split('\t')[7].split(',')[2] + ';' + line.split('\t')[8].split(',')[2] + '\n' + line.split('\t')[9]
+                    line = line.rstrip('\n')
+                    idt = '>' + line.split('\t')[2].split(',')[2] + ';' + line.split('\t')[3].split(',')[2] + ';' + line.split('\t')[4].split(',')[2] + ';' + line.split('\t')[5].split(',')[2] + ';' + line.split('\t')[6].split(',')[2] + ';' + line.split('\t')[7].split(',')[2] + ';' + line.split('\t')[8].split(',')[2] + '\n' + line.split('\t')[9] + '\n'
                     f_out.write(idt)
 
     ## unknown format specified
