@@ -1,0 +1,823 @@
+#! /usr/bin/env python3
+
+################################################
+################ IMPORT MODULES ################
+################################################
+import argparse
+import subprocess as sp
+import pandas as pd
+import os
+import shutil
+import collections
+import matplotlib
+import matplotlib.pyplot as plt
+from Bio.Align.Applications import MuscleCommandline
+from pathlib import Path
+from collections import Counter
+from Bio import SeqIO
+from Bio import AlignIO
+from Bio import Phylo
+from Bio.Seq import Seq
+from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceMatrix, DistanceTreeConstructor
+from function.module_1 import wget_ncbi, esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format, embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases
+from function.module_3 import tax2dict, get_accession, acc_to_dict, get_lineage, final_lineage_comb
+from function.module_5 import split_db_by_taxgroup, num_spec_seq_taxgroup, horizontal_barchart, get_amp_length, amplength_figure, file_dmp_to_dict, species_to_taxid, lineage_retrieval
+
+################################################
+########### MODULE DATABASE DOWNLOAD ###########
+################################################
+
+## function download data from online databases
+def db_download(args):
+    SOURCE = args.source
+    DATABASE = args.database
+    QUERY = args.query
+    OUTPUT = args.output
+    ORIG = args.orig
+    EMAIL = args.email
+    BATCHSIZE = args.batchsize
+
+    ## download taxonomy data from NCBI
+    if SOURCE == 'taxonomy':
+        print('\ndownloading taxonomy information')
+        url_acc2taxid = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz'
+        url_taxdump = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz'        
+        results = sp.run(['wget', url_acc2taxid])
+        results = sp.run(['gunzip', 'nucl_gb.accession2taxid.gz'])
+        results = sp.run(['wget', url_taxdump])
+        results = sp.run(['tar', '-zxvf', 'taxdump.tar.gz'])
+        print('removing intermediary files\n')
+        files_to_remove = ['citations.dmp', 'delnodes.dmp', 'division.dmp', 'gencode.dmp', 'merged.dmp', 'gc.prt', 'readme.txt', 'taxdump.tar.gz']
+        for file in files_to_remove:
+            os.remove(file)
+
+    ## download sequencing data from NCBI
+    elif SOURCE == 'ncbi':
+        if all(v is not None for v in [DATABASE, QUERY, OUTPUT, EMAIL]):
+            print('\ndownloading sequences from NCBI')
+            ncbi_download = wget_ncbi(QUERY, DATABASE, EMAIL, BATCHSIZE)
+            print('formatting the downloaded sequencing file to CRABS format')
+            format_seqs = ncbi_formatting(OUTPUT, ORIG)
+            print(f'written {format_seqs} sequences to {OUTPUT}\n')
+        else:
+            print('\nnot all parameters have an input value\n')
+
+    ## download sequencing data from EMBL
+    elif SOURCE == 'embl':
+        if all(v is not None for v in [DATABASE, OUTPUT]):
+            print('\ndownloading sequences from EMBL')
+            dl_files = embl_download(DATABASE)
+            fasta_file = embl_fasta_format(dl_files)
+            print(f'formatting intermediary file to CRABS format')
+            crabs_file = embl_crabs_format(fasta_file, OUTPUT, ORIG)
+            print(f'written {crabs_file} sequences to {OUTPUT}\n')
+        else:
+            print('\nnot all parameters have an input value\n')
+
+    ## download sequencing data from MitoFish
+    elif SOURCE == 'mitofish':
+        if all(v is not None for v in [OUTPUT]):
+            print('\ndownloading sequences from the MitoFish database')
+            url = 'http://mitofish.aori.u-tokyo.ac.jp/files/complete_partial_mitogenomes.zip'
+            dl_file = mitofish_download(url)
+            print(f'formatting {dl_file} to CRABS format')
+            mitoformat = mitofish_format(dl_file, OUTPUT, ORIG)
+            print(f'written {mitoformat} sequences to {OUTPUT}\n')
+        else:
+            print('\nnot all parameters have an input value\n')
+
+    ## download sequencing data from BOLD
+    elif SOURCE == 'bold':
+        if all(v is not None for v in [DATABASE, OUTPUT]):
+            print('\ndownloading sequences from BOLD')
+            bold_file = bold_download(DATABASE)
+            print(f'downloaded {bold_file} sequences from BOLD')
+            print(f'formatting {bold_file} sequences to CRABS format')
+            boldformat = bold_format(OUTPUT, ORIG)
+            print(f'written {boldformat} sequences to {OUTPUT}\n')
+        else:
+            print('\nnot all parameters have an input value\n')
+
+## function: import existing or custom database
+def db_import(args):
+    INPUT = args.input
+    HEADER = args.header
+    OUTPUT = args.output
+    FWD = args.fwd
+    REV = args.rev
+    DELIM = args.delim
+
+    ## process file with accession number in header
+    if HEADER == 'accession':
+        if all(v is not None for v in [INPUT, OUTPUT, DELIM]):
+            print(f'\nchecking correct formatting of accession numbers in {INPUT}')
+            incorrect_accession = check_accession(INPUT, OUTPUT, DELIM)
+            if len(incorrect_accession) != 0:
+                print('found incorrectly formatted accession numbers, please check file: "incorrect_accession_numbers.txt"')
+                with open('incorrect_accession_numbers.txt', 'w') as fout:
+                    for item in incorrect_accession:
+                        fout.write(item + '\n')
+            if all(v is not None for v in [FWD, REV]):
+                print(f'appending primer sequences to {OUTPUT}')
+                numseq = append_primer_seqs(OUTPUT, FWD, REV)
+                print(f'added primers to {numseq} sequences in {OUTPUT}\n')
+            else:
+                print('')
+        else:
+            print('\nnot all parameters have an input value\n')
+
+    ## process file with species info in header
+    elif HEADER == 'species':
+        if all(v is not None for v in [INPUT, OUTPUT, DELIM]):
+            print(f'\ngenerating new sequence headers for {INPUT}')
+            num_header = generate_header(INPUT, OUTPUT, DELIM)
+            print(f'generated {num_header} headers for {OUTPUT}')
+            if all(v is not None for v in [FWD, REV]):
+                print(f'appending primer sequences to {OUTPUT}')
+                numseq = append_primer_seqs(OUTPUT, FWD, REV)
+                print(f'added primers to {numseq} sequences in {OUTPUT}\n')
+            else:
+                print('')
+        else:
+            print('\nnot all parameters have an input value\n')
+    else:
+        print('\nplease specify header information: "accession" and "species"\n')
+
+## function: merge multiple databases
+def db_merge(args):
+    INPUT = args.input
+    UNIQ = args.uniq
+    OUTPUT = args.output
+
+    if UNIQ != '':
+        print('\nmerging all fasta files and discarding duplicate sequence headers')
+        num_uniq = merge_databases(INPUT, OUTPUT)
+        print(f'written {num_uniq} sequences to {OUTPUT}\n')
+    else:
+        print('\nmerging all fasta files and keeping duplicate sequence headers')
+        with open(OUTPUT, 'w') as fout:
+            for file in INPUT:
+                num = len(list(SeqIO.parse(file, 'fasta')))
+                print(f'found {num} sequences in {file}')
+                with open(file, 'r') as fin:
+                    for line in fin:
+                        fout.write(line)
+        num = len(list(SeqIO.parse(OUTPUT, 'fasta')))
+        print(f'written {num} sequences to {OUTPUT}\n')
+
+
+################################################
+############# MODULE IN SILICO PCR #############
+################################################
+
+## function: in silico PCR
+def insilico_pcr(args):
+    FWD = args.fwd
+    REV = args.rev
+    INPUT = args.input
+    ERROR = args.error
+    OUTPUT = args.output
+
+    ## reverse complement reverse primer sequence
+    REV_CORRECT = str(Seq(REV).reverse_complement())
+
+    ## setting variable names using the info from user input
+    TRIMMED_INIT = 'init_trimmed.fasta'
+    UNTRIMMED_INIT = 'init_untrimmed.fasta'
+    REVCOMP_UNTRIMMED_INIT = 'revcomp_untrimmed.fasta'
+    TRIMMED_REVCOMP = 'revcomp_trimmed.fasta'
+    UNTRIMMED_REVCOMP = 'untrimmed_revcomp.fasta'
+
+    OVERLAP = str(min([len(FWD), len(REV_CORRECT)]))
+    ADAPTER = FWD + '...' + REV_CORRECT
+
+    ## run cutadapt on downloaded fasta file
+    count_init = len(list(SeqIO.parse(INPUT, 'fasta')))
+    print('\nrunning in silico PCR on fasta file containing {} sequences'.format(count_init))
+    cmnd_cutadapt_1 = ['cutadapt', '-g', ADAPTER, '-o', TRIMMED_INIT, INPUT, '--untrimmed-output', UNTRIMMED_INIT, '--no-indels', '-e', ERROR, '--overlap', OVERLAP, '--quiet']
+    sp.call(cmnd_cutadapt_1)
+    count_trimmed_init = len(list(SeqIO.parse(TRIMMED_INIT, 'fasta')))
+    print('found primers in {} sequences'.format(count_trimmed_init))
+
+    ## run vsearch to reverse complement untrimmed sequences
+    if count_trimmed_init < count_init:
+        count_untrimmed_init = len(list(SeqIO.parse(UNTRIMMED_INIT, 'fasta')))
+        print('reverse complementing {} untrimmed sequences'.format(count_untrimmed_init))
+        cmnd_vsearch_revcomp = ['vsearch', '--fastx_revcomp', UNTRIMMED_INIT, '--fastaout', REVCOMP_UNTRIMMED_INIT, '--quiet']
+        sp.call(cmnd_vsearch_revcomp)
+
+        ## run cutadapt on reverse complemented untrimmed sequences
+        print('running in silico PCR on {} reverse complemented untrimmed sequences'.format(count_untrimmed_init))
+        cmnd_cutadapt_2 = ['cutadapt', '-g', ADAPTER, '-o', TRIMMED_REVCOMP, REVCOMP_UNTRIMMED_INIT, '--untrimmed-output', UNTRIMMED_REVCOMP, '--no-indels', '-e', ERROR, '--overlap', OVERLAP, '--quiet']
+        sp.call(cmnd_cutadapt_2)
+        count_trimmed_second = len(list(SeqIO.parse(TRIMMED_REVCOMP, 'fasta')))
+        print('found primers in {} sequences\n'.format(count_trimmed_second))
+
+        ## concatenate both trimmed files
+        with open(OUTPUT, 'wb') as wfd:
+            for f in [TRIMMED_INIT, TRIMMED_REVCOMP]:
+                with open(f, 'rb') as fd:
+                    shutil.copyfileobj(fd, wfd)
+        
+        ## remove intermediary files
+        files = [TRIMMED_INIT, UNTRIMMED_INIT, REVCOMP_UNTRIMMED_INIT, TRIMMED_REVCOMP, UNTRIMMED_REVCOMP]
+        for file in files:
+            os.remove(file)
+    
+    ## don't run reverse complement when initial in silico PCR trims all sequences
+    else:
+        print('all sequences trimmed, no reverse complement step\n')
+        results = sp.run(['mv', TRIMMED_INIT, OUTPUT])
+        os.remove(UNTRIMMED_INIT)
+
+################################################
+########## MODULE TAXONOMY ASSIGNMENT ##########
+################################################
+## function: get taxonomic lineage for each accession number
+def assign_tax(args):
+    INPUT = args.input
+    OUTPUT = args.output
+    ACC2TAX = args.acc2tax
+    TAXID = args.taxid
+    NAME = args.name
+
+    ## process initial files
+    print(f'\nretrieving accession numbers from {INPUT}')
+    accession = get_accession(INPUT)
+    print(f'found {len(accession)} accession numbers in {INPUT}')
+    acc2tax, taxid, name, no_acc = tax2dict(ACC2TAX, TAXID, NAME, accession)
+    print(f'processed {len(acc2tax)} entries in {ACC2TAX}')
+    print(f'processed {len(taxid)} entries in {TAXID}')
+    print(f'processed {len(name)} entries in {NAME}')
+
+
+    ## get taxonomic lineage
+    print(f'assigning a tax ID number to {len(accession)} accession numbers from {INPUT}')
+    acc_taxid_dict, taxid_list = acc_to_dict(accession, acc2tax, no_acc)
+    print(f'{len(acc_taxid_dict)} accession numbers resulted in {len(taxid_list)} unique tax ID numbers')
+    print(f'generating taxonomic lineages for {len(taxid_list)} tax ID numbers')
+    lineage = get_lineage(taxid_list, taxid, name)
+    print(f'assigning a taxonomic lineage to {len(accession)} accession numbers')
+    final_lineage = final_lineage_comb(acc_taxid_dict, lineage, INPUT, OUTPUT)
+    print(f'written {len(final_lineage)} entries to {OUTPUT}\n')
+
+################################################
+########### MODULE DATABASE CLEAN-UP ###########
+################################################
+
+## function: dereplicating the database
+def dereplicate(args):
+    INPUT = args.input
+    OUTPUT = args.output
+    METHOD = args.method
+
+    ## dereplicate strict (only unique sequences)
+    if METHOD == 'strict':
+        print(f'\nstrict dereplication of {INPUT}, only keeping unique sequences')
+        uniq_seqs = {}
+        uniq_line = []
+        count = 0
+        added = 0
+        with open(INPUT, 'r') as file_in:
+            for line in file_in:
+                count = count + 1
+                lines = line.rstrip('\n')
+                seq = lines.split('\t')[9]
+                if seq not in uniq_seqs:
+                    added = added + 1
+                    uniq_seqs[seq] = seq
+                    uniq_line.append(line)
+        print(f'found {count} sequences in {INPUT}')
+        print(f'written {added} sequences to {OUTPUT}\n')
+        with open(OUTPUT, 'w') as file_out:
+            for line in uniq_line:
+                file_out.write(line)
+
+    ## dereplicate single species (one sequence per species)
+    elif METHOD == 'single_species':
+        print(f'\ndereplicating {INPUT}, only keeping a single sequence per species')
+        uniq_spec = {}
+        uniq_line = []
+        count = 0
+        added = 0
+        with open(INPUT, 'r') as file_in:
+            for line in file_in:
+                count = count + 1
+                lines = line.rstrip('\n')
+                species = lines.split('\t')[8].split(',')[2]
+                if species not in uniq_spec:
+                    added = added + 1
+                    uniq_spec[species] = species 
+                    uniq_line.append(line)
+        print(f'found {count} sequences in {INPUT}')
+        print(f'written {added} sequences to {OUTPUT}\n')
+        with open(OUTPUT, 'w') as file_out:
+            for line in uniq_line:
+                file_out.write(line)
+
+    ## dereplicate unique species (all unique sequences per species)
+    elif METHOD == 'uniq_species':
+        print(f'\ndereplicating {INPUT}, keeping all unique sequences per species')
+        mydict = collections.defaultdict(list)
+        count = 0
+        added = 0
+        with open(INPUT, 'r') as file_in:
+            for line in file_in:
+                count = count + 1
+                lines = line.rstrip('\n')
+                spec = lines.split('\t')[8].split(',')[2]
+                seq = lines.split('\t')[9]
+                line_id = lines
+                seq_dicts = []
+                for item in mydict[spec]:
+                    seq_dict = item.rsplit('\t', 1)[1]
+                    seq_dicts.append(seq_dict)
+                if seq not in seq_dicts:
+                    added = added + 1
+                    mydict[spec].append(line_id)
+        print(f'found {count} sequences in {INPUT}')
+        print(f'written {added} sequences to {OUTPUT}\n')
+        with open(OUTPUT, 'w') as file_out:
+            for k, v in mydict.items():
+                for i in v:
+                    file_out.write(i + '\n')
+
+    ## dereplicate concensus species (generate concensus sequence for each species)
+    elif METHOD == 'consensus':
+        print('still to add...')
+
+    ## unknown method specified
+    else:
+        print('\nplease specify one of the accepted dereplication methods: "strict", "single_species", "uniq_species"\n')
+
+## function: sequence cleanup
+def db_filter(args):
+    MINLEN = args.minlen
+    MAXLEN = args.maxlen
+    MAXNS = args.maxns
+    INPUT = args.input
+    OUTPUT = args.output
+    DISCARD = args.discard
+    ENV = args.env
+    SPEC = args.spec
+    NANS = args.nans
+
+    ## set filtering parameters
+    print(f'\nfiltering parameters:\nremoving sequences shorter than {MINLEN} and longer than {MAXLEN}\nremoving sequences containing more than {MAXNS} "N"')
+    if ENV == 'no':
+        env = 100
+        print('keeping environmental sequences')
+    else:
+        env = 0
+        print('removing environmental sequences')
+    if SPEC == 'no':
+        print('keeping sequences unclassified at species level')
+        spec = 100
+    else:
+        spec = 0
+        print('removing sequences without a species ID')
+    if NANS == 'no':
+        nans = 100
+        print('keeping sequences with missing taxonomic information')
+    else:
+        nans = int(NANS)
+        print(f'removing sequences with missing information for more than {NANS} taxonomic levels')
+    nancount = 0
+    mincount = 0
+    maxcount = 0
+    mxncount = 0
+    speccount = 0
+    envcount = 0
+
+
+    ## read the input file and clean up given the parameters
+    clean_db = []
+    discard_db = []
+    count = 0
+    count_clean = 0
+    # try pandas here? 
+    with open(INPUT, 'r') as file_in:
+        for line in file_in:
+            count = count + 1
+            lines = line.rstrip('\n')
+            upline = lines.upper()
+            seq = upline.rsplit('\t', 1)[1]
+            species = upline.split('\t')[8]
+            if len(seq) >= MINLEN and len(seq) <= MAXLEN and seq.count('N') <= MAXNS and species.count('ENVIRONMENTAL') <= env and species.count('_SP.') <= spec and upline.count(',NAN') <= nans:
+                count_clean = count_clean + 1
+                clean_db.append(line)
+            else:
+                discard_db.append(line)
+    
+    ## write cleaned database to file
+    cleaned = count - count_clean
+    print(f'found {count} number of sequences in {INPUT}')
+    print(f'removed {cleaned} sequences during filtering')
+    print(f'written {count_clean} sequences to {OUTPUT}\n')
+    # try to break down the number of each category removed
+    for dis in discard_db:
+        dlines = dis.rstrip('\n')
+        dupline = dlines.upper()
+        dseq = dupline.rsplit('\t', 1)[1]
+        dspecies = dupline.split('\t')[8]
+        if len(dseq) <= MINLEN:
+            mincount += 1
+        if len(dseq) >= MAXLEN:
+            maxcount += 1
+        if dseq.count('N') >= MAXNS:
+            mxncount += 1
+        if dspecies.count('ENVIRONMENTAL') >= env:
+            envcount += 1
+        if dspecies.count('_SP.') >= spec:
+            speccount += 1
+        if dupline.count(',NAN') >= nans:
+            nancount += 1
+    if mincount > 0:
+        print(f'\tremoved {mincount} sequences below Minimum count')
+    if maxcount > 0:
+        print(f'\tremoved {maxcount} sequences above Maximum count')
+    if mxncount > 0:
+        print(f'\tremoved {mxncount} sequences with too many Ns')
+    if ENV == 'no':
+        if envcount > 0:
+            print(f'\tremoved {envcount} sequences listed as "Environmental"')
+    if SPEC == 'yes':
+        if speccount > 0:
+            print(f'\tremoved {speccount} sequences listed as sp.')
+    if NANS == 'no':
+        if nancount > 0:
+            print(f'\tremoved {nancount} sequences with missing taxonomic information')
+
+    # now output to files
+    with open(OUTPUT, 'w') as file_out:
+        for item in clean_db:
+            file_out.write(item)
+    if DISCARD != 'no':
+        with open(DISCARD, 'w') as dis_out:
+            for item in discard_db:
+                dis_out.write(item)
+
+################################################
+############# MODULE VISUALISATION #############
+################################################
+
+## figure output
+def visualization(args):
+    INPUT = args.input
+    OUTPUT = args.output
+    METHOD = args.method
+    LEVEL = args.level
+    SPECIES = args.species
+    TAXID = args.taxid
+    NAME = args.name
+
+    ## horizontal barchart
+    if METHOD == 'diversity':
+        tax_group_list, uniq_tax_group_list, species_dict = split_db_by_taxgroup(INPUT, LEVEL)
+        sequence_counter = Counter(tax_group_list)
+        list_info_dict = num_spec_seq_taxgroup(uniq_tax_group_list, species_dict, sequence_counter)
+        sorted_info = sorted(list_info_dict, key = lambda i: (i['sequence']))
+        figure = horizontal_barchart(sorted_info)
+    
+    ## length distribution
+    elif METHOD == 'amplicon_length':
+        amp_length_dict = get_amp_length(INPUT, LEVEL)
+        figure = amplength_figure(amp_length_dict)
+    
+    ## completeness table
+    elif METHOD == 'db_completeness':
+
+        ## read in the text file with species names
+        species_list = []
+        with open(SPECIES, 'r') as species_file:
+            for line in species_file:
+                species = line.rstrip('\n').replace(' ', '_')
+                species_list.append(species)
+        print(f'\nfound {len(species_list)} species of interest in {SPECIES}: {species_list}')
+
+        ## retrieve taxonomic lineage
+        print(f'generating taxonomic lineage for {len(species_list)} species')
+        name, node, taxid = file_dmp_to_dict(NAME, TAXID)
+        species_taxid_dict, taxid_list = species_to_taxid(species_list, taxid)
+        lineage = lineage_retrieval(taxid_list, node, name)
+        final_dict = collections.defaultdict(list)
+        for k, v in species_taxid_dict.items():
+            final_dict[k] = lineage[v]
+        print(f'gathering data for {len(final_dict)} species\n')
+
+        ## retrieve information about potential number of taxa shared with species of interest on genus and family level based on NCBI taxonomy files
+        table_info_dict = collections.defaultdict(dict)
+        for k, v in species_taxid_dict.items():
+            species = k
+            genus_count = 0
+            family_count = 0
+            ## find genus taxids
+            if v in node:
+                genus = node[v][1]
+            ## count number of species in genus
+            for k, v in node.items():
+                if v[1] == genus and v[0] == 'species':
+                    genus_count = genus_count + 1
+            ## find family taxids
+            if genus in node:
+                family = node[genus][1]
+            ## count number of species in family
+            for k, v in node.items():
+                if v[1] == family and v[0] == 'genus':
+                    genus = k
+                    for key, value in node.items():
+                        if value[1] == genus and value[0] == 'species':
+                            family_count = family_count + 1
+            table_info_dict[species] = {'species' : species, 'genus_num_ncbi' : genus_count, 'family_num_ncbi' : family_count}
+
+        ## retrieve information about number of taxa shared with species of interest on genus and family level in reference database
+        for k, v in final_dict.items():
+            species = k
+            genus = v[5]
+            family = v[4]
+            with open(INPUT, 'r') as file_in:
+                spec_db_count = []
+                genus_db_count = []
+                family_db_count = []
+                for line in file_in:
+                    spec_db = line.split('\t')[8].split(',')[2]
+                    genus_db = line.split('\t')[7].split(',')[2]
+                    family_db = line.split('\t')[6].split(',')[2]
+                    if spec_db == species:
+                        if spec_db not in spec_db_count:
+                            spec_db_count.append(spec_db)
+                    if genus_db == genus:
+                        if spec_db not in genus_db_count:
+                            genus_db_count.append(spec_db)
+                    if family_db == family:
+                        if spec_db not in family_db_count:
+                            family_db_count.append(spec_db)
+            for k, v in table_info_dict.items():
+                if k == species:
+                    v['species_in_ref_DB'] = len(spec_db_count)
+                    v['genus_num_ref_DB'] = len(genus_db_count)
+                    v['family_num_ref_DB'] = len(family_db_count)
+                    v['genus_list_ref_DB'] = genus_db_count
+                    v['family_list_ref_DB'] = family_db_count
+        df = pd.DataFrame.from_dict(table_info_dict, orient = 'index')
+        df['Completeness_genus'] = df['genus_num_ref_DB'] / df['genus_num_ncbi'] * 100
+        df['Completeness_family'] = df['family_num_ref_DB'] / df['family_num_ncbi'] * 100
+        df = df[['species', 'species_in_ref_DB', 'genus_num_ref_DB', 'genus_num_ncbi', 'Completeness_genus', 'family_num_ref_DB', 'family_num_ncbi', 'Completeness_family', 'genus_list_ref_DB', 'family_list_ref_DB']]
+        df.to_csv(OUTPUT, sep = '\t', index = None)
+    
+    ## phylogenetic tree
+    elif METHOD == 'phylo':
+        ## read in the text file with species names
+        species_list = []
+        with open(SPECIES, 'r') as species_file:
+            for line in species_file:
+                species = line.rstrip('\n').replace(' ', '_')
+                species_list.append(species)
+        print(f'\nfound {len(species_list)} species of interest in {SPECIES}: {species_list}')
+
+        ## retrieve taxonomic lineage
+        print(f'generating taxonomic lineage for {len(species_list)} species')
+        name, node, taxid = file_dmp_to_dict(NAME, TAXID)
+        species_taxid_dict, taxid_list = species_to_taxid(species_list, taxid)
+        lineage = lineage_retrieval(taxid_list, node, name)
+        final_dict = collections.defaultdict(list)
+        for k, v in species_taxid_dict.items():
+            final_dict[k] = lineage[v]
+        print(f'gathering data for {len(final_dict)} species')
+
+        ## gather sequences from database that share taxonomic rank
+        ranks = ['superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
+        count = 0
+        for item in ranks:
+            if item == LEVEL:
+                break
+            else:
+                count = count + 1
+        for k, v in final_dict.items():
+            species = k
+            taxrank = v[count]
+            species_file = []
+            try:
+                os.remove(f'{species}_phylo.fasta')
+            except OSError:
+                pass
+            with open(INPUT, 'r') as file_in:
+                for line in file_in:
+                    rank = line.split('\t')[count + 2].split(',')[2]
+                    #print(rank)
+                    if rank == taxrank:
+                        species_file.append(line)
+            for item in species_file:
+                if len(species_file) < 2:
+                    print(f'only {len(species_file)} sequence in database that shares the {LEVEL} taxonomic rank with {species}, omitted from phylogenetic analysis.')
+                elif len(species_file) > 100:
+                    print(f'{len(species_file)} sequences in database that share the {LEVEL} taxonomic rank with {species}, omitted from phylogenetic analysis')
+                else:
+                    header = '>' + item.split('\t')[0] + '_' + item.split('\t')[8].split(',')[2]
+                    seq = item.rsplit('\t', 1)[1]
+                    with open(f'{species}_phylo.fasta', 'a') as file_out:
+                        file_out.write(header + '\n')
+                        file_out.write(seq)
+            
+        for species in species_list:
+            my_file = Path(f'{species}_phylo.fasta')
+            if my_file.is_file():
+                print(f'generating phylogenetic tree for {species}')
+                muscle_cline = MuscleCommandline(input = my_file, out = f'{species}_align.clw', diags = True, maxiters = 1, log = f'{species}_align_log.txt', clw = True)
+                muscle_cline()
+                with open(f'{species}_align.clw', 'r') as aln:
+                    alignment = AlignIO.read(aln, 'clustal')
+                calculator = DistanceCalculator('identity')
+                Distance_matrix = calculator.get_distance(alignment)
+                constructor = DistanceTreeConstructor(calculator, 'nj')
+                tree = constructor.build_tree(alignment)
+                fig = plt.figure(figsize = (25,15), dpi = 100)
+                matplotlib.rc('font', size=12)   
+                matplotlib.rc('xtick', labelsize=10)   
+                matplotlib.rc('ytick', labelsize=10)    
+                axes = fig.add_subplot(1, 1, 1)
+                Phylo.draw(tree, axes=axes, do_show = False)
+                fig.savefig(f'{species}_tree_figure.pdf')
+                print()
+
+    ## incorrect parameter
+    else:
+        print('\nplease specify method of visualization: "diversity", "amplicon_length", "db_completeness", "phylo"\n')
+
+## format the taxonomic lineage
+def tax_format(args):
+    INPUT = args.input
+    OUTPUT = args.output
+    FORMAT = args.format
+
+    ## format database to sintax
+    if FORMAT == 'sintax':
+        print(f'\nformatting {INPUT} to sintax format\n')
+        with open(OUTPUT, 'w') as f_out:
+            with open(INPUT, 'r') as f_in:
+                for line in f_in:
+                    line = line.rstrip('\n')
+                    # splitting the line just once, may save a little time
+                    lineparts = line.split('\t')
+                    seq = lineparts[9]
+                    otu = lineparts[0]
+                    taxa = lineparts[2:-1]
+                    # a list comprehension to get the third section
+                    parts = [i.split(',')[2] for i in taxa]
+                    sintax = '>'+otu+';tax=d:'+parts[0]+',p:'+parts[1]+',c:'+parts[2]+',o:'+parts[3]+',f:'+parts[4]+',g:'+parts[5]+',s:'+parts[6]+'\n'+seq+'\n'
+                    #sintax = '>' + line.split('\t')[0] + ';tax=d:' + line.split('\t')[2].split(',')[2] + ',p:' + line.split('\t')[3].split(',')[2] + ',c:' + line.split('\t')[4].split(',')[2] + ',o:' + line.split('\t')[5].split(',')[2] + ',f:' + line.split('\t')[6].split(',')[2] + ',g:' + line.split('\t')[7].split(',')[2] + ',s:' + line.split('\t')[8].split(',')[2] + '\n' + line.split('\t')[9] + '\n'
+                    f_out.write(sintax)
+
+    ## format database to RDP
+    elif FORMAT == 'rdp':
+        print(f'\nformatting {INPUT} to RDP format\n')
+        with open(OUTPUT, 'w') as f_out:
+            with open(INPUT, 'r') as f_in:
+                for line in f_in:
+                    line = line.rstrip('\n')
+                    rdp = '>' + line.split('\t')[0] + '\t' + 'root;' + line.split('\t')[2].split(',')[2] + ';' + line.split('\t')[3].split(',')[2] + ';' + line.split('\t')[4].split(',')[2] + ';' + line.split('\t')[5].split(',')[2] + ';' + line.split('\t')[6].split(',')[2] + ';' + line.split('\t')[7].split(',')[2] + ';' + line.split('\t')[8].split(',')[2] + '\n' + line.split('\t')[9] + '\n'
+                    f_out.write(rdp)
+
+    ## format database to QIIf
+    elif FORMAT == 'qiif':
+        print(f'\nformatting {INPUT} to QIIf format\n')
+        fasta_f = OUTPUT + '.fasta'
+        txt_f = OUTPUT + '.txt'
+        with open(fasta_f, 'w') as f_out:
+            with open(INPUT, 'r') as f_in:
+                for line in f_in:
+                    line = line.rstrip('\n')
+                    fasta = '>' + line.split('\t')[0] + '\n' + line.split('\t')[9] + '\n'
+                    f_out.write(fasta)
+        with open(txt_f, 'w') as f_out:
+            with open(INPUT, 'r') as f_in:
+                for line in f_in:   
+                    tax = line.split('\t')[0] + '\t' + 'k__' + line.split('\t')[2].split(',')[2] + ';p__' + line.split('\t')[3].split(',')[2] + ';c__' + line.split('\t')[4].split(',')[2] + ';o__' + line.split('\t')[5].split(',')[2] + ';f__' + line.split('\t')[6].split(',')[2] + ';g__' + line.split('\t')[7].split(',')[2] + ';s__' + line.split('\t')[8].split(',')[2] + '\n'
+                    f_out.write(tax)
+
+    ## format database to QIIz
+    elif FORMAT == 'qiiz':
+        print(f'\nformatting {INPUT} to QIIz format')
+        print('still to add, not sure how this looks like')
+    
+    ## format database to DAD
+    elif FORMAT == 'dad':
+        print(f'\nformatting {INPUT} to DAD format\n')
+        with open(OUTPUT, 'w') as f_out:
+            with open(INPUT, 'r') as f_in:
+                for line in f_in:
+                    line = line.rstrip('\n')
+                    dad = '>' + line.split('\t')[2].split(',')[2] + ';' + line.split('\t')[3].split(',')[2] + ';' + line.split('\t')[4].split(',')[2] + ';' + line.split('\t')[5].split(',')[2] + ';' + line.split('\t')[6].split(',')[2] + ';' + line.split('\t')[7].split(',')[2] + '\n' + line.split('\t')[9] + '\n'
+                    f_out.write(dad)
+
+    ## format database to DADs
+    elif FORMAT == 'dads':
+        print(f'\nformatting {INPUT} to DADs format\n')
+        with open(OUTPUT, 'w') as f_out:
+            with open(INPUT, 'r') as f_in:
+                for line in f_in:
+                    line = line.rstrip('\n')
+                    dads = '>' + line.split('\t')[0] + ' ' + line.split('\t')[7].split(',')[2] + ' ' + line.split('\t')[8].split(',')[2] + '\n' + line.split('\t')[9] + '\n'
+                    f_out.write(dads)
+    
+    ## format database to IDT
+    elif FORMAT == 'idt':
+        print(f'\nformatting {INPUT} to IDT format\n')
+        with open(OUTPUT, 'w') as f_out:
+            with open(INPUT, 'r') as f_in:
+                for line in f_in:
+                    line = line.rstrip('\n')
+                    idt = '>' + line.split('\t')[2].split(',')[2] + ';' + line.split('\t')[3].split(',')[2] + ';' + line.split('\t')[4].split(',')[2] + ';' + line.split('\t')[5].split(',')[2] + ';' + line.split('\t')[6].split(',')[2] + ';' + line.split('\t')[7].split(',')[2] + ';' + line.split('\t')[8].split(',')[2] + '\n' + line.split('\t')[9] + '\n'
+                    f_out.write(idt)
+
+    ## unknown format specified
+    else:
+        print('\nplease specify one of the accepted formats: "sintax", "rdp", "qiif", "qiiz", "dad", "dads", "idt"\n')
+
+################################################
+################### ARGPARSE ###################
+################################################
+def main():
+    parser = argparse.ArgumentParser(description = 'creating a curated reference database')
+    subparser = parser.add_subparsers()
+
+    db_download_parser = subparser.add_parser('db_download', description = 'downloading sequence data from online databases')
+    db_download_parser.set_defaults(func = db_download)
+    db_download_parser.add_argument('-s', '--source', help = 'specify online database used to download sequences. Currently supported options are: (1) ncbi, (2) embl, (3) mitofish, (4) bold, (5) taxonomy', dest = 'source', type = str, required = True)
+    db_download_parser.add_argument('-db', '--database', help = 'specific database used to download sequences. Example NCBI: nucleotide. Example EMBL: mam*. Example BOLD: Actinopterygii', dest = 'database', type = str)
+    db_download_parser.add_argument('-q', '--query', help = 'NCBI query search to limit portion of database to be downloaded. Example: "16S[All Fields] AND ("1"[SLEN] : "50000"[SLEN])"', dest = 'query', type = str)
+    db_download_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str)
+    db_download_parser.add_argument('-k', '--keep_original', help = 'keep original downloaded file, default = "no"', dest = 'orig', type = str, default = 'no')
+    db_download_parser.add_argument('-e', '--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str)
+    db_download_parser.add_argument('-b', '--batchsize', help = 'number of sequences downloaded from NCBI per iteration. Default = 5000', dest = 'batchsize', type = int, default = 5000)
+
+    db_import_parser = subparser.add_parser('db_import', description = 'import existing or curated database')
+    db_import_parser.set_defaults(func = db_import)
+    db_import_parser.add_argument('-i', '--input', help = 'input database filename', dest = 'input', type = str, required = True)
+    db_import_parser.add_argument('-s', '--seq_header', help = 'information provided in sequence header: "accession" or "species"', dest = 'header', type = str, required = True)
+    db_import_parser.add_argument('-o', '--output', help = 'output file name option', dest = 'output', type = str, required = True)
+    db_import_parser.add_argument('-f', '--fwd', help = 'forward primer sequence in 5-3 direction', dest = 'fwd', type = str)
+    db_import_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest = 'rev', type = str)
+    db_import_parser.add_argument('-d', '--delim', help = 'delimiter specifying species or accession', dest = 'delim', type = str, required = True)
+
+    db_merge_parser = subparser.add_parser('db_merge', description = 'merge multiple databases')
+    db_merge_parser.set_defaults(func = db_merge)
+    db_merge_parser.add_argument('-i', '--input', nargs = '+', help = 'list of files to be merged', dest = 'input', required = True)
+    db_merge_parser.add_argument('-u', '--uniq', help = 'keep only unique accession numbers', dest = 'uniq', type = str, default = '')
+    db_merge_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
+    
+    in_silico_pcr_parser = subparser.add_parser('insilico_pcr', description = 'curating the downloaded reference sequences with an in silico PCR')
+    in_silico_pcr_parser.set_defaults(func = insilico_pcr)
+    in_silico_pcr_parser.add_argument('-f', '--fwd', help = 'forward primer sequence in 5-3 direction', dest = 'fwd', type = str, required = True)
+    in_silico_pcr_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest = 'rev', type = str, required = True)
+    in_silico_pcr_parser.add_argument('-i', '--input', help = 'input filename', dest = 'input', type = str, required = True)
+    in_silico_pcr_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
+    in_silico_pcr_parser.add_argument('-e', '--error', help = 'number of errors allowed in primer-binding site. Default = 4.5', dest = 'error', type = str, default = '4.5')
+
+    ref_database_parser = subparser.add_parser('assign_tax', description = 'creating the reference database with taxonomic information')
+    ref_database_parser.set_defaults(func = assign_tax)
+    ref_database_parser.add_argument('-i', '--input', help = 'input file containing the curated fasta sequences after in silico PCR', dest = 'input', type = str, required = True)
+    ref_database_parser.add_argument('-o', '--output', help = 'curated reference database output file', dest = 'output', type = str, required = True)
+    ref_database_parser.add_argument('-a', '--acc2tax', help = 'accession to taxid file name', dest = 'acc2tax', type = str, required = True)
+    ref_database_parser.add_argument('-t', '--taxid', help = 'taxid file name', dest = 'taxid', type = str, required = True)
+    ref_database_parser.add_argument('-n', '--name', help = 'phylogeny file name', dest = 'name', type = str, required = True)
+
+    dereplication_parser = subparser.add_parser('dereplicate', description = 'dereplicating the database')
+    dereplication_parser.set_defaults(func = dereplicate)
+    dereplication_parser.add_argument('-i', '--input', help = 'filename of the curated reference database', dest = 'input', type = str, required = True)
+    dereplication_parser.add_argument('-o', '--output', help = 'filename of the dereplicated curated reference database', dest = 'output', type = str, required = True)
+    dereplication_parser.add_argument('-m', '--method', help = 'method of dereplication: "strict", "single_species", "uniq_species"', dest = 'method', type = str, required = True)
+
+    seq_cleanup_parser = subparser.add_parser('seq_cleanup', description = 'filtering the database on sequence and header parameters')
+    seq_cleanup_parser.set_defaults(func = db_filter)
+    seq_cleanup_parser.add_argument('-min', '--minlen', help = 'minimum sequence length to be retained in the database. Default = 100', dest = 'minlen', type = int, default = '100')
+    seq_cleanup_parser.add_argument('-max', '--maxlen', help = 'maximum sequence length to be retained in the database. Default = 500', dest = 'maxlen', type = int, default = '500')
+    seq_cleanup_parser.add_argument('-n', '--maxns', help = 'maximum number of ambiguous bases allowed in the sequence. Default = 0', dest = 'maxns', type = int, default = '0')
+    seq_cleanup_parser.add_argument('-i', '--input', help = 'input file name', dest = 'input', type = str, required = True)
+    seq_cleanup_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
+    seq_cleanup_parser.add_argument('-d', '--discard', help = 'file name of discarded sequences', dest = 'discard', type = str, default = 'no')
+    seq_cleanup_parser.add_argument('-e', '--enviro', help = 'discard environmental sequences from the dataset. yes/no', dest = 'env', type = str, default = 'no')
+    seq_cleanup_parser.add_argument('-s', '--species', help = 'discard sequences for which the species name is unspecified. yes/no', dest = 'spec', type = str, default = 'no')
+    seq_cleanup_parser.add_argument('-na', '--nans', help = 'discard sequences with N number of unspecified taxonomic levels', dest = 'nans', type = str, default = 'no')
+    
+    visualization_parser = subparser.add_parser('visualization', description = 'figure displaying various aspects of the reference database')
+    visualization_parser.set_defaults(func = visualization)
+    visualization_parser.add_argument('-i', '--input', help = 'input file name', dest = 'input', type = str, required = True)
+    visualization_parser.add_argument('-o', '--output', help = 'output file name for db_completeness method', dest = 'output', type = str)
+    visualization_parser.add_argument('-m', '--method', help = 'method of visualization: "diversity", "amplicon_length", "db_completeness", "phylo"', dest = 'method', type = str, required = True)
+    visualization_parser.add_argument('-l', '--level', help = 'taxonomic level to split the database for diversity, amplicon_length, and phylo methods: "superkingdom", "phylum", "class", "order", "family", "genus", "species"', dest = 'level', type = str)
+    visualization_parser.add_argument('-s', '--species', help = 'list of species of interest for phylo and db_completeness methods', dest = 'species', type = str)
+    visualization_parser.add_argument('-t', '--taxid', help = 'taxid file name for phylo and db_completeness methods', dest = 'taxid', type = str)
+    visualization_parser.add_argument('-n', '--name', help = 'phylogeny file name for phylo and db_completeness methods', dest = 'name', type = str)
+
+    format_database_parser = subparser.add_parser('tax_format', description = 'formatting the database to various formats')
+    format_database_parser.set_defaults(func = tax_format)
+    format_database_parser.add_argument('-i', '--input', help = 'input file name', dest = 'input', type = str, required = True)
+    format_database_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
+    format_database_parser.add_argument('-f', '--format', help = 'process database to format: "sintax", "rdp", "qiif", "qiiz", "dad", "dads", "idt"', dest = 'format', type = str, required = True)
+
+    args = parser.parse_args()
+    args.func(args)
+
+if __name__ == '__main__':
+    main()
