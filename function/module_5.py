@@ -20,8 +20,8 @@ def split_db_by_taxgroup(file_in, tax_level):
             break
     with open(file_in, 'r') as f_in:
         for line in f_in:
-            taxgroup = line.split('\t')[count].split(',')[2]
-            species = line.split('\t')[8].split(',')[2]
+            taxgroup = line.split('\t')[count] #.split(',')[2]
+            species = line.split('\t')[8] #.split(',')[2]
             tax_group_list.append(taxgroup)
             species_dict[taxgroup].append(species)
             if taxgroup not in uniq_tax_group_list:
@@ -72,7 +72,7 @@ def get_amp_length(file_in, tax_level):
         for line in f_in:
             l = line.rstrip('\n')
             seq_len = len(l.rsplit('\t', 1)[1])
-            taxgroup = l.split('\t')[count].split(',')[2]
+            taxgroup = l.split('\t')[count] #.split(',')[2]
             amplength_dict['overall'].append(seq_len)
             amplength_dict[taxgroup].append(seq_len)
     sorted_dict = sorted(amplength_dict.items(), key = lambda item: len(item[1]), reverse = True)

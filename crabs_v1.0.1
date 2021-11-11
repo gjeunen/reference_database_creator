@@ -178,6 +178,10 @@ def insilico_pcr(args):
     ERROR = args.error
     OUTPUT = args.output
 
+    # Change 'I' to 'N'
+    FWD = FWD.replace('I','N')
+    REV = REV.replace('I','N')
+
     ## reverse complement reverse primer sequence
     REV_CORRECT = str(Seq(REV).reverse_complement())
 
