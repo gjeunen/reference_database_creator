@@ -540,7 +540,6 @@ def geo_cleanup(args):
             species_count = species_count + 1
             species = line.rstrip('\n').replace(' ', '_')
             species_list.append(species)
-    
     geo_dict = {key: None for key in species_list}
 
     ## read input file and extract species of interest
@@ -554,7 +553,21 @@ def geo_cleanup(args):
                 geo_species_list.append(species)
 
     ## write to output file and print statements
-    
+    with open(OUTPUT, 'w') as file:
+        file.write(first_line)
+        for item in geo_list:
+            file.write(item)
+    diff_spec_list = set(species_list) - set(geo_species_list)
+    uniq_spec = set(geo_species_list)
+    print(f'\nfound {species_count} species in species list')
+    print(f'written {geo_count} number of sequences to XX, representing {len(uniq_spec)} species')
+    if len(diff_spec_list) != 0:
+        print('species not found in the database were:')
+        for item in diff_spec_list:
+            print('\t\t' + item)
+        print()
+    else:
+        print(f'all {species_count} species were found in the database\n')
 
 ################################################
 ############# MODULE VISUALISATION #############
