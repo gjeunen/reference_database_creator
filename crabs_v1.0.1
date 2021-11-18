@@ -282,6 +282,33 @@ def pga(args):
     sp.call(cmnd_vsearch_pga)
 
     ## step 3: extract the sequence regions that conform to parameter settings
+    count_align = 0
+    count_pga_filter = 0
+    pga_list = []
+    with open('CRABS_pga_info.txt', 'r') as file:
+        for line in file:
+            count_align = count_align + 1
+            query = line.split('\t')[0]
+            ql = int(line.split('\t')[1])
+            qilo = int(line.split('\t')[3])
+            qihi = int(line.split('\t')[4])
+            target = line.split('\t')[5]
+            tcov = float(line.split('\t')[7])
+            end_pos = ql - qihi 
+            if tcov >= 99 and (qilo < len(FWD) or end_pos < len(REV)):
+                count_pga_filter = count_pga_filter + 1
+                seq = non_insilico_dict[query]
+                seq = seq[qilo - 1 : qihi]
+                pga_list.append('>' + query + '\n')
+                pga_list.append(seq + '\n')
+    print(f'{count_align} out of {count_non_insilico} number of sequences aligned to the in silico database')
+    print(f'{count_pga_filter} number of sequences achieved an alignment with sufficient coverage of the database sequence and whereby the alignment started or ended within the length of the primer-binding region')
+    with open('CRABS_pga_results.fasta', 'w') as file:
+        for item in pga_list:
+            file.write(item)
+    
+    ## step 4: combine in silico and pga files and clean up intermediary files
+
 
 ################################################
 ########## MODULE TAXONOMY ASSIGNMENT ##########
