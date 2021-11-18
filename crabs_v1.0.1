@@ -311,7 +311,7 @@ def pga(args):
     with open(OUTPUT, 'w') as outfile:
         for name in filenames:
             with open(name) as infile:
-                outfile.wwrite(infile.read())
+                outfile.write(infile.read())
     remove_files = ['CRABS_pga_results.fasta', 'CRABS_pga_info.txt', 'CRABS_pga.fasta']
     for file in remove_files:
         os.remove(file)
