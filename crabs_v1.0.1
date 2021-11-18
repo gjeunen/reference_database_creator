@@ -307,7 +307,7 @@ def pga(args):
             file.write(item)
     
     ## step 4: combine in silico and pga files and clean up intermediary files
-    filenames = [DB, 'CRABS_pga_results,fasta']
+    filenames = [DB, 'CRABS_pga_results.fasta']
     with open(OUTPUT, 'w') as outfile:
         for name in filenames:
             with open(name) as infile:
