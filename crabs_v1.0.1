@@ -523,6 +523,11 @@ def db_filter(args):
     if DISCARD != 'no':
         discard_db.to_csv(DISCARD,sep='\t',index=False)
 
+## function: geo cleanup
+def geo_cleanup(args):
+    INPUT = args.input
+    OUTPUT = args.output
+    SPECIES = args.species
 
 ################################################
 ############# MODULE VISUALISATION #############
@@ -884,6 +889,12 @@ def main():
     seq_cleanup_parser.add_argument('-s', '--species', help = 'discard sequences for which the species name is unspecified. yes/no', dest = 'spec', type = str, default = 'no')
     seq_cleanup_parser.add_argument('-na', '--nans', help = 'discard sequences with at least N number of unspecified taxonomic levels', dest = 'nans', type = str, default = 'no')
     
+    geo_cleanup_parser = subparser.add_parser('geo_cleanup', description = 'subsetting the database using a user-provided species list')
+    geo_cleanup_parser.set_defaults(func = geo_cleanup)
+    geo_cleanup_parser.add_argument('-i', '--input', help = 'input file name', dest = 'input', type = str, required = True)
+    geo_cleanup_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
+    geo_cleanup_parser.add_argument('-s', '--species', help = 'species list text file', dest = 'species', type = str, required = True)
+
     visualization_parser = subparser.add_parser('visualization', description = 'figure displaying various aspects of the reference database')
     visualization_parser.set_defaults(func = visualization)
     visualization_parser.add_argument('-i', '--input', help = 'input file name', dest = 'input', type = str, required = True)
