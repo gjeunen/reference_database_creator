@@ -544,6 +544,17 @@ def geo_cleanup(args):
     geo_dict = {key: None for key in species_list}
 
     ## read input file and extract species of interest
+    with open(INPUT, 'r') as file:
+        first_line = file.readline()
+        for line in file:
+            species = line.split('\t')[8]
+            if species in geo_dict:
+                geo_count = geo_count + 1
+                geo_list.append(line)
+                geo_species_list.append(species)
+
+    ## write to output file and print statements
+    
 
 ################################################
 ############# MODULE VISUALISATION #############
