@@ -15,6 +15,7 @@ from Bio.Align.Applications import MuscleCommandline
 from pathlib import Path
 from collections import Counter
 from Bio import SeqIO
+from Bio.SeqIO import FastaIO
 from Bio import AlignIO
 from Bio import Phylo
 from Bio.Seq import Seq
@@ -247,7 +248,36 @@ def pga(args):
     REV = args.rev
     ID = args.id
 
-
+    ## step 1: extract sequences from originally downloaded file that were not successful during in silico PCR analysis
+    insilico_dict = {}
+    non_insilico_dict = {}
+    non_insilico_list = []
+    count_orig = 0
+    count_insilico = 0
+    count_non_insilico = 0
+    for seq_record in SeqIO.parse(DB, 'fasta'):
+        count_insilico = count_insilico + 1
+        id = str(seq_record.id)
+        seq = str(seq_record.seq)
+        insilico_dict[id] = seq
+    for seq_record in SeqIO.parse(INPUT, 'fasta'):
+        count_orig = count_orig + 1
+        id = str(seq_record.id)
+        seq = str(seq_record.seq)
+        if id not in insilico_dict:
+            count_non_insilico = count_non_insilico + 1
+            non_insilico_list.append(seq_record)
+            non_insilico_dict[id] = seq
+    print(f'\nfound {count_orig} number of sequences in the originally downloaded sequencing file')
+    print(f'found {count_insilico} number of sequences in the in silico file')
+    print(f'analysing {count_non_insilico} number of sequences for pairwise global alignment')
+    non_insilico_fa = [FastaIO.as_fasta_2line(record) for record in non_insilico_list]
+    with open('CRABS_pga.fasta', 'w') as file:
+        for item in non_insilico_fa:
+            file.write(item)
+    
+    ## step 2: run the pairwise global alignment with vsearch
+    
 
 ################################################
 ########## MODULE TAXONOMY ASSIGNMENT ##########
