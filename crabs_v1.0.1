@@ -529,6 +529,22 @@ def geo_cleanup(args):
     OUTPUT = args.output
     SPECIES = args.species
 
+    ## read file containing species into list
+    species_list = []
+    geo_list = []
+    geo_species_list = []
+    species_count = 0
+    geo_count = 0
+    with open(SPECIES, 'r') as file:
+        for line in file:
+            species_count = species_count + 1
+            species = line.rstrip('\n').replace(' ', '_')
+            species_list.append(species)
+    
+    geo_dict = {key: None for key in species_list}
+
+    ## read input file and extract species of interest
+
 ################################################
 ############# MODULE VISUALISATION #############
 ################################################
