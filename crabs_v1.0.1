@@ -234,10 +234,25 @@ def insilico_pcr(args):
         results = sp.run(['mv', TRIMMED_INIT, OUTPUT])
         os.remove(UNTRIMMED_INIT)
 
+################################################
+####### MODULE PAIRWISE GLOBAL ALIGNMENT #######
+################################################
+
+## function: retrieve the amplicon region from sequences with missing primer-binding regions
+def pga(args):
+    INPUT = args.input
+    DB = args.db
+    OUTPUT = args.output
+    FWD = args.fwd
+    REV = args.rev
+    ID = args.id
+
+
 
 ################################################
 ########## MODULE TAXONOMY ASSIGNMENT ##########
 ################################################
+
 ## function: get taxonomic lineage for each accession number
 def assign_tax(args):
     INPUT = args.input
@@ -765,6 +780,15 @@ def main():
     in_silico_pcr_parser.add_argument('-i', '--input', help = 'input filename', dest = 'input', type = str, required = True)
     in_silico_pcr_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
     in_silico_pcr_parser.add_argument('-e', '--error', help = 'number of errors allowed in primer-binding site. Default = 4.5', dest = 'error', type = str, default = '4.5')
+
+    pga_parser = subparser.add_parser('pga', description = 'extracting amplicon regions from sequences with missing primer-binding regions')
+    pga_parser.set_defaults(func = pga)
+    pga_parser.add_argument('-i', '--input', help = 'filename of the originally downloaded sequencing data', dest =  'input', type = str, required = True)
+    pga_parser.add_argument('-o', '--output', help = 'output filename', dest =  'output', type = str, required = True)
+    pga_parser.add_argument('-db', '--database', help = 'filename of the in silico PCR results', dest =  'db', type = str, required = True)
+    pga_parser.add_argument('-f', '--fwd', help = 'forward primer sequence in 5-3 direction', dest =  'fwd', type = str, required = True)
+    pga_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest =  'rev', type = str, required = True)
+    pga_parser.add_argument('-id', '--percid', help = 'minimum percentage identity of the alignment score to be allowed. Default = 0.95', dest =  'id', type = str, Default = '0.95')
 
     ref_database_parser = subparser.add_parser('assign_tax', description = 'creating the reference database with taxonomic information')
     ref_database_parser.set_defaults(func = assign_tax)
