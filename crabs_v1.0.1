@@ -301,7 +301,7 @@ def pga(args):
                 pga_list.append('>' + query + '\n')
                 pga_list.append(seq + '\n')
     print(f'{count_align} out of {count_non_insilico} number of sequences aligned to the in silico database')
-    print(f'{count_pga_filter} number of sequences achieved an alignment with sufficient coverage of the database sequence and whereby the alignment started or ended within the length of the primer-binding region')
+    print(f'{count_pga_filter} number of sequences achieved an alignment that passed filtering thresholds')
     with open('CRABS_pga_results.fasta', 'w') as file:
         for item in pga_list:
             file.write(item)
