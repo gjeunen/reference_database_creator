@@ -560,7 +560,7 @@ def geo_cleanup(args):
     diff_spec_list = set(species_list) - set(geo_species_list)
     uniq_spec = set(geo_species_list)
     print(f'\nfound {species_count} species in species list')
-    print(f'written {geo_count} number of sequences to XX, representing {len(uniq_spec)} species')
+    print(f'written {geo_count} number of sequences to "{OUTPUT}", representing {len(uniq_spec)} species')
     if len(diff_spec_list) != 0:
         print('species not found in the database were:')
         for item in diff_spec_list:
