@@ -478,7 +478,7 @@ def db_filter(args):
     # try pandas here? 
     cols = ['seqID','taxid','kingdom','phylum','class','order','family','genus','species','sequence']
     df = pd.read_csv(INPUT, sep='\t', names=cols)
-    df_filt = df[(df['sequence'].str.len() > MINLEN) & (df['sequence'].str.len() < MAXLEN) & (~df['species'].str.contains('|'.join(spList),regex=True)) & (~df['species'].str.contains('|'.join(envList),regex=True)) & (df['sequence'].str.count('N') <= MAXNS)]
+    df_filt = df[(df['sequence'].str.len() > MINLEN) & (df['sequence'].str.len() < MAXLEN) & (~df['species'].str.contains('|'.join(spList),regex=True, na=False)) & (~df['species'].str.contains('|'.join(envList),regex=True, na=False)) & (df['sequence'].str.count('N') <= MAXNS)]
     df_final = df_filt.dropna(thresh=nans)
     # get number of rows with na
     df_rows = df_final.index.values
@@ -499,8 +499,8 @@ def db_filter(args):
     mincount = len(discard_db[discard_db['sequence'].str.len() < MINLEN])
     maxcount = len(discard_db[discard_db['sequence'].str.len() > MAXLEN])
     mxncount = len(discard_db[discard_db['sequence'].str.count('N') >= MAXNS])
-    speccount = len(discard_db[discard_db['species'].str.contains('|'.join(spList),regex=True)])
-    envcount = len(discard_db[discard_db['species'].str.contains('|'.join(envList),regex=True)])
+    speccount = len(discard_db[discard_db['species'].str.contains('|'.join(spList),regex=True, na=False)])
+    envcount = len(discard_db[discard_db['species'].str.contains('|'.join(envList),regex=True, na=False)])
 
     if mincount > 0:
         print(f'\tfound {mincount} sequences below Minimum count')
