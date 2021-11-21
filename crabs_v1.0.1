@@ -278,7 +278,7 @@ def pga(args):
     
     ## step 2: run the pairwise global alignment with vsearch
     print(f'running pairwise global alignment on {count_non_insilico} number of sequences. This may take a while!')
-    cmnd_vsearch_pga = ['vsearch', '--usearch_global', 'CRABS_pga.fasta', '--db', DB, '--id', ID, '--userout', 'CRABS_pga_info.txt', '--userfields', 'query+ql+qcov+qilo+qihi+target+tl+tcov+tilo+tihi+id', '--quiet']
+    cmnd_vsearch_pga = ['vsearch', '--usearch_global', 'CRABS_pga.fasta', '--db', DB, '--id', ID, '--userout', 'CRABS_pga_info.txt', '--userfields', 'query+ql+qcov+qilo+qihi+target+tl+tcov+tilo+tihi+id']
     sp.call(cmnd_vsearch_pga)
 
     ## step 3: extract the sequence regions that conform to parameter settings
