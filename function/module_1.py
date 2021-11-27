@@ -182,25 +182,33 @@ def embl_fasta_format(dat_format):
         fasta = []
         seq_len = []
         count = 0
-        with open(ufile, 'r') as file:
-            print(f'formatting {ufile} to fasta format')
-            is_required = False
-            for line in file:
-                if line.startswith('AC'):
-                    part = '>' + line.split('   ')[1].split(';')[0]
-                    fasta.append(part)
-                elif is_required and line.startswith(' '):
-                    remove_digits = str.maketrans('', '', digits)
-                    seq = line.replace(' ', '').translate(remove_digits).upper().rstrip('\n')
-                    fasta.append(seq)
-                else:
-                    is_required = 'SQ' in line
+        with tqdm(total = os.path.getsize(ufile)) as pbar:
+            with open(ufile, 'r') as file:
+                print(f'formatting {ufile} to fasta format')
+                for line in file:
+                    pbar.update(len(line))
+                    if line.startswith('AC'):
+                        part = '>' + line.split('   ')[1].split(';')[0]
+                    elif line.startswith('     '):
+                        remove_digits = str.maketrans('', '', digits)
+                        seq = line.replace(' ', '').translate(remove_digits).upper().rstrip('\n')
+                        seq_len.append(seq)
+                        count = count + 1
+                    elif line.startswith('//'):
+                        if count < 900:
+                            fasta.append(part)
+                            for item in seq_len:
+                                fasta.append(item)
+                            seq_len = []
+                            count = 0
+                        else:
+                            seq_len = []
+                            count = 0
         with open(ffile, 'w') as fa:
             print(f'saving {ffile}')
             for element in fasta:
-                fa.write('{}\n'.format(element))
-    for file in dat_format:
-        os.remove(file)
+                file.write('{}\n'.format(element))
+        os.remove(ufile)
     intermediary_file = 'CRABS_embl_download.fasta'
     print('Combining all EMBL downloaded fasta files...')
     with open(intermediary_file, 'w') as w_file:
