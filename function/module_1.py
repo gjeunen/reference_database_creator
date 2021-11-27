@@ -182,9 +182,9 @@ def embl_fasta_format(dat_format):
         fasta = []
         seq_len = []
         count = 0
+        print(f'formatting {ufile} to fasta format')
         with tqdm(total = os.path.getsize(ufile)) as pbar:
             with open(ufile, 'r') as file:
-                print(f'formatting {ufile} to fasta format')
                 for line in file:
                     pbar.update(len(line))
                     if line.startswith('AC'):
@@ -208,6 +208,7 @@ def embl_fasta_format(dat_format):
             print(f'saving {ffile}')
             for element in fasta:
                 file.write('{}\n'.format(element))
+    for ufile in dat_format:
         os.remove(ufile)
     intermediary_file = 'CRABS_embl_download.fasta'
     print('Combining all EMBL downloaded fasta files...')
