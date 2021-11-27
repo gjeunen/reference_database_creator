@@ -180,6 +180,8 @@ def embl_fasta_format(dat_format):
         ffile = ufile[:-4] + '.fasta'
         ffiles.append(ffile)
         fasta = []
+        seq_len = []
+        count = 0
         with open(ufile, 'r') as file:
             print(f'formatting {ufile} to fasta format')
             is_required = False
