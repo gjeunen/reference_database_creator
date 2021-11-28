@@ -582,6 +582,11 @@ def visualization(args):
     SPECIES = args.species
     TAXID = args.taxid
     NAME = args.name
+    FWD = args.fwd
+    REV = args.rev
+    FWD_NAME = args.fwd_name
+    REV_NAME = args.rev_name
+    RAW = args.raw
 
     ## horizontal barchart
     if METHOD == 'diversity':
@@ -751,10 +756,14 @@ def visualization(args):
                 Phylo.draw(tree, axes=axes, do_show = False)
                 fig.savefig(f'{species}_tree_figure.pdf')
                 print()
+        
+    elif METHOD == 'primer_efficiency':
+        ## read in the data
+        print()
 
     ## incorrect parameter
     else:
-        print('\nplease specify method of visualization: "diversity", "amplicon_length", "db_completeness", "phylo"\n')
+        print('\nplease specify method of visualization: "diversity", "amplicon_length", "db_completeness", "phylo", "primer_efficiency"\n')
 
 ## format the taxonomic lineage
 def tax_format(args):
@@ -939,11 +948,16 @@ def main():
     visualization_parser.set_defaults(func = visualization)
     visualization_parser.add_argument('-i', '--input', help = 'input file name', dest = 'input', type = str, required = True)
     visualization_parser.add_argument('-o', '--output', help = 'output file name for db_completeness method', dest = 'output', type = str)
-    visualization_parser.add_argument('-m', '--method', help = 'method of visualization: "diversity", "amplicon_length", "db_completeness", "phylo"', dest = 'method', type = str, required = True)
+    visualization_parser.add_argument('-m', '--method', help = 'method of visualization: "diversity", "amplicon_length", "db_completeness", "phylo", "primer_efficiency"', dest = 'method', type = str, required = True)
     visualization_parser.add_argument('-l', '--level', help = 'taxonomic level to split the database for diversity, amplicon_length, and phylo methods: "superkingdom", "phylum", "class", "order", "family", "genus", "species"', dest = 'level', type = str)
     visualization_parser.add_argument('-s', '--species', help = 'list of species of interest for phylo and db_completeness methods', dest = 'species', type = str)
     visualization_parser.add_argument('-t', '--taxid', help = 'taxid file name for phylo and db_completeness methods', dest = 'taxid', type = str)
     visualization_parser.add_argument('-n', '--name', help = 'phylogeny file name for phylo and db_completeness methods', dest = 'name', type = str)
+    visualization_parser.add_argument('-f', '--fwd', help = 'forward primer sequence in 5-3 direction', dest = 'fwd', type = str)
+    visualization_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest = 'rev', type = str)
+    visualization_parser.add_argument('-fn', '--fwd_name', help = 'forward primer sequence name', dest = 'fwd_name', type = str)
+    visualization_parser.add_argument('-rn', '--rev_name', help = 'reverse primer sequence name', dest = 'rev_name', type = str)
+    visualization_parser.add_argument('-raw', '--raw_file', help = 'file name of the downloaded sequences prior to in silico PCR analysis', dest = 'raw', type = str)
 
     format_database_parser = subparser.add_parser('tax_format', description = 'formatting the database to various formats')
     format_database_parser.set_defaults(func = tax_format)
@@ -956,3 +970,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
