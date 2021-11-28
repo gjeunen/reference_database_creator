@@ -207,8 +207,8 @@ def embl_fasta_format(dat_format):
         with open(ffile, 'w') as fa:
             print(f'saving {ffile}')
             for element in fasta:
-                file.write('{}\n'.format(element))
-    for ufile in dat_format:
+                fa.write('{}\n'.format(element))
+    #for ufile in dat_format:
         os.remove(ufile)
     intermediary_file = 'CRABS_embl_download.fasta'
     print('Combining all EMBL downloaded fasta files...')
