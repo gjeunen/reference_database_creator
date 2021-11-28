@@ -758,8 +758,25 @@ def visualization(args):
                 print()
         
     elif METHOD == 'primer_efficiency':
-        ## read in the data
-        print()
+        ## generate dictionary of pre-in silico PCR file to search against
+        print(f'\ngenerating dictionary of sequences of {RAW}')
+        raw_dict = {}
+        count = 0
+        for record in SeqIO.parse(RAW, 'fasta'):
+            count = count + 1
+            raw_dict[record.id] = record.seq
+        print(f'written {count} sequences from {RAW} into a dictionary')
+
+        ## extract the primer-binding regions from the raw file
+        forward = FWD
+        reverse = str(Seq(REV).reverse_complement())
+        with open(INPUT, 'r') as infile:
+            for line in infile:
+                id = line.split('\t')[0]
+                seq = line.split('\t')[-1].rstrip('\n')
+
+
+
 
     ## incorrect parameter
     else:
