@@ -794,6 +794,134 @@ def visualization(args):
         with open(OUTPUT, 'w') as outfile:
             for item in subset_data:
                 outfile.write(item)
+        
+        ## generate data for figure
+        fwd_dict = collections.defaultdict(list)
+        fwd_list = list(forward)
+        rev_dict = collections.defaultdict(list)
+        rev_list = list(reverse)
+        with open(OUTPUT, 'r') as fi:
+            for line in fi:
+                fwd_primer = line.split('\t')[10]
+                rev_primer = line.split('\t')[11].rstrip('\n')
+                fwd_primer_list = list(fwd_primer)
+                count = 0
+                for item in fwd_primer_list:
+                    count = count + 1
+                    fwd_dict[count].append(item)
+                rev_primer_list = list(rev_primer)
+                count = 0
+                for item in rev_primer_list:
+                    count = count + 1
+                    rev_dict[count].append(item)
+        
+        A_list = []
+        C_list = []
+        G_list = []
+        T_list = []
+        other_list = []
+
+        for k, v in fwd_dict.items():
+            total = len(v)
+            count_A = int(v.count('A')/total*100)
+            count_C = int(v.count('C')/total*100)
+            count_G = int(v.count('G')/total*100)
+            count_T = int(v.count('T')/total*100)
+            count_other = int(100 - count_A - count_C - count_G - count_T)
+            A_list.append(count_A)
+            C_list.append(count_C)
+            G_list.append(count_G)
+            T_list.append(count_T)
+            other_list.append(count_other)
+
+        rev_A_list = []
+        rev_C_list = []
+        rev_G_list = []
+        rev_T_list = []
+        rev_other_list = []
+
+        for k, v in rev_dict.items():
+            total = len(v)
+            count_A = int(v.count('A')/total*100)
+            count_C = int(v.count('C')/total*100)
+            count_G = int(v.count('G')/total*100)
+            count_T = int(v.count('T')/total*100)
+            count_other = int(100 - count_A - count_C - count_G - count_T)
+            rev_A_list.append(count_A)
+            rev_C_list.append(count_C)
+            rev_G_list.append(count_G)
+            rev_T_list.append(count_T)
+            rev_other_list.append(count_other)
+
+        primer_A_list = []
+        primer_C_list = []
+        primer_G_list = []
+        primer_T_list = []
+        primer_other_list = []
+
+        for item in fwd_list:
+            A_primer = item.count('A')*100
+            C_primer = item.count('C')*100
+            G_primer = item.count('G')*100
+            T_primer = item.count('T')*100
+            other_primer = 100 - A_primer - C_primer - G_primer - T_primer
+            primer_A_list.append(A_primer)
+            primer_C_list.append(C_primer)
+            primer_G_list.append(G_primer)
+            primer_T_list.append(T_primer)
+            primer_other_list.append(other_primer)
+
+        rev_primer_A_list = []
+        rev_primer_C_list = []
+        rev_primer_G_list = []
+        rev_primer_T_list = []
+        rev_primer_other_list = []
+
+        for item in rev_list:
+            A_primer = item.count('A')*100
+            C_primer = item.count('C')*100
+            G_primer = item.count('G')*100
+            T_primer = item.count('T')*100
+            other_primer = 100 - A_primer - C_primer - G_primer - T_primer
+            rev_primer_A_list.append(A_primer)
+            rev_primer_C_list.append(C_primer)
+            rev_primer_G_list.append(G_primer)
+            rev_primer_T_list.append(T_primer)
+            rev_primer_other_list.append(other_primer)
+        
+        primer_3 = [v1 + v2 for (v1, v2) in zip(primer_A_list, primer_C_list)]
+        primer_4 = [v1 + v2 for (v1, v2) in zip(primer_3, primer_G_list)]
+        primer_5 = [v1 + v2 for (v1, v2) in zip(primer_4, primer_T_list)]
+
+        rev_primer_3 = [v1 + v2 for (v1, v2) in zip(rev_primer_A_list, rev_primer_C_list)]
+        rev_primer_4 = [v1 + v2 for (v1, v2) in zip(rev_primer_3, rev_primer_G_list)]
+        rev_primer_5 = [v1 + v2 for (v1, v2) in zip(rev_primer_4, rev_primer_T_list)]
+
+        bottom_3 = [v1 + v2 for (v1, v2) in zip(A_list, C_list)]
+        bottom_4 = [v1 + v2 for (v1, v2) in zip(bottom_3, G_list)]
+        bottom_5 = [v1 + v2 for (v1, v2) in zip(bottom_4, T_list)]
+
+        rev_bottom_3 = [v1 + v2 for (v1, v2) in zip(rev_A_list, rev_C_list)]
+        rev_bottom_4 = [v1 + v2 for (v1, v2) in zip(rev_bottom_3, rev_G_list)]
+        rev_bottom_5 = [v1 + v2 for (v1, v2) in zip(rev_bottom_4, rev_T_list)]
+
+        index = []
+        bp_test = []
+        count = 0
+        for item in fwd_list:
+            count = count + 1
+            index.append(str(count))
+            bp_test.append(100)
+        
+        rev_index = []
+        count = 0
+        bp_test_rev = []
+        for item in rev_list:
+            count = count + 1
+            rev_index.append(str(count))
+            bp_test_rev.append(100)
+        
+        ## generate figure
 
 
 
