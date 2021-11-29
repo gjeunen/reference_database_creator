@@ -587,6 +587,7 @@ def visualization(args):
     FWD_NAME = args.fwd_name
     REV_NAME = args.rev_name
     RAW = args.raw
+    TAXGROUP = args.taxgroup
 
     ## horizontal barchart
     if METHOD == 'diversity':
@@ -975,6 +976,7 @@ def main():
     visualization_parser.add_argument('-fn', '--fwd_name', help = 'forward primer sequence name', dest = 'fwd_name', type = str)
     visualization_parser.add_argument('-rn', '--rev_name', help = 'reverse primer sequence name', dest = 'rev_name', type = str)
     visualization_parser.add_argument('-raw', '--raw_file', help = 'file name of the downloaded sequences prior to in silico PCR analysis', dest = 'raw', type = str)
+    visualization_parser.add_argument('-tg', '--tax_group', help = 'phylogenetic group to be included in the primer efficiency analysis', dest = 'taxgroup', type = str)
 
     format_database_parser = subparser.add_parser('tax_format', description = 'formatting the database to various formats')
     format_database_parser.set_defaults(func = tax_format)
