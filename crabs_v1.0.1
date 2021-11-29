@@ -922,8 +922,68 @@ def visualization(args):
             bp_test_rev.append(100)
         
         ## generate figure
+        width = 0.8
+        fig, axs = plt.subplots(2,2,gridspec_kw={'height_ratios': [20,1]})
 
+        axs[1,0].bar(index, primer_A_list, width=width, label='A', color = '#e09f3e')
+        axs[1,0].bar(index, primer_C_list, width, bottom = primer_A_list, label='C', color = '#335c67')
+        axs[1,0].bar(index, primer_G_list, width, bottom = primer_3, label='G', color = '#fff3b0')
+        axs[1,0].bar(index, primer_T_list, width, bottom = primer_4, label='T', color = '#9e2a2b')
+        axs[1,0].bar(index, primer_other_list, width, bottom = primer_5, label='other', color = 'gray')
 
+        axs[0,0].bar(index, A_list, width=width, label='A', color = '#e09f3e')
+        axs[0,0].bar(index, C_list, width, bottom = A_list, label='C', color = '#335c67')
+        axs[0,0].bar(index, G_list, width, bottom = bottom_3, label='G', color = '#fff3b0')
+        axs[0,0].bar(index, T_list, width, bottom = bottom_4, label='T', color = '#9e2a2b')
+        axs[0,0].bar(index, other_list, width, bottom = bottom_5, label='other', color = 'gray')
+
+        axs[1,1].bar(rev_index, rev_primer_A_list, width=width, label='A', color = '#e09f3e')
+        axs[1,1].bar(rev_index, rev_primer_C_list, width, bottom = rev_primer_A_list, label='C', color = '#335c67')
+        axs[1,1].bar(rev_index, rev_primer_G_list, width, bottom = rev_primer_3, label='G', color = '#fff3b0')
+        axs[1,1].bar(rev_index, rev_primer_T_list, width, bottom = rev_primer_4, label='T', color = '#9e2a2b')
+        axs[1,1].bar(rev_index, rev_primer_other_list, width, bottom = rev_primer_5, label='other', color = 'gray')
+
+        axs[0,1].bar(rev_index, rev_A_list, width=width, label='A', color = '#e09f3e')
+        axs[0,1].bar(rev_index, rev_C_list, width, bottom = rev_A_list, label='C', color = '#335c67')
+        axs[0,1].bar(rev_index, rev_G_list, width, bottom = rev_bottom_3, label='G', color = '#fff3b0')
+        axs[0,1].bar(rev_index, rev_T_list, width, bottom = rev_bottom_4, label='T', color = '#9e2a2b')
+        axs[0,1].bar(rev_index, rev_other_list, width, bottom = rev_bottom_5, label='other', color = 'gray')
+
+        axs[0,0].set_ylabel('Proportion of bp occurrences')
+        axs[0,0].tick_params(bottom=False)
+        axs[1,0].tick_params(left=False)
+        axs[1,0].tick_params(bottom=False)
+        axs[1,0].set(yticklabels=[])
+        axs[1,0].set(xticklabels=[])
+        axs[0,0].set(xticklabels=[])
+        axs[1,0].margins(y=0)
+        axs[0,0].margins(y=0)
+        axs[0,0].set_title(f'{FWD_NAME}: Forward primer')
+        axs[0,1].legend(bbox_to_anchor=(1.0, 1.0))
+
+        axs[0,1].tick_params(left=False)
+        axs[0,1].tick_params(bottom=False)
+        axs[0,1].set(yticklabels=[])
+        axs[0,1].set(xticklabels=[])
+        axs[1,1].margins(y=0)
+        axs[0,1].margins(y=0)
+        axs[0,1].set_title(f'{REV_NAME}: Reverse primer')
+        axs[1,1].set(yticklabels=[])
+        axs[1,1].tick_params(left=False)
+        axs[1,1].tick_params(bottom=False)
+        axs[1,1].set(xticklabels=[])
+
+        fig.suptitle(f'{INPUT} - {TAXGROUP}')
+
+        for x, y, p in zip(rev_index, bp_test_rev, rev_list):
+            axs[1,1].text(x, y/2, p, color = 'black', ha = 'center', va = 'center') 
+
+        for x, y, p in zip(index, bp_test, fwd_list):
+            axs[1,0].text(x, y/2, p, color = 'black', ha = 'center', va = 'center') 
+        
+        plt.subplots_adjust(hspace = 0.05, wspace = 0.05)
+
+        plt.show()
 
     ## incorrect parameter
     else:
