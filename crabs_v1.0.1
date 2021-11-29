@@ -790,7 +790,7 @@ def visualization(args):
                         first = line.rstrip()
                         subset_data.append(first + '\t' + fwd + '\t' + rev + '\n')
         
-        print(f'written {count} {TAXGROUP} sequences with primer-binding region information to {OUTPUT}')
+        print(f'written {count} {TAXGROUP} sequences with primer-binding region information to {OUTPUT}\n')
         with open(OUTPUT, 'w') as outfile:
             for item in subset_data:
                 outfile.write(item)
