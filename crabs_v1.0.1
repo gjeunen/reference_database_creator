@@ -1188,7 +1188,7 @@ def main():
     pga_parser.add_argument('-db', '--database', help = 'filename of the in silico PCR results', dest =  'db', type = str, required = True)
     pga_parser.add_argument('-f', '--fwd', help = 'forward primer sequence in 5-3 direction', dest =  'fwd', type = str, required = True)
     pga_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest =  'rev', type = str, required = True)
-    pga_parser.add_argument('-s', '--speed', help = 'subsetting input file based on sequence length to increase speed: "fast" (<5,000 bp), "medium" (<10,000 bp), "slow" (all sequences)', dest =  'speed', type = str, default = 'medium')
+    pga_parser.add_argument('-s', '--speed', help = 'subsetting input file based on sequence length to increase speed: "fast" (<5,000 bp), "medium" (<10,000 bp), "slow" (all sequences). Default = "medium"', dest =  'speed', type = str, default = 'medium')
     pga_parser.add_argument('-id', '--percid', help = 'minimum percentage identity of the alignment score to be allowed. Default = 0.95', dest =  'id', type = str, default = '0.95')
 
     ref_database_parser = subparser.add_parser('assign_tax', description = 'creating the reference database with taxonomic information')
