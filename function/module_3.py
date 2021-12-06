@@ -75,6 +75,7 @@ def acc_to_dict(acc_list, acc2taxid_dict, no_acc, acc2tax_name):
                 if line.startswith('  <TSeq_taxid>'):
                     taxid = line.split('TSeq_taxid>')[1].rstrip('</')
         acc_taxid_dict[item] = taxid
+        taxlist.append(taxid)
 
     os.remove('efetch_output.txt')
     taxlist = list(dict.fromkeys(taxlist))
