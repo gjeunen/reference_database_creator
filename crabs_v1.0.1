@@ -298,7 +298,7 @@ def pga(args):
             for item in newfile:
                 outfile.write(item)
         print(f'subsetting {INPUT} by discarding sequences longer than 5,000 bp')
-        print(f'found {count} ({count/count_non_insilico*100}%) number of sequences in {INPUT} shorter than 5,000 bp')
+        print(f'found {count} ({float("{:.2f}".format(count/count_non_insilico*100))}%) number of sequences in {INPUT} shorter than 5,000 bp')
     elif SPEED == 'medium':
         newfile = []
         count = 0
@@ -318,7 +318,7 @@ def pga(args):
             for item in newfile:
                 outfile.write(item)
         print(f'subsetting {INPUT} by discarding sequences longer than 10,000 bp')
-        print(f'found {count} ({count/count_non_insilico*100}%) number of sequences in {INPUT} shorter than 10,000 bp')
+        print(f'found {count} ({float("{:.2f}".format(count/count_non_insilico*100))}%) number of sequences in {INPUT} shorter than 10,000 bp')
     elif SPEED == 'slow':
         newfile = []
         count = 0
