@@ -247,6 +247,7 @@ def pga(args):
     OUTPUT = args.output
     FWD = args.fwd
     REV = args.rev
+    SPEED = args.speed
     ID = args.id
 
     ## step 1: extract sequences from originally downloaded file that were not successful during in silico PCR analysis
@@ -277,12 +278,63 @@ def pga(args):
         for item in non_insilico_fa:
             file.write(item)
     
-    ## step 2: run the pairwise global alignment with vsearch
+    ## step 2: subset the data based on the SPEED parameter
+    if SPEED == 'fast':
+        newfile = []
+        with open('CRABS_pga.fasta', 'r') as infile:
+            for line in infile:
+                if line.startswith('>'):
+                    header = line
+                else:
+                    seq = line
+                    line = line.rstrip('\n')
+                    seqlen = len(line)
+                    if seqlen < 5001:
+                        newfile.append(header)
+                        newfile.append(seq)
+        with open('CRABS_pga_subset.fasta', 'w') as outfile:
+            for item in newfile:
+                outfile.write(item)
+    elif SPEED == 'medium':
+        newfile = []
+        with open('CRABS_pga.fasta', 'r') as infile:
+            for line in infile:
+                if line.startswith('>'):
+                    header = line
+                else:
+                    seq = line
+                    line = line.rstrip('\n')
+                    seqlen = len(line)
+                    if seqlen < 10001:
+                        newfile.append(header)
+                        newfile.append(seq)
+        with open('CRABS_pga_subset.fasta', 'w') as outfile:
+            for item in newfile:
+                outfile.write(item)
+    elif SPEED == 'slow':
+        newfile = []
+        with open('CRABS_pga.fasta', 'r') as infile:
+            for line in infile:
+                if line.startswith('>'):
+                    header = line
+                else:
+                    seq = line
+                    line = line.rstrip('\n')
+                    seqlen = len(line)
+                    newfile.append(header)
+                    newfile.append(seq)
+        with open('CRABS_pga_subset.fasta', 'w') as outfile:
+            for item in newfile:
+                outfile.write(item)
+    else:
+        print('please specify one of the accepted --speed options: "fast", "medium", "slow"')
+
+    ## step 3: run the pairwise global alignment with vsearch
     print(f'running pairwise global alignment on {count_non_insilico} number of sequences. This may take a while!')
-    cmnd_vsearch_pga = ['vsearch', '--usearch_global', 'CRABS_pga.fasta', '--db', DB, '--id', ID, '--userout', 'CRABS_pga_info.txt', '--userfields', 'query+ql+qcov+qilo+qihi+target+tl+tcov+tilo+tihi+id', '--threads', '7']
+    cmnd_vsearch_pga = ['vsearch', '--usearch_global', 'CRABS_pga_subset.fasta', '--db', DB, '--id', ID, '--userout', 'CRABS_pga_info.txt', '--userfields', 'query+ql+qcov+qilo+qihi+target+tl+tcov+tilo+tihi+id', '--threads', '7']
     sp.call(cmnd_vsearch_pga)
 
-    ## step 3: extract the sequence regions that conform to parameter settings
+    ## step 4: extract the sequence regions that conform to parameter settings
     count_align = 0
     count_pga_filter = 0
     pga_list = []
@@ -307,13 +359,13 @@ def pga(args):
         for item in pga_list:
             file.write(item)
     
-    ## step 4: combine in silico and pga files and clean up intermediary files
+    ## step 5: combine in silico and pga files and clean up intermediary files
     filenames = [DB, 'CRABS_pga_results.fasta']
     with open(OUTPUT, 'w') as outfile:
         for name in filenames:
             with open(name) as infile:
                 outfile.write(infile.read())
-    remove_files = ['CRABS_pga_results.fasta', 'CRABS_pga_info.txt', 'CRABS_pga.fasta']
+    remove_files = ['CRABS_pga_results.fasta', 'CRABS_pga_info.txt', 'CRABS_pga.fasta', 'CRABS_pga_subset.fasta']
     for file in remove_files:
         os.remove(file)
 
@@ -1136,6 +1188,7 @@ def main():
     pga_parser.add_argument('-db', '--database', help = 'filename of the in silico PCR results', dest =  'db', type = str, required = True)
     pga_parser.add_argument('-f', '--fwd', help = 'forward primer sequence in 5-3 direction', dest =  'fwd', type = str, required = True)
     pga_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest =  'rev', type = str, required = True)
+    pga_parser.add_argument('-s', '--speed', help = 'subsetting input file based on sequence length to increase speed: "fast" (<5,000 bp), "medium" (<10,000 bp), "slow" (all sequences)', dest =  'speed', type = str, default = 'medium')
     pga_parser.add_argument('-id', '--percid', help = 'minimum percentage identity of the alignment score to be allowed. Default = 0.95', dest =  'id', type = str, default = '0.95')
 
     ref_database_parser = subparser.add_parser('assign_tax', description = 'creating the reference database with taxonomic information')
