@@ -68,14 +68,19 @@ def acc_to_dict(acc_list, acc2taxid_dict, no_acc, acc2tax_name):
                 no_info.append(item)
     print(f'did not find {len(no_info)} accession numbers in {acc2tax_name}, retrieving information through a web search')
     for item in tqdm(no_info):
+        count = 0
         url = f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&rettype=fasta&retmode=xml&id={item}'
         result = sp.run(['wget', url, '-O', 'efetch_output.txt'], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
         with open('efetch_output.txt', 'r') as file_in:
             for line in file_in:
                 if line.startswith('  <TSeq_taxid>'):
+                    count = count + 1
                     taxid = line.split('TSeq_taxid>')[1].rstrip('</')
-        acc_taxid_dict[item] = taxid
-        taxlist.append(taxid)
+        if count == 0:
+            print(f'could not find taxonomic ID for {item}')
+        else:
+            acc_taxid_dict[item] = taxid
+            taxlist.append(taxid)
 
     os.remove('efetch_output.txt')
     taxlist = list(dict.fromkeys(taxlist))
