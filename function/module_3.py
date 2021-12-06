@@ -2,8 +2,10 @@
 
 ## import modules
 from Bio import SeqIO
+from tqdm import tqdm
 import collections
 import subprocess as sp
+import os
 
 ## functions: taxonomy assignment
 def tax2dict(acc2tax, taxid, name, accession_dict):
@@ -45,7 +47,7 @@ def get_accession(file_in):
     
     return accession
 
-def acc_to_dict(acc_list, acc2taxid_dict, no_acc):
+def acc_to_dict(acc_list, acc2taxid_dict, no_acc, acc2tax_name):
     acc_taxid_dict = {}
     taxlist = []
     no_info = []
@@ -62,9 +64,10 @@ def acc_to_dict(acc_list, acc2taxid_dict, no_acc):
                 acc_taxid_dict[item] = acc2taxid_dict[item]
                 taxlist.append(acc_taxid_dict[item])
             else:
-                print(f'did not find {item} in accession file, retrieving information through a web seach')
+                #print(f'did not find {item} in accession file, retrieving information through a web seach')
                 no_info.append(item)
-    for item in no_info:
+    print(f'did not find {len(no_info)} accession numbers in {acc2tax_name}, retrieving information through a web search')
+    for item in tqdm(no_info):
         url = f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&rettype=fasta&retmode=xml&id={item}'
         result = sp.run(['wget', url, '-O', 'efetch_output.txt'], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
         with open('efetch_output.txt', 'r') as file_in:
@@ -73,6 +76,7 @@ def acc_to_dict(acc_list, acc2taxid_dict, no_acc):
                     taxid = line.split('TSeq_taxid>')[1].rstrip('</')
         acc_taxid_dict[item] = taxid
 
+    os.remove('efetch_output.txt')
     taxlist = list(dict.fromkeys(taxlist))
 
     return acc_taxid_dict, taxlist

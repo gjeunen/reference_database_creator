@@ -342,7 +342,7 @@ def assign_tax(args):
 
     ## get taxonomic lineage
     print(f'assigning a tax ID number to {len(accession)} accession numbers from {INPUT}')
-    acc_taxid_dict, taxid_list = acc_to_dict(accession, acc2tax, no_acc)
+    acc_taxid_dict, taxid_list = acc_to_dict(accession, acc2tax, no_acc, ACC2TAX)
     print(f'{len(acc_taxid_dict)} accession numbers resulted in {len(taxid_list)} unique tax ID numbers')
     print(f'generating taxonomic lineages for {len(taxid_list)} tax ID numbers')
     lineage = get_lineage(taxid_list, taxid, name)
