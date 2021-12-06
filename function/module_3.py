@@ -3,6 +3,7 @@
 ## import modules
 from Bio import SeqIO
 import collections
+import subprocess as sp
 
 ## functions: taxonomy assignment
 def tax2dict(acc2tax, taxid, name, accession_dict):
@@ -47,6 +48,7 @@ def get_accession(file_in):
 def acc_to_dict(acc_list, acc2taxid_dict, no_acc):
     acc_taxid_dict = {}
     taxlist = []
+    no_info = []
     for item in acc_list:
         if item.startswith('CRABS'):
             species_name = item.split(':')[1]
@@ -60,7 +62,17 @@ def acc_to_dict(acc_list, acc2taxid_dict, no_acc):
                 acc_taxid_dict[item] = acc2taxid_dict[item]
                 taxlist.append(acc_taxid_dict[item])
             else:
-                print(f'did not find {item} in accession file')
+                print(f'did not find {item} in accession file, retrieving information through a web seach')
+                no_info.append(item)
+    for item in no_info:
+        url = f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&rettype=fasta&retmode=xml&id={item}'
+        result = sp.run(['wget', url, '-O', 'efetch_output.txt'], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
+        with open('efetch_output.txt', 'r') as file_in:
+            for line in file_in:
+                if line.startswith('  <TSeq_taxid>'):
+                    taxid = line.split('TSeq_taxid>')[1].rstrip('</')
+        acc_taxid_dict[item] = taxid
+
     taxlist = list(dict.fromkeys(taxlist))
 
     return acc_taxid_dict, taxlist
