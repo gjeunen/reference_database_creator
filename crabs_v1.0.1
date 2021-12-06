@@ -9,6 +9,7 @@ import pandas as pd
 import os
 import shutil
 import collections
+from tqdm import tqdm
 import matplotlib
 import matplotlib.pyplot as plt
 from Bio.Align.Applications import MuscleCommandline
@@ -282,41 +283,45 @@ def pga(args):
     if SPEED == 'fast':
         newfile = []
         count = 0
-        with open('CRABS_pga.fasta', 'r') as infile:
-            for line in infile:
-                if line.startswith('>'):
-                    header = line
-                else:
-                    seq = line
-                    line = line.rstrip('\n')
-                    seqlen = len(line)
-                    if seqlen < 5001:
-                        count = count + 1
-                        newfile.append(header)
-                        newfile.append(seq)
-        with open('CRABS_pga_subset.fasta', 'w') as outfile:
-            for item in newfile:
-                outfile.write(item)
         print(f'subsetting {INPUT} by discarding sequences longer than 5,000 bp')
+        with tqdm(total = os.path.getsize('CRABS_pga.fasta')) as pbar:
+            with open('CRABS_pga.fasta', 'r') as infile:
+                for line in infile:
+                    pbar.update(len(line))
+                    if line.startswith('>'):
+                        header = line
+                    else:
+                        seq = line
+                        line = line.rstrip('\n')
+                        seqlen = len(line)
+                        if seqlen < 5001:
+                            count = count + 1
+                            newfile.append(header)
+                            newfile.append(seq)
+            with open('CRABS_pga_subset.fasta', 'w') as outfile:
+                for item in newfile:
+                    outfile.write(item)
         print(f'found {count} ({float("{:.2f}".format(count/count_non_insilico*100))}%) number of sequences in {INPUT} shorter than 5,000 bp')
     elif SPEED == 'medium':
         newfile = []
         count = 0
-        with open('CRABS_pga.fasta', 'r') as infile:
-            for line in infile:
-                if line.startswith('>'):
-                    header = line
-                else:
-                    seq = line
-                    line = line.rstrip('\n')
-                    seqlen = len(line)
-                    if seqlen < 10001:
-                        count = count + 1
-                        newfile.append(header)
-                        newfile.append(seq)
-        with open('CRABS_pga_subset.fasta', 'w') as outfile:
-            for item in newfile:
-                outfile.write(item)
+        with tqdm(total = os.path.getsize('CRABS_pga.fasta')) as pbar:
+            with open('CRABS_pga.fasta', 'r') as infile:
+                for line in infile:
+                    pbar.update(len(line))
+                    if line.startswith('>'):
+                        header = line
+                    else:
+                        seq = line
+                        line = line.rstrip('\n')
+                        seqlen = len(line)
+                        if seqlen < 10001:
+                            count = count + 1
+                            newfile.append(header)
+                            newfile.append(seq)
+            with open('CRABS_pga_subset.fasta', 'w') as outfile:
+                for item in newfile:
+                    outfile.write(item)
         print(f'subsetting {INPUT} by discarding sequences longer than 10,000 bp')
         print(f'found {count} ({float("{:.2f}".format(count/count_non_insilico*100))}%) number of sequences in {INPUT} shorter than 10,000 bp')
     elif SPEED == 'slow':
