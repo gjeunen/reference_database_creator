@@ -91,7 +91,7 @@ def efetch_seqs_from_webenv(web_record, database, email, batch_size, output):
 
     return numseq
 
-def ncbi_formatting(file, original):
+def ncbi_formatting(file, original, discard):
     mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']
     newfile = []
     discarded = []
@@ -107,13 +107,12 @@ def ncbi_formatting(file, original):
     with open(file, 'w') as fout:
         for item in newfile_db:
             fout.write(item)
-    discarded_db = [FastaIO.as_fasta_2line(record) for record in discarded]
-    discarded_file = file + 'DISCARDED_SEQS.fasta'
-    with open(discarded_file, 'w') as fbad:
-        for item in discarded_db:
-            fbad.write(item)
-    numdiscard = len(discarded)
-    print(f'found {numdiscard} sequences with incorrect accession format')
+    if discard != 'no':
+        discarded_db = [FastaIO.as_fasta_2line(record) for record in discarded]
+        with open(discard, 'w') as fbad:
+            for item in discarded_db:
+                fbad.write(item)
+    print(f'found {len(discarded)} sequences with incorrect accession format')
     if original != 'yes':
         os.remove('CRABS_ncbi_download.fasta')
     numseq = len(newfile)
@@ -129,7 +128,7 @@ def mitofish_download(website):
 
     return fasta
 
-def mitofish_format(file_in, file_out, original):
+def mitofish_format(file_in, file_out, original, discard):
     mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']
     newfile = []
     discarded = []
@@ -147,13 +146,12 @@ def mitofish_format(file_in, file_out, original):
     with open(file_out, 'w') as fout:
         for item in newfile_db:
             fout.write(item)
-    discarded_db = [FastaIO.as_fasta_2line(record) for record in discarded]
-    discarded_file = file_out + 'DISCARDED_SEQS.fasta'
-    with open(discarded_file, 'w') as fbad:
-        for item in discarded_db:
-            fbad.write(item)
-    numdiscard = len(discarded)
-    print(f'found {numdiscard} sequences with incorrect accession format')
+    if discard != 'no':
+        discarded_db = [FastaIO.as_fasta_2line(record) for record in discarded]
+        with open(discard, 'w') as fbad:
+            for item in discarded_db:
+                fbad.write(item)
+    print(f'found {len(discarded)} sequences with incorrect accession format')
     numseq = len(newfile)
     if original != 'yes':
         os.remove(file_in)
@@ -221,7 +219,7 @@ def embl_fasta_format(dat_format):
         os.remove(f)
     return intermediary_file
 
-def embl_crabs_format(f_in, f_out, original):
+def embl_crabs_format(f_in, f_out, original, discard):
     mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']
     newfile = []
     discarded = []
@@ -237,13 +235,12 @@ def embl_crabs_format(f_in, f_out, original):
     with open(f_out, 'w') as fout:
         for item in newfile_db:
             fout.write(item)
-    discarded_db = [FastaIO.as_fasta_2line(record) for record in discarded]
-    discarded_file = f_out + 'DISCARDED_SEQS.fasta'
-    with open(discarded_file, 'w') as fbad:
-        for item in discarded_db:
-            fbad.write(item)
-    numdiscard = len(discarded)
-    print(f'found {numdiscard} sequences with incorrect accession format')
+    if discard != 'no':
+        discarded_db = [FastaIO.as_fasta_2line(record) for record in discarded]
+        with open(discard, 'w') as fbad:
+            for item in discarded_db:
+                fbad.write(item)
+    print(f'found {len(discarded)} sequences with incorrect accession format')
     numseq = len(newfile)
     if original != 'yes':
         os.remove(f_in)
@@ -268,7 +265,7 @@ def bold_download(entry):
     
     return num_bold
 
-def bold_format(f_out, original):
+def bold_format(f_out, original, discard):
     mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']
     newfile = []
     discarded = []
@@ -301,13 +298,12 @@ def bold_format(f_out, original):
     with open(f_out, 'w') as fout:
         for item in newfile_db:
             fout.write(item)
-    discarded_db = [FastaIO.as_fasta_2line(record) for record in discarded]
-    discarded_file = f_out + 'DISCARDED_SEQS.fasta'
-    with open(discarded_file, 'w') as fbad:
-        for item in discarded_db:
-            fbad.write(item)
-    numdiscard = len(discarded)
-    print(f'found {numdiscard} sequences with incorrect accession format')
+    if discard != 'no':
+        discarded_db = [FastaIO.as_fasta_2line(record) for record in discarded]
+        with open(discard, 'w') as fbad:
+            for item in discarded_db:
+                fbad.write(item)
+    print(f'found {len(discarded)} sequences with incorrect accession format')
     numseq = len(newfile)
     if original != 'yes':
         os.remove('CRABS_bold_download.fasta')

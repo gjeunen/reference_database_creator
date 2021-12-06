@@ -37,6 +37,7 @@ def db_download(args):
     ORIG = args.orig
     EMAIL = args.email
     BATCHSIZE = args.batchsize
+    DISCARD = args.discard
 
     ## download taxonomy data from NCBI
     if SOURCE == 'taxonomy':
@@ -58,7 +59,7 @@ def db_download(args):
             print('\ndownloading sequences from NCBI')
             ncbi_download = wget_ncbi(QUERY, DATABASE, EMAIL, BATCHSIZE)
             print('formatting the downloaded sequencing file to CRABS format')
-            format_seqs = ncbi_formatting(OUTPUT, ORIG)
+            format_seqs = ncbi_formatting(OUTPUT, ORIG, DISCARD)
             print(f'written {format_seqs} sequences to {OUTPUT}\n')
         else:
             print('\nnot all parameters have an input value\n')
@@ -70,7 +71,7 @@ def db_download(args):
             dl_files = embl_download(DATABASE)
             fasta_file = embl_fasta_format(dl_files)
             print(f'formatting intermediary file to CRABS format')
-            crabs_file = embl_crabs_format(fasta_file, OUTPUT, ORIG)
+            crabs_file = embl_crabs_format(fasta_file, OUTPUT, ORIG, DISCARD)
             print(f'written {crabs_file} sequences to {OUTPUT}\n')
         else:
             print('\nnot all parameters have an input value\n')
@@ -82,7 +83,7 @@ def db_download(args):
             url = 'http://mitofish.aori.u-tokyo.ac.jp/files/complete_partial_mitogenomes.zip'
             dl_file = mitofish_download(url)
             print(f'formatting {dl_file} to CRABS format')
-            mitoformat = mitofish_format(dl_file, OUTPUT, ORIG)
+            mitoformat = mitofish_format(dl_file, OUTPUT, ORIG, DISCARD)
             print(f'written {mitoformat} sequences to {OUTPUT}\n')
         else:
             print('\nnot all parameters have an input value\n')
@@ -94,7 +95,7 @@ def db_download(args):
             bold_file = bold_download(DATABASE)
             print(f'downloaded {bold_file} sequences from BOLD')
             print(f'formatting {bold_file} sequences to CRABS format')
-            boldformat = bold_format(OUTPUT, ORIG)
+            boldformat = bold_format(OUTPUT, ORIG, DISCARD)
             print(f'written {boldformat} sequences to {OUTPUT}\n')
         else:
             print('\nnot all parameters have an input value\n')
@@ -278,7 +279,7 @@ def pga(args):
     
     ## step 2: run the pairwise global alignment with vsearch
     print(f'running pairwise global alignment on {count_non_insilico} number of sequences. This may take a while!')
-    cmnd_vsearch_pga = ['vsearch', '--usearch_global', 'CRABS_pga.fasta', '--db', DB, '--id', ID, '--userout', 'CRABS_pga_info.txt', '--userfields', 'query+ql+qcov+qilo+qihi+target+tl+tcov+tilo+tihi+id']
+    cmnd_vsearch_pga = ['vsearch', '--usearch_global', 'CRABS_pga.fasta', '--db', DB, '--id', ID, '--userout', 'CRABS_pga_info.txt', '--userfields', 'query+ql+qcov+qilo+qihi+target+tl+tcov+tilo+tihi+id', '--threads', '7']
     sp.call(cmnd_vsearch_pga)
 
     ## step 3: extract the sequence regions that conform to parameter settings
@@ -1101,6 +1102,7 @@ def main():
     db_download_parser.add_argument('-q', '--query', help = 'NCBI query search to limit portion of database to be downloaded. Example: "16S[All Fields] AND ("1"[SLEN] : "50000"[SLEN])"', dest = 'query', type = str)
     db_download_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str)
     db_download_parser.add_argument('-k', '--keep_original', help = 'keep original downloaded file, default = "no"', dest = 'orig', type = str, default = 'no')
+    db_download_parser.add_argument('-d', '--discard', help = 'output filename for sequences with incorrect formatting, default = not saved', dest = 'discard', type = str, default = 'no')
     db_download_parser.add_argument('-e', '--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str)
     db_download_parser.add_argument('-b', '--batchsize', help = 'number of sequences downloaded from NCBI per iteration. Default = 5000', dest = 'batchsize', type = int, default = 5000)
 
