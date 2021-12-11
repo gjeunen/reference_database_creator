@@ -531,7 +531,7 @@ def db_filter(args):
         print('keeping sequences unclassified at species level')
         spList = ['KEEP ALL SPECIES NO MATTER DESIGNATION']
     else:
-        spList = ['_sp.','_SP.','_indet.']
+        spList = ['_sp\.','_SP\.','_indet.']
         print('removing sequences without a species ID')
     if NANS == 'no':
         nans = 0
