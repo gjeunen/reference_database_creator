@@ -346,7 +346,7 @@ def pga(args):
 
     ## step 3: run the pairwise global alignment with vsearch
     print(f'running pairwise global alignment on {count} number of sequences. This may take a while!')
-    cmnd_vsearch_pga = ['vsearch', '--usearch_global', 'CRABS_pga_subset.fasta', '--db', DB, '--id', ID, '--userout', 'CRABS_pga_info.txt', '--userfields', 'query+ql+qcov+qilo+qihi+target+tl+tcov+tilo+tihi+id', '--threads', '7']
+    cmnd_vsearch_pga = ['vsearch', '--usearch_global', 'CRABS_pga_subset.fasta', '--db', DB, '--id', ID, '--userout', 'CRABS_pga_info.txt', '--userfields', 'query+ql+qcov+qilo+qihi+target+tl+tcov+tilo+tihi+id']
     sp.call(cmnd_vsearch_pga)
 
     ## step 4: extract the sequence regions that conform to parameter settings
@@ -362,7 +362,7 @@ def pga(args):
             qihi = int(line.split('\t')[4])
             tcov = float(line.split('\t')[7])
             end_pos = ql - qihi 
-            if tcov >= 99 and (qilo < len(FWD) or end_pos < len(REV)):
+            if tcov >= 99 and (qilo - 1 < len(FWD) or end_pos < len(REV)):
                 count_pga_filter = count_pga_filter + 1
                 seq = non_insilico_dict[query]
                 seq = seq[qilo - 1 : qihi]
