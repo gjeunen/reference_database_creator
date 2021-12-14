@@ -475,7 +475,8 @@ def dereplicate(args):
     ## dereplicate unique species (all unique sequences per species)
     elif METHOD == 'uniq_species':
         print(f'\ndereplicating {INPUT}, keeping all unique sequences per species')
-        mydict = collections.defaultdict(list)
+        mydict = {}
+        uniq_file = []
         count = 0
         added = 0
         with open(INPUT, 'r') as file_in:
@@ -484,20 +485,16 @@ def dereplicate(args):
                 lines = line.rstrip('\n')
                 spec = lines.split('\t')[8] #.split(',')[2] # taken out for simplified_table
                 seq = lines.split('\t')[9]
-                line_id = lines
-                seq_dicts = []
-                for item in mydict[spec]:
-                    seq_dict = item.rsplit('\t', 1)[1]
-                    seq_dicts.append(seq_dict)
-                if seq not in seq_dicts:
+                uniq = spec + '_' + seq
+                if uniq not in mydict:
+                    mydict[uniq] = seq
+                    uniq_file.append(lines)
                     added = added + 1
-                    mydict[spec].append(line_id)
         print(f'found {count} sequences in {INPUT}')
         print(f'written {added} sequences to {OUTPUT}\n')
         with open(OUTPUT, 'w') as file_out:
-            for k, v in mydict.items():
-                for i in v:
-                    file_out.write(i + '\n')
+            for item in uniq_file:
+                file_out.write(item + '\n')
 
     ## dereplicate concensus species (generate concensus sequence for each species)
     elif METHOD == 'consensus':
