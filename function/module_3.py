@@ -51,6 +51,7 @@ def acc_to_dict(acc_list, acc2taxid_dict, no_acc, acc2tax_name):
     acc_taxid_dict = {}
     taxlist = []
     no_info = []
+    missing_species_name = []
     for item in acc_list:
         if item.startswith('CRABS'):
             species_name = item.split(':')[1]
@@ -58,31 +59,34 @@ def acc_to_dict(acc_list, acc2taxid_dict, no_acc, acc2tax_name):
                 acc_taxid_dict[item] = no_acc[species_name]
                 taxlist.append(acc_taxid_dict[item])
             else:
-                print(f'no tax ID found for {species_name}, most likely due to spelling mistake.')
+                missing_species_name.append(species_name)
         else:
             if item in acc2taxid_dict:
                 acc_taxid_dict[item] = acc2taxid_dict[item]
                 taxlist.append(acc_taxid_dict[item])
             else:
-                #print(f'did not find {item} in accession file, retrieving information through a web seach')
                 no_info.append(item)
-    print(f'did not find {len(no_info)} accession numbers in {acc2tax_name}, retrieving information through a web search')
-    for item in tqdm(no_info):
-        count = 0
-        url = f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&rettype=fasta&retmode=xml&id={item}'
-        result = sp.run(['wget', url, '-O', 'efetch_output.txt'], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
-        with open('efetch_output.txt', 'r') as file_in:
-            for line in file_in:
-                if line.startswith('  <TSeq_taxid>'):
-                    count = count + 1
-                    taxid = line.split('TSeq_taxid>')[1].rstrip('</')
-        if count == 0:
-            print(f'could not find taxonomic ID for {item}')
-        else:
-            acc_taxid_dict[item] = taxid
-            taxlist.append(taxid)
-
-    os.remove('efetch_output.txt')
+    if len(missing_species_name) > 0:
+        print(f'did not find a tax ID found for {len(missing_species_name)} entries, most likely due to spelling mistakes.')
+    if len(no_info) > 0:
+        print(f'did not find {len(no_info)} accession numbers in {acc2tax_name}, retrieving information through a web search')
+        missing_no_info = []
+        for item in tqdm(no_info):
+            count = 0
+            url = f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&rettype=fasta&retmode=xml&id={item}'
+            result = sp.run(['wget', url, '-O', 'efetch_output.txt'], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
+            with open('efetch_output.txt', 'r') as file_in:
+                for line in file_in:
+                    if line.startswith('  <TSeq_taxid>'):
+                        count = count + 1
+                        taxid = line.split('TSeq_taxid>')[1].rstrip('</')
+            if count == 0:
+                missing_no_info.append(item)
+            else:
+                acc_taxid_dict[item] = taxid
+                taxlist.append(taxid)
+        print(f'could not find a taxonomic ID for {len(missing_no_info)} entries')
+        os.remove('efetch_output.txt')
     taxlist = list(dict.fromkeys(taxlist))
 
     return acc_taxid_dict, taxlist
