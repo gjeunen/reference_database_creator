@@ -15,7 +15,7 @@ import codecs
 
 
 ## functions NCBI
-def wget_ncbi(query, database, email, batchsize):
+def wget_ncbi(query, database, email, batchsize, output):
     print('looking up the number of sequences that match the query')
     url_esearch = f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db={database}&usehistory=y&email={email}&term={query}'
     result = sp.run(['wget', url_esearch, '-O', 'esearch_output.txt'], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
@@ -29,18 +29,18 @@ def wget_ncbi(query, database, email, batchsize):
                 webenv = line.split('WebEnv>')[1].rstrip('</')
     
     count = 0
-    for i in tqdm(range(0, int(seqcount), batchsize)):
+    for i in range(0, int(seqcount), batchsize):
         count = count+1
         url2 = f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db={database}&email={email}&query_key={querykey}&WebEnv={webenv}&rettype=fasta&retstart={i}&retmax={batchsize}'
-        results = sp.run(['wget', url2, '-O', f'efetch_output_{count}.fasta'], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
-    
-    tempfiles = [f for f in os.listdir() if f.startswith('efetch_output_')]
+        results = sp.run(['wget', url2, '-O', f'temp_{output}_{count}.fasta',  '-q', '--show-progress'])
+
+    tempfiles = [f for f in os.listdir() if f.startswith(f'temp_{output}_')]
     with open('CRABS_ncbi_download.fasta', 'a') as file_out:
         for tempfile in tempfiles:
             with open(tempfile, 'r') as infile:
                 for line in infile:
                     file_out.write(line)
-    
+
     os.remove('esearch_output.txt')
     for tempfile in tempfiles:
         os.remove(tempfile)
@@ -95,23 +95,25 @@ def ncbi_formatting(file, original, discard):
     mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']
     newfile = []
     discarded = []
-    for record in SeqIO.parse('CRABS_ncbi_download.fasta', 'fasta'):
-        acc = str(record.description.split('.')[0])
-        if not any(mistake in acc for mistake in mistakes):
-            record.description = acc
-            record.id = record.description
-            newfile.append(record)
-        else:
-            discarded.append(record)
-    newfile_db = [FastaIO.as_fasta_2line(record) for record in newfile]
-    with open(file, 'w') as fout:
-        for item in newfile_db:
-            fout.write(item)
-    if discard != 'no':
-        discarded_db = [FastaIO.as_fasta_2line(record) for record in discarded]
-        with open(discard, 'w') as fbad:
-            for item in discarded_db:
-                fbad.write(item)
+    with tqdm(total = os.path.getsize('CRABS_ncbi_download.fasta')) as pbar:
+        for record in SeqIO.parse('CRABS_ncbi_download.fasta', 'fasta'):
+            pbar.update(len(record))
+            acc = str(record.description.split('.')[0])
+            if not any(mistake in acc for mistake in mistakes):
+                record.description = acc
+                record.id = record.description
+                newfile.append(record)
+            else:
+                discarded.append(record)
+        newfile_db = [FastaIO.as_fasta_2line(record) for record in newfile]
+        with open(file, 'w') as fout:
+            for item in newfile_db:
+                fout.write(item)
+        if discard != 'no':
+            discarded_db = [FastaIO.as_fasta_2line(record) for record in discarded]
+            with open(discard, 'w') as fbad:
+                for item in discarded_db:
+                    fbad.write(item)
     print(f'found {len(discarded)} sequences with incorrect accession format')
     if original != 'yes':
         os.remove('CRABS_ncbi_download.fasta')
@@ -121,8 +123,8 @@ def ncbi_formatting(file, original, discard):
 
 ## functions MitoFish
 def mitofish_download(website):
-    results = sp.run(['wget', website])
-    results = sp.run(['unzip', 'complete_partial_mitogenomes.zip'])
+    results = sp.run(['wget', website, '-q', '--show-progress'])
+    results = sp.run(['unzip', 'complete_partial_mitogenomes.zip'], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
     fasta = 'complete_partial_mitogenomes.fa'
     os.remove('complete_partial_mitogenomes.zip')
 
@@ -132,16 +134,18 @@ def mitofish_format(file_in, file_out, original, discard):
     mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']
     newfile = []
     discarded = []
-    for record in SeqIO.parse(file_in, 'fasta'):
-        acc = str(record.description.split('|')[1])
-        if acc.isdigit():
-            acc = str(record.description.split('|')[3])
-        if not any(mistake in acc for mistake in mistakes):
-            record.description = acc
-            record.id = record.description
-            newfile.append(record)
-        else:
-            discarded.append(record)
+    with tqdm(total = os.path.getsize(file_in)) as pbar:
+        for record in SeqIO.parse(file_in, 'fasta'):
+            pbar.update(len(record))
+            acc = str(record.description.split('|')[1])
+            if acc.isdigit():
+                acc = str(record.description.split('|')[3])
+            if not any(mistake in acc for mistake in mistakes):
+                record.description = acc
+                record.id = record.description
+                newfile.append(record)
+            else:
+                discarded.append(record)
     newfile_db = [FastaIO.as_fasta_2line(record) for record in newfile]
     with open(file_out, 'w') as fout:
         for item in newfile_db:
@@ -161,7 +165,7 @@ def mitofish_format(file_in, file_out, original, discard):
 ## functions EMBL
 def embl_download(database):
     url = 'ftp://ftp.ebi.ac.uk/pub/databases/embl/release/std/rel_std_' + database
-    result = sp.run(['wget', url])
+    result = sp.run(['wget', url, '-q', '--show-progress'])
     gfiles = [f for f in os.listdir() if f.startswith('rel_std')]
     ufiles = []
     for gfile in gfiles:
@@ -223,14 +227,16 @@ def embl_crabs_format(f_in, f_out, original, discard):
     mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']
     newfile = []
     discarded = []
-    for record in SeqIO.parse(f_in, 'fasta'):
-        acc = str(record.id)
-        if not any(mistake in acc for mistake in mistakes):
-            record.description = acc
-            record.id = record.description
-            newfile.append(record)
-        else:
-            discarded.append(record)
+    with tqdm(total = os.path.getsize(f_in)) as pbar:
+        for record in SeqIO.parse(f_in, 'fasta'):
+            pbar.update(len(record))
+            acc = str(record.id)
+            if not any(mistake in acc for mistake in mistakes):
+                record.description = acc
+                record.id = record.description
+                newfile.append(record)
+            else:
+                discarded.append(record)
     newfile_db = [FastaIO.as_fasta_2line(record) for record in newfile]
     with open(f_out, 'w') as fout:
         for item in newfile_db:
@@ -251,7 +257,7 @@ def embl_crabs_format(f_in, f_out, original, discard):
 def bold_download(entry):
     url = 'http://v3.boldsystems.org/index.php/API_Public/sequence?taxon=' + entry 
     filename = 'CRABS_bold_download.fasta'
-    result = sp.run(['wget', url, '-O', filename])
+    result = sp.run(['wget', url, '-O', filename, '-q', '--show-progress'])
     BLOCKSIZE = 1048576
     with codecs.open(filename, 'r', 'latin1') as sourcefile:
         with codecs.open('mid.fasta', 'w', 'utf-8') as targetfile:
@@ -270,30 +276,32 @@ def bold_format(f_out, original, discard):
     newfile = []
     discarded = []
     count = 0
-    for record in SeqIO.parse('CRABS_bold_download.fasta', 'fasta'):
-        if record.description.split('-')[-1] == 'SUPPRESSED':
-            discarded.append(record)
-        else:
-            if len(record.description.split('|')) == 4:
-                acc = str(record.description.split('|')[3].split('.')[0])
-                if not any(mistake in acc for mistake in mistakes):
-                    record.description = acc
+    with tqdm(total = os.path.getsize('CRABS_bold_download.fasta')) as pbar:
+        for record in SeqIO.parse('CRABS_bold_download.fasta', 'fasta'):
+            pbar.update(len(record))
+            if record.description.split('-')[-1] == 'SUPPRESSED':
+                discarded.append(record)
+            else:
+                if len(record.description.split('|')) == 4:
+                    acc = str(record.description.split('|')[3].split('.')[0])
+                    if not any(mistake in acc for mistake in mistakes):
+                        record.description = acc
+                        record.id = record.description
+                        record.seq = record.seq.strip('-')
+                        if record.seq.count('-') == 0:
+                            newfile.append(record)
+                    else:
+                        discarded.append(record)
+                else:
+                    count = count +1
+                    spec = str(record.description.split('|')[1].replace(' ', '_'))
+                    acc_crab = 'CRABS_' + str(count) + ':' + spec 
+                    record.description = acc_crab
                     record.id = record.description
+                    record.name = record.description
                     record.seq = record.seq.strip('-')
                     if record.seq.count('-') == 0:
                         newfile.append(record)
-                else:
-                    discarded.append(record)
-            else:
-                count = count +1
-                spec = str(record.description.split('|')[1].replace(' ', '_'))
-                acc_crab = 'CRABS_' + str(count) + ':' + spec 
-                record.description = acc_crab
-                record.id = record.description
-                record.name = record.description
-                record.seq = record.seq.strip('-')
-                if record.seq.count('-') == 0:
-                    newfile.append(record)
     newfile_db = [FastaIO.as_fasta_2line(record) for record in newfile]
     with open(f_out, 'w') as fout:
         for item in newfile_db:
