@@ -185,6 +185,7 @@ def insilico_pcr(args):
     INPUT = args.input
     ERROR = args.error
     OUTPUT = args.output
+    CORES = args.cores
 
     # Change 'I' to 'N'
     FWD = FWD.replace('I','N')
@@ -204,25 +205,55 @@ def insilico_pcr(args):
     ADAPTER = FWD + '...' + REV_CORRECT
 
     ## run cutadapt on downloaded fasta file
-    count_init = len(list(SeqIO.parse(INPUT, 'fasta')))
-    print('\nrunning in silico PCR on fasta file containing {} sequences'.format(count_init))
-    cmnd_cutadapt_1 = ['cutadapt', '-g', ADAPTER, '-o', TRIMMED_INIT, INPUT, '--untrimmed-output', UNTRIMMED_INIT, '--no-indels', '-e', ERROR, '--overlap', OVERLAP, '--quiet']
+    print(f'\nreading {INPUT} into memory')
+    seqcount = 0
+    with tqdm(total = os.path.getsize(INPUT)) as pbar:
+        with open(INPUT, 'r') as infile:
+            for line in infile:
+                pbar.update(len(line))
+                if line.startswith('>'):
+                    seqcount = seqcount + 1
+    count_init = seqcount
+    print(f'found {count_init} sequences in {INPUT}')
+    print('running in silico PCR on fasta file containing {} sequences'.format(count_init))
+    cmnd_cutadapt_1 = ['cutadapt', '-g', ADAPTER, '-o', TRIMMED_INIT, INPUT, '--untrimmed-output', UNTRIMMED_INIT, '--no-indels', '-e', ERROR, '--overlap', OVERLAP, '--cores', CORES, '--quiet']# '--report=minimal']
     sp.call(cmnd_cutadapt_1)
-    count_trimmed_init = len(list(SeqIO.parse(TRIMMED_INIT, 'fasta')))
+    print(f'counting the number of sequences found by in silico PCR')
+    count_trimmed_init = 0
+    with tqdm(total = os.path.getsize(TRIMMED_INIT)) as pbar:
+        with open(TRIMMED_INIT, 'r') as infile:
+            for line in infile:
+                pbar.update(len(line))
+                if line.startswith('>'):
+                    count_trimmed_init = count_trimmed_init + 1
     print('found primers in {} sequences'.format(count_trimmed_init))
 
     ## run vsearch to reverse complement untrimmed sequences
     if count_trimmed_init < count_init:
-        count_untrimmed_init = len(list(SeqIO.parse(UNTRIMMED_INIT, 'fasta')))
+        print(f'reading sequences without primer-binding regions into memory')
+        count_untrimmed_init = 0
+        with tqdm(total = os.path.getsize(UNTRIMMED_INIT)) as pbar:
+            with open(UNTRIMMED_INIT, 'r') as infile:
+                for line in infile:
+                    pbar.update(len(line))
+                    if line.startswith('>'):
+                        count_untrimmed_init = count_untrimmed_init + 1
         print('reverse complementing {} untrimmed sequences'.format(count_untrimmed_init))
         cmnd_vsearch_revcomp = ['vsearch', '--fastx_revcomp', UNTRIMMED_INIT, '--fastaout', REVCOMP_UNTRIMMED_INIT, '--quiet']
         sp.call(cmnd_vsearch_revcomp)
 
         ## run cutadapt on reverse complemented untrimmed sequences
         print('running in silico PCR on {} reverse complemented untrimmed sequences'.format(count_untrimmed_init))
-        cmnd_cutadapt_2 = ['cutadapt', '-g', ADAPTER, '-o', TRIMMED_REVCOMP, REVCOMP_UNTRIMMED_INIT, '--untrimmed-output', UNTRIMMED_REVCOMP, '--no-indels', '-e', ERROR, '--overlap', OVERLAP, '--quiet']
+        cmnd_cutadapt_2 = ['cutadapt', '-g', ADAPTER, '-o', TRIMMED_REVCOMP, REVCOMP_UNTRIMMED_INIT, '--untrimmed-output', UNTRIMMED_REVCOMP, '--no-indels', '-e', ERROR, '--overlap', OVERLAP, '--cores', CORES, '--quiet']#'--report=minimal']
         sp.call(cmnd_cutadapt_2)
-        count_trimmed_second = len(list(SeqIO.parse(TRIMMED_REVCOMP, 'fasta')))
+        print(f'counting the number of sequences found by in silico PCR')
+        count_trimmed_second = 0
+        with tqdm(total = os.path.getsize(TRIMMED_REVCOMP)) as pbar:
+            with open(TRIMMED_REVCOMP, 'r') as infile:
+                for line in infile:
+                    pbar.update(len(line))
+                    if line.startswith('>'):
+                        count_trimmed_second = count_trimmed_second + 1
         print('found primers in {} sequences\n'.format(count_trimmed_second))
 
         ## concatenate both trimmed files
@@ -1197,6 +1228,7 @@ def main():
     in_silico_pcr_parser.add_argument('-f', '--fwd', help = 'forward primer sequence in 5-3 direction', dest = 'fwd', type = str, required = True)
     in_silico_pcr_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest = 'rev', type = str, required = True)
     in_silico_pcr_parser.add_argument('-e', '--error', help = 'number of errors allowed in primer-binding site. Default = 4.5', dest = 'error', type = str, default = '4.5')
+    in_silico_pcr_parser.add_argument('-t', '--threads', help = 'number of threads used to compute in silico PCR. Default = autodetection', dest = 'cores', type = str, default = '0')
 
     pga_parser = subparser.add_parser('pga', description = 'extracting amplicon regions from sequences with missing primer-binding regions')
     pga_parser.set_defaults(func = pga)
