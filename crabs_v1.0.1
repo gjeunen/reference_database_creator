@@ -185,7 +185,7 @@ def insilico_pcr(args):
     INPUT = args.input
     ERROR = args.error
     OUTPUT = args.output
-    CORES = args.cores
+    THREADS = args.threads
 
     # Change 'I' to 'N'
     FWD = FWD.replace('I','N')
@@ -216,7 +216,7 @@ def insilico_pcr(args):
     count_init = seqcount
     print(f'found {count_init} sequences in {INPUT}')
     print('running in silico PCR on fasta file containing {} sequences'.format(count_init))
-    cmnd_cutadapt_1 = ['cutadapt', '-g', ADAPTER, '-o', TRIMMED_INIT, INPUT, '--untrimmed-output', UNTRIMMED_INIT, '--no-indels', '-e', ERROR, '--overlap', OVERLAP, '--cores', CORES, '--quiet']# '--report=minimal']
+    cmnd_cutadapt_1 = ['cutadapt', '-g', ADAPTER, '-o', TRIMMED_INIT, INPUT, '--untrimmed-output', UNTRIMMED_INIT, '--no-indels', '-e', ERROR, '--overlap', OVERLAP, '--cores', THREADS, '--quiet']# '--report=minimal']
     sp.call(cmnd_cutadapt_1)
     print(f'counting the number of sequences found by in silico PCR')
     count_trimmed_init = 0
@@ -244,7 +244,7 @@ def insilico_pcr(args):
 
         ## run cutadapt on reverse complemented untrimmed sequences
         print('running in silico PCR on {} reverse complemented untrimmed sequences'.format(count_untrimmed_init))
-        cmnd_cutadapt_2 = ['cutadapt', '-g', ADAPTER, '-o', TRIMMED_REVCOMP, REVCOMP_UNTRIMMED_INIT, '--untrimmed-output', UNTRIMMED_REVCOMP, '--no-indels', '-e', ERROR, '--overlap', OVERLAP, '--cores', CORES, '--quiet']#'--report=minimal']
+        cmnd_cutadapt_2 = ['cutadapt', '-g', ADAPTER, '-o', TRIMMED_REVCOMP, REVCOMP_UNTRIMMED_INIT, '--untrimmed-output', UNTRIMMED_REVCOMP, '--no-indels', '-e', ERROR, '--overlap', OVERLAP, '--cores', THREADS, '--quiet']#'--report=minimal']
         sp.call(cmnd_cutadapt_2)
         print(f'counting the number of sequences found by in silico PCR')
         count_trimmed_second = 0
@@ -1228,7 +1228,7 @@ def main():
     in_silico_pcr_parser.add_argument('-f', '--fwd', help = 'forward primer sequence in 5-3 direction', dest = 'fwd', type = str, required = True)
     in_silico_pcr_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest = 'rev', type = str, required = True)
     in_silico_pcr_parser.add_argument('-e', '--error', help = 'number of errors allowed in primer-binding site. Default = 4.5', dest = 'error', type = str, default = '4.5')
-    in_silico_pcr_parser.add_argument('-t', '--threads', help = 'number of threads used to compute in silico PCR. Default = autodetection', dest = 'cores', type = str, default = '0')
+    in_silico_pcr_parser.add_argument('-t', '--threads', help = 'number of threads used to compute in silico PCR. Default = autodetection', dest = 'threads', type = str, default = '0')
 
     pga_parser = subparser.add_parser('pga', description = 'extracting amplicon regions from sequences with missing primer-binding regions')
     pga_parser.set_defaults(func = pga)
