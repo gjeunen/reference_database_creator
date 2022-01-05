@@ -294,21 +294,27 @@ def pga(args):
     count_orig = 0
     count_insilico = 0
     count_non_insilico = 0
-    for seq_record in SeqIO.parse(DB, 'fasta'):
-        count_insilico = count_insilico + 1
-        id = str(seq_record.id)
-        seq = str(seq_record.seq)
-        insilico_dict[id] = seq
-    for seq_record in SeqIO.parse(INPUT, 'fasta'):
-        count_orig = count_orig + 1
-        id = str(seq_record.id)
-        seq = str(seq_record.seq)
-        if id not in insilico_dict:
-            count_non_insilico = count_non_insilico + 1
-            non_insilico_list.append(seq_record)
-            non_insilico_dict[id] = seq
-    print(f'\nfound {count_orig} number of sequences in the originally downloaded sequencing file')
-    print(f'found {count_insilico} number of sequences in the in silico file')
+    print(f'\nreading {DB} into memory')
+    with tqdm(total = os.path.getsize(DB)) as pbar:
+        for seq_record in SeqIO.parse(DB, 'fasta'):
+            pbar.update(len(seq_record))
+            count_insilico = count_insilico + 1
+            id = str(seq_record.id)
+            seq = str(seq_record.seq)
+            insilico_dict[id] = seq
+    print(f'found {count_insilico} number of sequences in {DB}')
+    print(f'reading {INPUT} into memory')
+    with tqdm(total = os.path.getsize(INPUT)) as pbar:
+        for seq_record in SeqIO.parse(INPUT, 'fasta'):
+            pbar.update(len(seq_record))
+            count_orig = count_orig + 1
+            id = str(seq_record.id)
+            seq = str(seq_record.seq)
+            if id not in insilico_dict:
+                count_non_insilico = count_non_insilico + 1
+                non_insilico_list.append(seq_record)
+                non_insilico_dict[id] = seq
+    print(f'found {count_orig} number of sequences in {INPUT}')
     print(f'analysing {count_non_insilico} number of sequences for pairwise global alignment')
     non_insilico_fa = [FastaIO.as_fasta_2line(record) for record in non_insilico_list]
     with open('CRABS_pga.fasta', 'w') as file:
@@ -382,30 +388,34 @@ def pga(args):
 
     ## step 3: run the pairwise global alignment with vsearch
     print(f'running pairwise global alignment on {count} number of sequences. This may take a while!')
-    cmnd_vsearch_pga = ['vsearch', '--usearch_global', 'CRABS_pga_subset.fasta', '--db', DB, '--id', ID, '--userout', 'CRABS_pga_info.txt', '--userfields', 'query+ql+qcov+qilo+qihi+target+tl+tcov+tilo+tihi+id']
-    sp.call(cmnd_vsearch_pga)
+    cmnd_vsearch_pga = ['vsearch', '--usearch_global', 'CRABS_pga_subset.fasta', '--db', DB, '--id', ID, '--userout', 'CRABS_pga_info.txt', '--userfields', 'query+ql+qcov+qilo+qihi+target+tl+tcov+tilo+tihi+id']#, '--quiet']
+    result = sp.run(cmnd_vsearch_pga, stdout = sp.DEVNULL, stderr = sp.DEVNULL)
 
     ## step 4: extract the sequence regions that conform to parameter settings
     count_align = 0
     count_pga_filter = 0
     pga_list = []
-    with open('CRABS_pga_info.txt', 'r') as file:
-        for line in file:
-            count_align = count_align + 1
-            query = line.split('\t')[0]
-            ql = int(line.split('\t')[1])
-            qilo = int(line.split('\t')[3])
-            qihi = int(line.split('\t')[4])
-            tcov = float(line.split('\t')[7])
-            end_pos = ql - qihi 
-            if tcov >= 99 and (qilo - 1 < len(FWD) or end_pos < len(REV)):
-                count_pga_filter = count_pga_filter + 1
-                seq = non_insilico_dict[query]
-                seq = seq[qilo - 1 : qihi]
-                pga_list.append('>' + query + '\n')
-                pga_list.append(seq + '\n')
-    print(f'{count_align} out of {count} number of sequences aligned to the in silico database')
+    print(f'filtering alignments based on parameter settings')
+    with tqdm(total = os.path.getsize('CRABS_pga_info.txt')) as pbar:
+        with open('CRABS_pga_info.txt', 'r') as file:
+            for line in file:
+                pbar.update(len(line))
+                count_align = count_align + 1
+                query = line.split('\t')[0]
+                ql = int(line.split('\t')[1])
+                qilo = int(line.split('\t')[3])
+                qihi = int(line.split('\t')[4])
+                tcov = float(line.split('\t')[7])
+                end_pos = ql - qihi 
+                if tcov >= 99 and (qilo - 1 < len(FWD) or end_pos < len(REV)):
+                    count_pga_filter = count_pga_filter + 1
+                    seq = non_insilico_dict[query]
+                    seq = seq[qilo - 1 : qihi]
+                    pga_list.append('>' + query + '\n')
+                    pga_list.append(seq + '\n')
+    print(f'{count_align} out of {count} number of sequences aligned to {DB}')
     print(f'{count_pga_filter} number of sequences achieved an alignment that passed filtering thresholds')
+    print(f'written {count_pga_filter} sequences to {OUTPUT}\n')
     with open('CRABS_pga_results.fasta', 'w') as file:
         for item in pga_list:
             file.write(item)
