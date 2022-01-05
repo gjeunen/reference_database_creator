@@ -10,44 +10,52 @@ import os
 ## functions: taxonomy assignment
 def tax2dict(acc2tax, taxid, name, accession_dict):
     acc_taxid_info = {}
-    print(f'converting {acc2tax} to dictionary')
-    with open(acc2tax, 'r') as fin:
-        for line in fin:
-            acc = line.split('\t')[0]
-            if acc in accession_dict:
-                tax = line.split('\t')[2]
-                acc_taxid_info[acc] = tax
-    print(f'converting {taxid} to dictionary')
+    print(f'reading {acc2tax} into memory')
+    with tqdm(total = os.path.getsize(acc2tax)) as pbar:
+        with open(acc2tax, 'r') as fin:
+            for line in fin:
+                pbar.update(len(line))
+                acc = line.split('\t')[0]
+                if acc in accession_dict:
+                    tax = line.split('\t')[2]
+                    acc_taxid_info[acc] = tax
+    print(f'reading {taxid} into memory')
     taxids = {}
-    with open(taxid, 'r') as f_in:
-        for line in f_in:
-            taxs = line.split('\t|\t')[0]
-            taxup = line.split('\t|\t')[1]
-            rank = line.split('\t|\t')[2]
-            taxids[taxs] = [rank, taxup]
-    print(f'converting {name} to dictionary')
+    with tqdm(total = os.path.getsize(taxid)) as pbar:
+        with open(taxid, 'r') as f_in:
+            for line in f_in:
+                pbar.update(len(line))
+                taxs = line.split('\t|\t')[0]
+                taxup = line.split('\t|\t')[1]
+                rank = line.split('\t|\t')[2]
+                taxids[taxs] = [rank, taxup]
+    print(f'reading {name} into memory')
     names = {}
     no_acc = {}
-    with open(name, 'r') as n_in:
-        for line in n_in:
-            sc = line.split('\t')[6]
-            if sc == 'scientific name':
-                taxid_name = line.split('\t|\t')[0]
-                name = line.split('\t|\t')[1].replace(' ', '_')
-                names[taxid_name] = name
-                no_acc[name] = taxid_name
+    with tqdm(total = os.path.getsize(name)) as pbar:
+        with open(name, 'r') as n_in:
+            for line in n_in:
+                pbar.update(len(line))
+                sc = line.split('\t')[6]
+                if sc == 'scientific name':
+                    taxid_name = line.split('\t|\t')[0]
+                    name = line.split('\t|\t')[1].replace(' ', '_')
+                    names[taxid_name] = name
+                    no_acc[name] = taxid_name
 
     return acc_taxid_info, taxids, names, no_acc
 
 def get_accession(file_in):
     accession = {}
-    for record in SeqIO.parse(file_in, 'fasta'):
-        acc = str(record.id)
-        accession[acc] = acc
+    with tqdm(total = os.path.getsize(file_in)) as pbar:
+        for record in SeqIO.parse(file_in, 'fasta'):
+            pbar.update(len(record))
+            acc = str(record.id).split('.')[0]
+            accession[acc] = acc
     
     return accession
 
-def acc_to_dict(acc_list, acc2taxid_dict, no_acc, acc2tax_name):
+def acc_to_dict(acc_list, acc2taxid_dict, no_acc, acc2tax_name, web):
     acc_taxid_dict = {}
     taxlist = []
     no_info = []
@@ -68,7 +76,7 @@ def acc_to_dict(acc_list, acc2taxid_dict, no_acc, acc2tax_name):
                 no_info.append(item)
     if len(missing_species_name) > 0:
         print(f'did not find a tax ID found for {len(missing_species_name)} entries, most likely due to spelling mistakes.')
-    if len(no_info) > 0:
+    if len(no_info) > 0 and web != 'no':
         print(f'did not find {len(no_info)} accession numbers in {acc2tax_name}, retrieving information through a web search')
         missing_no_info = []
         for item in tqdm(no_info):
@@ -87,12 +95,18 @@ def acc_to_dict(acc_list, acc2taxid_dict, no_acc, acc2tax_name):
                 taxlist.append(taxid)
         print(f'could not find a taxonomic ID for {len(missing_no_info)} entries')
         os.remove('efetch_output.txt')
+    else:
+        print(f'did not find {len(no_info)} accession numbers in {acc2tax_name}')
     taxlist = list(dict.fromkeys(taxlist))
 
     return acc_taxid_dict, taxlist
 
-def get_lineage(taxlist, taxid_dict, names_dict):
-    ranks = {'superkingdom' : 'yes', 'phylum' : 'yes', 'class' : 'yes', 'order' : 'yes', 'family' : 'yes', 'genus' : 'yes', 'species' : 'yes'}
+def get_lineage(taxranks, taxlist, taxid_dict, names_dict):
+    #ranks = {'superkingdom' : 'yes', 'phylum' : 'yes', 'class' : 'yes', 'order' : 'yes', 'family' : 'yes', 'genus' : 'yes', 'species' : 'yes'}
+    ranks = {}
+    ranklist = str(taxranks).split('+')
+    for item in ranklist:
+        ranks[item] = 'yes'
     true_lineage = collections.defaultdict(list)
     for tax in taxlist:
         lineage = {}
@@ -150,10 +164,11 @@ def final_lineage_simple(acc_tax_dict, lineage_dict, file_in, file_out):
     final_dict = collections.defaultdict(list)
     for record in SeqIO.parse(file_in, 'fasta'):
         acc = str(record.id)
+        acc_without = acc.split('.')[0]
         seq = str(record.seq)
-        if acc in acc_tax_dict:
-            v = acc_tax_dict[acc]
-            final_dict[acc].append(acc_tax_dict[acc])
+        if acc_without in acc_tax_dict:
+            v = acc_tax_dict[acc_without]
+            final_dict[acc].append(acc_tax_dict[acc_without])
             final_dict[acc].append(lineage_dict[v])
             final_dict[acc].append(seq)
     with open(file_out, 'w') as fout:

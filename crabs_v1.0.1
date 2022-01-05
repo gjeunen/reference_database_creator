@@ -414,7 +414,7 @@ def pga(args):
                     pga_list.append('>' + query + '\n')
                     pga_list.append(seq + '\n')
     print(f'{count_align} out of {count} number of sequences aligned to {DB}')
-    print(f'{count_pga_filter} number of sequences achieved an alignment that passed filtering thresholds')
+    print(f'{count_pga_filter + count} number of sequences achieved an alignment that passed filtering thresholds')
     print(f'written {count_pga_filter} sequences to {OUTPUT}\n')
     with open('CRABS_pga_results.fasta', 'w') as file:
         for item in pga_list:
@@ -442,6 +442,8 @@ def assign_tax(args):
     ACC2TAX = args.acc2tax
     TAXID = args.taxid
     NAME = args.name
+    WEB = args.web
+    RANKS = args.ranks
 
     ## process initial files
     print(f'\nretrieving accession numbers from {INPUT}')
@@ -455,10 +457,10 @@ def assign_tax(args):
 
     ## get taxonomic lineage
     print(f'assigning a tax ID number to {len(accession)} accession numbers from {INPUT}')
-    acc_taxid_dict, taxid_list = acc_to_dict(accession, acc2tax, no_acc, ACC2TAX)
+    acc_taxid_dict, taxid_list = acc_to_dict(accession, acc2tax, no_acc, ACC2TAX, WEB)
     print(f'{len(acc_taxid_dict)} accession numbers resulted in {len(taxid_list)} unique tax ID numbers')
     print(f'generating taxonomic lineages for {len(taxid_list)} tax ID numbers')
-    lineage = get_lineage(taxid_list, taxid, name)
+    lineage = get_lineage(RANKS, taxid_list, taxid, name)
     print(f'assigning a taxonomic lineage to {len(accession)} accession numbers')
     #final_lineage = final_lineage_comb(acc_taxid_dict, lineage, INPUT, OUTPUT)
     final_lineage = final_lineage_simple(acc_taxid_dict, lineage, INPUT, OUTPUT)
@@ -1257,6 +1259,8 @@ def main():
     ref_database_parser.add_argument('-a', '--acc2tax', help = 'accession to taxid file name', dest = 'acc2tax', type = str, required = True)
     ref_database_parser.add_argument('-t', '--taxid', help = 'taxid file name', dest = 'taxid', type = str, required = True)
     ref_database_parser.add_argument('-n', '--name', help = 'phylogeny file name', dest = 'name', type = str, required = True)
+    ref_database_parser.add_argument('-w', '--web', help = 'retrieve missing taxonomic information through a web search. Default = "no"', dest = 'web', type = str, default = 'no')
+    ref_database_parser.add_argument('-r', '--ranks', help = 'taxonomic ranks included in the taxonomic lineage. Default = "superkingdom+phylum+class+order+family+genus+species"', dest = 'ranks', type = str, default = 'superkingdom+phylum+class+order+family+genus+species')
 
     dereplication_parser = subparser.add_parser('dereplicate', description = 'dereplicating the database')
     dereplication_parser.set_defaults(func = dereplicate)
