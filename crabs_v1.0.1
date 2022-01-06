@@ -23,6 +23,7 @@ from Bio.Seq import Seq
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceMatrix, DistanceTreeConstructor
 from function.module_db_download import wget_ncbi, esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format, embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases
 from function.module_assign_tax import tax2dict, get_accession, acc_to_dict, get_lineage, final_lineage_comb, final_lineage_simple
+from function.module_dereplicate import derep_strict
 from function.module_visualizations import split_db_by_taxgroup, num_spec_seq_taxgroup, horizontal_barchart, get_amp_length, amplength_figure, file_dmp_to_dict, species_to_taxid, lineage_retrieval
 
 ################################################
@@ -479,24 +480,9 @@ def dereplicate(args):
     ## dereplicate strict (only unique sequences)
     if METHOD == 'strict':
         print(f'\nstrict dereplication of {INPUT}, only keeping unique sequences')
-        uniq_seqs = {}
-        uniq_line = []
-        count = 0
-        added = 0
-        with open(INPUT, 'r') as file_in:
-            for line in file_in:
-                count = count + 1
-                lines = line.rstrip('\n')
-                seq = lines.split('\t')[9]
-                if seq not in uniq_seqs:
-                    added = added + 1
-                    uniq_seqs[seq] = seq
-                    uniq_line.append(line)
-        print(f'found {count} sequences in {INPUT}')
-        print(f'written {added} sequences to {OUTPUT}\n')
-        with open(OUTPUT, 'w') as file_out:
-            for line in uniq_line:
-                file_out.write(line)
+        orig_count, derep_count = derep_strict(INPUT, OUTPUT)
+        print(f'found {orig_count} sequences in {INPUT}')
+        print(f'written {derep_count} sequences to {OUTPUT}\n')
 
     ## dereplicate single species (one sequence per species)
     elif METHOD == 'single_species':
