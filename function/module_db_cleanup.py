@@ -87,18 +87,56 @@ def derep_uniq(file_in, file_out, taxranks):
         print(f'species information found at position {species_position - 1}, starting dereplication process')
         mydict = {}
         uniq_file = []
-        with open(file_in, 'r') as infile:
-            for line in infile:
-                count = count + 1
-                lines = line.rstrip('\n')
-                spec = lines.split('\t')[species_position]
-                seq = lines.split('\t')[-1]
-                uniq = spec + '_' + seq
-                if uniq not in mydict:
-                    mydict[uniq] = seq
-                    uniq_file.append(lines)
-                    added = added + 1
+        with tqdm(total = os.path.getsize(file_in)) as pbar:
+            with open(file_in, 'r') as infile:
+                for line in infile:
+                    pbar.update(len(line))
+                    count = count + 1
+                    lines = line.rstrip('\n')
+                    spec = lines.split('\t')[species_position]
+                    seq = lines.split('\t')[-1]
+                    uniq = spec + '_' + seq
+                    if uniq not in mydict:
+                        mydict[uniq] = seq
+                        uniq_file.append(lines)
+                        added = added + 1
         with open(file_out, 'w') as outfile:
             for item in uniq_file:
                 outfile.write(item + '\n')
+    
     return abort, count, added
+
+
+## functions: sequence cleanup
+def set_param(env, spec, Nans):
+    if env == 'no':
+        envList = ['KEEP ALL ENVIRONMENTAL SEQUENCES']
+        print('keeping environmental sequences')
+    else:
+        envList = ['ENVIRONMENTAL','environmental','Environmental']
+        print('removing environmental sequences')
+    if spec == 'no':
+        print('keeping sequences unclassified at species level')
+        spList = ['KEEP ALL SPECIES NO MATTER DESIGNATION']
+    else:
+        spList = ['_sp\.','_SP\.','_indet.']
+        print('removing sequences without a species ID')
+    if Nans == 'no':
+        nans = 0
+        print('keeping sequences with missing taxonomic information')
+    else:
+        if Nans == '1':
+            nans = None
+        else:
+            nans = 10 - int(Nans)
+        print(f'removing sequences with missing information for at least {Nans} taxonomic levels')
+    
+    return envList, spList, nans
+
+def create_pd_cols(taxranks):
+    ranks = str(taxranks).split('+')
+    ranks.insert(0, 'seqID')
+    ranks.insert(1, 'taxid')
+    ranks.append('sequence')
+
+    return ranks

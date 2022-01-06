@@ -23,7 +23,7 @@ from Bio.Seq import Seq
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceMatrix, DistanceTreeConstructor
 from function.module_db_download import wget_ncbi, esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format, embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases
 from function.module_assign_tax import tax2dict, get_accession, acc_to_dict, get_lineage, final_lineage_comb, final_lineage_simple
-from function.module_dereplicate import derep_strict, derep_single, derep_uniq
+from function.module_db_cleanup import derep_strict, derep_single, derep_uniq, set_param, create_pd_cols
 from function.module_visualizations import split_db_by_taxgroup, num_spec_seq_taxgroup, horizontal_barchart, get_amp_length, amplength_figure, file_dmp_to_dict, species_to_taxid, lineage_retrieval
 
 ################################################
@@ -505,10 +505,6 @@ def dereplicate(args):
             print(f'found {orig_count} sequences in {INPUT}')
             print(f'written {derep_count} sequences to {OUTPUT}\n')
 
-    ## dereplicate concensus species (generate concensus sequence for each species)
-    elif METHOD == 'consensus':
-        print('still to add...')
-
     ## unknown method specified
     else:
         print('\nplease specify one of the accepted dereplication methods: "strict", "single_species", "uniq_species"\n')
@@ -524,33 +520,13 @@ def db_filter(args):
     ENV = args.env
     SPEC = args.spec
     NANS = args.nans
+    RANKS = args.ranks
 
     ## set filtering parameters
     print(f'\nfiltering parameters:\nremoving sequences shorter than {MINLEN} and longer than {MAXLEN}\nremoving sequences containing more than {MAXNS} "N"')
-    if ENV == 'no':
-        envList = ['KEEP ALL ENVIRONMENTAL SEQUENCES']
-        print('keeping environmental sequences')
-    else:
-        envList = ['ENVIRONMENTAL','environmental','Environmental']
-        print('removing environmental sequences')
-    if SPEC == 'no':
-        print('keeping sequences unclassified at species level')
-        spList = ['KEEP ALL SPECIES NO MATTER DESIGNATION']
-    else:
-        spList = ['_sp\.','_SP\.','_indet.']
-        print('removing sequences without a species ID')
-    if NANS == 'no':
-        nans = 0
-        print('keeping sequences with missing taxonomic information')
-    else:
-        if NANS == '1':
-            nans = None
-        else:
-            nans = 10 - int(NANS)
-        print(f'removing sequences with missing information for at least {NANS} taxonomic levels')
+    envList, spList, nans = set_param(ENV, SPEC, NANS)
     ## read the input file and clean up given the parameters
-    # try pandas here? 
-    cols = ['seqID','taxid','kingdom','phylum','class','order','family','genus','species','sequence']
+    cols = create_pd_cols(RANKS)
     df = pd.read_csv(INPUT, sep='\t', names=cols)
     df_filt = df[(df['sequence'].str.len() > MINLEN) & (df['sequence'].str.len() < MAXLEN) & (~df['species'].str.contains('|'.join(spList),regex=True, na=False)) & (~df['species'].str.contains('|'.join(envList),regex=True, na=False)) & (df['sequence'].str.count('N') <= MAXNS)]
     df_final = df_filt.dropna(thresh=nans)
@@ -1241,6 +1217,7 @@ def main():
     seq_cleanup_parser.add_argument('-e', '--enviro', help = 'discard environmental sequences from the dataset. yes/no', dest = 'env', type = str, default = 'no')
     seq_cleanup_parser.add_argument('-s', '--species', help = 'discard sequences for which the species name is unspecified. yes/no', dest = 'spec', type = str, default = 'no')
     seq_cleanup_parser.add_argument('-na', '--nans', help = 'discard sequences with at least N number of unspecified taxonomic levels', dest = 'nans', type = str, default = 'no')
+    seq_cleanup_parser.add_argument('-r', '--ranks', help = 'taxonomic ranks included in the taxonomic lineage. Default = "superkingdom+phylum+class+order+family+genus+species"', dest = 'ranks', type = str, default = 'superkingdom+phylum+class+order+family+genus+species')
     
     geo_cleanup_parser = subparser.add_parser('geo_cleanup', description = 'subsetting the database using a user-provided species list')
     geo_cleanup_parser.set_defaults(func = geo_cleanup)
