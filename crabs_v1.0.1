@@ -23,7 +23,7 @@ from Bio.Seq import Seq
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceMatrix, DistanceTreeConstructor
 from function.module_db_download import wget_ncbi, esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format, embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases
 from function.module_assign_tax import tax2dict, get_accession, acc_to_dict, get_lineage, final_lineage_comb, final_lineage_simple
-from function.module_dereplicate import derep_strict
+from function.module_dereplicate import derep_strict, derep_single
 from function.module_visualizations import split_db_by_taxgroup, num_spec_seq_taxgroup, horizontal_barchart, get_amp_length, amplength_figure, file_dmp_to_dict, species_to_taxid, lineage_retrieval
 
 ################################################
@@ -476,6 +476,7 @@ def dereplicate(args):
     INPUT = args.input
     OUTPUT = args.output
     METHOD = args.method
+    RANKS = args.ranks
 
     ## dereplicate strict (only unique sequences)
     if METHOD == 'strict':
@@ -487,24 +488,15 @@ def dereplicate(args):
     ## dereplicate single species (one sequence per species)
     elif METHOD == 'single_species':
         print(f'\ndereplicating {INPUT}, only keeping a single sequence per species')
-        uniq_spec = {}
-        uniq_line = []
-        count = 0
-        added = 0
-        with open(INPUT, 'r') as file_in:
-            for line in file_in:
-                count = count + 1
-                lines = line.rstrip('\n')
-                species = lines.split('\t')[8]#.split(',')[2]
-                if species not in uniq_spec:
-                    added = added + 1
-                    uniq_spec[species] = species 
-                    uniq_line.append(line)
-        print(f'found {count} sequences in {INPUT}')
-        print(f'written {added} sequences to {OUTPUT}\n')
-        with open(OUTPUT, 'w') as file_out:
-            for line in uniq_line:
-                file_out.write(line)
+        fail, orig_count, derep_count = derep_single(INPUT, OUTPUT, RANKS)
+        if fail != 0:
+            print('aborting single species dereplication...')
+        else:
+            print(f'found {orig_count} sequences in {INPUT}')
+            print(f'written {derep_count} sequences to {OUTPUT}\n')
+
+
+
 
     ## dereplicate unique species (all unique sequences per species)
     elif METHOD == 'uniq_species':
@@ -1253,6 +1245,7 @@ def main():
     dereplication_parser.add_argument('-i', '--input', help = 'filename of the curated reference database', dest = 'input', type = str, required = True)
     dereplication_parser.add_argument('-o', '--output', help = 'filename of the dereplicated curated reference database', dest = 'output', type = str, required = True)
     dereplication_parser.add_argument('-m', '--method', help = 'method of dereplication: "strict", "single_species", "uniq_species"', dest = 'method', type = str, required = True)
+    dereplication_parser.add_argument('-r', '--ranks', help = 'taxonomic ranks included in the taxonomic lineage. Default = "superkingdom+phylum+class+order+family+genus+species"', dest = 'ranks', type = str, default = 'superkingdom+phylum+class+order+family+genus+species')
 
     seq_cleanup_parser = subparser.add_parser('seq_cleanup', description = 'filtering the database on sequence and header parameters')
     seq_cleanup_parser.set_defaults(func = db_filter)
