@@ -527,51 +527,56 @@ def db_filter(args):
     envList, spList, nans = set_param(ENV, SPEC, NANS)
     ## read the input file and clean up given the parameters
     cols = create_pd_cols(RANKS)
-    df = pd.read_csv(INPUT, sep='\t', names=cols)
-    df_filt = df[(df['sequence'].str.len() > MINLEN) & (df['sequence'].str.len() < MAXLEN) & (~df['species'].str.contains('|'.join(spList),regex=True, na=False)) & (~df['species'].str.contains('|'.join(envList),regex=True, na=False)) & (df['sequence'].str.count('N') <= MAXNS)]
-    df_final = df_filt.dropna(thresh=nans)
-    # get number of rows with na
-    df_rows = df_final.index.values
-    df_initial_filt_rows = df_filt.index.values 
-    orig_rows = df.index.values 
-    nancount = len(df_initial_filt_rows)- len(df_rows)
-    discarded_rows = set(orig_rows) - set(df_rows)
-    disList = list(discarded_rows)
-    discard_db = df.loc[df.index.isin(disList)]
-    count = len(orig_rows)
-    count_clean = len(df_rows)
-    ## write cleaned database to file
-    cleaned = count - count_clean
-    print(f'found {count} number of sequences in {INPUT}')
-    print(f'removed {cleaned} sequences during filtering')
-    print(f'written {count_clean} sequences to {OUTPUT}\n')
-    # try to break down the number of each category removed
-    mincount = len(discard_db[discard_db['sequence'].str.len() < MINLEN])
-    maxcount = len(discard_db[discard_db['sequence'].str.len() > MAXLEN])
-    mxncount = len(discard_db[discard_db['sequence'].str.count('N') >= MAXNS])
-    speccount = len(discard_db[discard_db['species'].str.contains('|'.join(spList),regex=True, na=False)])
-    envcount = len(discard_db[discard_db['species'].str.contains('|'.join(envList),regex=True, na=False)])
+    ## check if species info is in tax rank
+    if 'species' not in cols:
+        print('species information not found, please include "species" in the taxonomic lineage')
+        print('aborting database filtering...')
+    else:
+        df = pd.read_csv(INPUT, sep='\t', names=cols)
+        df_filt = df[(df['sequence'].str.len() > MINLEN) & (df['sequence'].str.len() < MAXLEN) & (~df['species'].str.contains('|'.join(spList),regex=True, na=False)) & (~df['species'].str.contains('|'.join(envList),regex=True, na=False)) & (df['sequence'].str.count('N') <= MAXNS)]
+        df_final = df_filt.dropna(thresh=nans)
+        # get number of rows with na
+        df_rows = df_final.index.values
+        df_initial_filt_rows = df_filt.index.values 
+        orig_rows = df.index.values 
+        nancount = len(df_initial_filt_rows)- len(df_rows)
+        discarded_rows = set(orig_rows) - set(df_rows)
+        disList = list(discarded_rows)
+        discard_db = df.loc[df.index.isin(disList)]
+        count = len(orig_rows)
+        count_clean = len(df_rows)
+        ## write cleaned database to file
+        cleaned = count - count_clean
+        print(f'found {count} number of sequences in {INPUT}')
+        print(f'removed {cleaned} sequences during filtering')
+        print(f'written {count_clean} sequences to {OUTPUT}\n')
+        # try to break down the number of each category removed
+        mincount = len(discard_db[discard_db['sequence'].str.len() < MINLEN])
+        maxcount = len(discard_db[discard_db['sequence'].str.len() > MAXLEN])
+        mxncount = len(discard_db[discard_db['sequence'].str.count('N') >= MAXNS])
+        speccount = len(discard_db[discard_db['species'].str.contains('|'.join(spList),regex=True, na=False)])
+        envcount = len(discard_db[discard_db['species'].str.contains('|'.join(envList),regex=True, na=False)])
 
-    if mincount > 0:
-        print(f'\tfound {mincount} sequences below Minimum count')
-    if maxcount > 0:
-        print(f'\tfound {maxcount} sequences above Maximum count')
-    if mxncount > 0:
-        print(f'\tfound {mxncount} sequences with too many Ns')
-    if ENV == 'yes':
-        if envcount > 0:
-            print(f'\tfound {envcount} sequences listed as "Environmental"')
-    if SPEC == 'yes':
-        if speccount > 0:
-            print(f'\tfound {speccount} sequences listed as sp.')
-    if NANS != 'no':
-        if nancount > 0:
-            print(f'\tfound {nancount} sequences with missing taxonomic information')
+        if mincount > 0:
+            print(f'\tfound {mincount} sequences below Minimum count')
+        if maxcount > 0:
+            print(f'\tfound {maxcount} sequences above Maximum count')
+        if mxncount > 0:
+            print(f'\tfound {mxncount} sequences with too many Ns')
+        if ENV == 'yes':
+            if envcount > 0:
+                print(f'\tfound {envcount} sequences listed as "Environmental"')
+        if SPEC == 'yes':
+            if speccount > 0:
+                print(f'\tfound {speccount} sequences listed as sp.')
+        if NANS != 'no':
+            if nancount > 0:
+                print(f'\tfound {nancount} sequences with missing taxonomic information')
 
-    # now output to files
-    df_final.to_csv(OUTPUT,sep='\t',index=False)
-    if DISCARD != 'no':
-        discard_db.to_csv(DISCARD,sep='\t',index=False)
+        # now output to files
+        df_final.to_csv(OUTPUT,sep='\t',index=False)
+        if DISCARD != 'no':
+            discard_db.to_csv(DISCARD,sep='\t',index=False)
 
 ## function: geo cleanup
 def geo_cleanup(args):
