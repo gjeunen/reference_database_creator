@@ -13,8 +13,8 @@ def derep_strict(file_in, file_out):
     count = 0
     added = 0
     with tqdm(total = os.path.getsize(file_in)) as pbar:
-        with open(file_in, 'r') as file_in:
-            for line in file_in:
+        with open(file_in, 'r') as infile:
+            for line in infile:
                 pbar.update(len(line))
                 count = count + 1
                 lines = line.rstrip('\n')
@@ -23,9 +23,9 @@ def derep_strict(file_in, file_out):
                     added = added + 1
                     uniq_seqs[seq] = seq
                     uniq_line.append(line)
-    with open(file_out, 'w') as file_out:
+    with open(file_out, 'w') as outfile:
         for line in uniq_line:
-            file_out.write(line)
+            outfile.write(line)
     return count, added
 
 
@@ -50,8 +50,8 @@ def derep_single(file_in, file_out, taxranks):
         uniq_spec = {}
         uniq_line = []
         with tqdm(total = os.path.getsize(file_in)) as pbar:
-            with open(file_in, 'r') as file_in:
-                for line in file_in:
+            with open(file_in, 'r') as infile:
+                for line in infile:
                     pbar.update(len(line))
                     count = count + 1
                     lines = line.rstrip('\n')
@@ -60,9 +60,45 @@ def derep_single(file_in, file_out, taxranks):
                         added = added + 1
                         uniq_spec[species] = species 
                         uniq_line.append(line)
-        with open(file_out, 'w') as file_out:
+        with open(file_out, 'w') as outfile:
             for line in uniq_line:
-                file_out.write(line)
+                outfile.write(line)
 
     return abort, count, added
 
+
+## functions: uniq_species dereplication
+def derep_uniq(file_in, file_out, taxranks):
+    rankslist = str(taxranks).split('+')
+    spec_pos = 0
+    abort = 0
+    count = 0
+    added = 0
+    species_position = 'n'
+    for item in rankslist:
+        if item == 'species':
+            species_position = spec_pos + 2
+        else:
+            spec_pos = spec_pos + 1
+    if species_position == 'n':
+        print(f'species information not found, please include "species" in the taxonomic lineage')
+        abort = 1
+    else:
+        print(f'species information found at position {species_position - 1}, starting dereplication process')
+        mydict = {}
+        uniq_file = []
+        with open(file_in, 'r') as infile:
+            for line in infile:
+                count = count + 1
+                lines = line.rstrip('\n')
+                spec = lines.split('\t')[species_position]
+                seq = lines.split('\t')[-1]
+                uniq = spec + '_' + seq
+                if uniq not in mydict:
+                    mydict[uniq] = seq
+                    uniq_file.append(lines)
+                    added = added + 1
+        with open(file_out, 'w') as outfile:
+            for item in uniq_file:
+                outfile.write(item + '\n')
+    return abort, count, added

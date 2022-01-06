@@ -23,7 +23,7 @@ from Bio.Seq import Seq
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceMatrix, DistanceTreeConstructor
 from function.module_db_download import wget_ncbi, esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format, embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases
 from function.module_assign_tax import tax2dict, get_accession, acc_to_dict, get_lineage, final_lineage_comb, final_lineage_simple
-from function.module_dereplicate import derep_strict, derep_single
+from function.module_dereplicate import derep_strict, derep_single, derep_uniq
 from function.module_visualizations import split_db_by_taxgroup, num_spec_seq_taxgroup, horizontal_barchart, get_amp_length, amplength_figure, file_dmp_to_dict, species_to_taxid, lineage_retrieval
 
 ################################################
@@ -495,32 +495,15 @@ def dereplicate(args):
             print(f'found {orig_count} sequences in {INPUT}')
             print(f'written {derep_count} sequences to {OUTPUT}\n')
 
-
-
-
     ## dereplicate unique species (all unique sequences per species)
     elif METHOD == 'uniq_species':
         print(f'\ndereplicating {INPUT}, keeping all unique sequences per species')
-        mydict = {}
-        uniq_file = []
-        count = 0
-        added = 0
-        with open(INPUT, 'r') as file_in:
-            for line in file_in:
-                count = count + 1
-                lines = line.rstrip('\n')
-                spec = lines.split('\t')[8] #.split(',')[2] # taken out for simplified_table
-                seq = lines.split('\t')[9]
-                uniq = spec + '_' + seq
-                if uniq not in mydict:
-                    mydict[uniq] = seq
-                    uniq_file.append(lines)
-                    added = added + 1
-        print(f'found {count} sequences in {INPUT}')
-        print(f'written {added} sequences to {OUTPUT}\n')
-        with open(OUTPUT, 'w') as file_out:
-            for item in uniq_file:
-                file_out.write(item + '\n')
+        fail, orig_count, derep_count = derep_uniq(INPUT, OUTPUT, RANKS)
+        if fail != 0:
+            print('aborting unique sequence species dereplication...')
+        else:
+            print(f'found {orig_count} sequences in {INPUT}')
+            print(f'written {derep_count} sequences to {OUTPUT}\n')
 
     ## dereplicate concensus species (generate concensus sequence for each species)
     elif METHOD == 'consensus':
