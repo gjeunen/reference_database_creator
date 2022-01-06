@@ -578,6 +578,7 @@ def geo_cleanup(args):
     INPUT = args.input
     OUTPUT = args.output
     SPECIES = args.species
+    RANKS = args.ranks
 
     ## read file containing species into list
     species_list = []
@@ -592,32 +593,45 @@ def geo_cleanup(args):
             species_list.append(species)
     geo_dict = {key: None for key in species_list}
 
-    ## read input file and extract species of interest
-    with open(INPUT, 'r') as file:
-        first_line = file.readline()
-        for line in file:
-            species = line.split('\t')[8]
-            if species in geo_dict:
-                geo_count = geo_count + 1
-                geo_list.append(line)
-                geo_species_list.append(species)
-
-    ## write to output file and print statements
-    with open(OUTPUT, 'w') as file:
-        file.write(first_line)
-        for item in geo_list:
-            file.write(item)
-    diff_spec_list = set(species_list) - set(geo_species_list)
-    uniq_spec = set(geo_species_list)
-    print(f'\nfound {species_count} species in species list')
-    print(f'written {geo_count} number of sequences to "{OUTPUT}", representing {len(uniq_spec)} species')
-    if len(diff_spec_list) != 0:
-        print('species not found in the database were:')
-        for item in diff_spec_list:
-            print('\t\t' + item)
-        print()
+    ## check species position in tax lineage
+    species_position = 'n'
+    taxranks = str(RANKS).split('+')
+    spec_pos = 0
+    for item in taxranks:
+        if item == 'species':
+            species_position = spec_pos + 2
+        else:
+            spec_pos = spec_pos + 1
+    if species_position == 'n':
+        print(f'species information not found, please include "species" in the taxonomic lineage')
+        print('aborting geo cleanup...\n')
     else:
-        print(f'all {species_count} species were found in the database\n')
+        ## read input file and extract species of interest
+        with open(INPUT, 'r') as file:
+            first_line = file.readline()
+            for line in file:
+                species = line.split('\t')[species_position]
+                if species in geo_dict:
+                    geo_count = geo_count + 1
+                    geo_list.append(line)
+                    geo_species_list.append(species)
+
+        ## write to output file and print statements
+        with open(OUTPUT, 'w') as file:
+            file.write(first_line)
+            for item in geo_list:
+                file.write(item)
+        diff_spec_list = set(species_list) - set(geo_species_list)
+        uniq_spec = set(geo_species_list)
+        print(f'\nfound {species_count} species in {SPECIES}')
+        print(f'written {geo_count} number of sequences to "{OUTPUT}", representing {len(uniq_spec)} species')
+        if len(diff_spec_list) != 0:
+            print('species not found in the database were:')
+            for item in diff_spec_list:
+                print('\t\t' + item)
+            print()
+        else:
+            print(f'all {species_count} species were found in the database\n')
 
 ################################################
 ############# MODULE VISUALISATION #############
@@ -1224,6 +1238,7 @@ def main():
     geo_cleanup_parser.add_argument('-i', '--input', help = 'input file name', dest = 'input', type = str, required = True)
     geo_cleanup_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
     geo_cleanup_parser.add_argument('-s', '--species', help = 'species list text file', dest = 'species', type = str, required = True)
+    geo_cleanup_parser.add_argument('-r', '--ranks', help = 'taxonomic ranks included in the taxonomic lineage. Default = "superkingdom+phylum+class+order+family+genus+species"', dest = 'ranks', type = str, default = 'superkingdom+phylum+class+order+family+genus+species')
 
     visualization_parser = subparser.add_parser('visualization', description = 'figure displaying various aspects of the reference database')
     visualization_parser.set_defaults(func = visualization)
