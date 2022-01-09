@@ -10,6 +10,7 @@ import os
 import shutil
 import collections
 from tqdm import tqdm
+from itertools import islice
 import matplotlib
 import matplotlib.pyplot as plt
 from Bio.Align.Applications import MuscleCommandline
@@ -657,19 +658,29 @@ def visualization(args):
     REV_NAME = args.rev_name
     RAW = args.raw
     TAXGROUP = args.taxgroup
+    RANKS = args.ranks
+    SUBSET = args.subset
 
     ## horizontal barchart
     if METHOD == 'diversity':
-        tax_group_list, uniq_tax_group_list, species_dict = split_db_by_taxgroup(INPUT, LEVEL)
-        sequence_counter = Counter(tax_group_list)
-        list_info_dict = num_spec_seq_taxgroup(uniq_tax_group_list, species_dict, sequence_counter)
-        sorted_info = sorted(list_info_dict, key = lambda i: (i['sequence']))
-        figure = horizontal_barchart(sorted_info)
+        tax_group_list, uniq_tax_group_list, species_dict, abort = split_db_by_taxgroup(INPUT, LEVEL, RANKS)
+        if abort == 'yes':
+            print('aborting visualization process...\n')
+        else:
+            sequence_counter = Counter(tax_group_list)
+            list_info_dict = num_spec_seq_taxgroup(uniq_tax_group_list, species_dict, sequence_counter)
+            sorted_info = sorted(list_info_dict, key = lambda i: (i['sequence']))
+            dict_len = len(sorted_info)
+            final_dict = sorted_info[dict_len - int(SUBSET) : dict_len]
+            figure = horizontal_barchart(final_dict)
     
     ## length distribution
     elif METHOD == 'amplicon_length':
-        amp_length_dict = get_amp_length(INPUT, LEVEL)
-        figure = amplength_figure(amp_length_dict)
+        amp_length_dict, abort = get_amp_length(INPUT, LEVEL, SUBSET, RANKS)
+        if abort == 'yes':
+            print('aborting visualization process...\n')
+        else:
+            figure = amplength_figure(amp_length_dict)
     
     ## completeness table
     elif METHOD == 'db_completeness':
@@ -1260,6 +1271,8 @@ def main():
     visualization_parser.add_argument('-rn', '--rev_name', help = 'reverse primer sequence name', dest = 'rev_name', type = str)
     visualization_parser.add_argument('-raw', '--raw_file', help = 'file name of the downloaded sequences prior to in silico PCR analysis', dest = 'raw', type = str)
     visualization_parser.add_argument('-tg', '--tax_group', help = 'phylogenetic group to be included in the primer efficiency analysis', dest = 'taxgroup', type = str)
+    visualization_parser.add_argument('-sub', '--subset', help = 'display the X most abundant items in the visualization for diversity and amplicon_length methods. Default = 10', dest = 'subset', type = str, default = '10')
+    visualization_parser.add_argument('-ra', '--ranks', help = 'taxonomic ranks included in the taxonomic lineage. Default = "superkingdom+phylum+class+order+family+genus+species"', dest = 'ranks', type = str, default = 'superkingdom+phylum+class+order+family+genus+species')
 
     format_database_parser = subparser.add_parser('tax_format', description = 'formatting the database to various formats')
     format_database_parser.set_defaults(func = tax_format)

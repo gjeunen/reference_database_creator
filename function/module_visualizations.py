@@ -8,26 +8,43 @@ from itertools import islice
 from matplotlib import pyplot as plt
 
 ## functions: visualizations
-def split_db_by_taxgroup(file_in, tax_level):
-    ranks = ['superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
-    count = 1
+def split_db_by_taxgroup(file_in, tax_level, taxranks):
+    species_position = 'n'
+    level_position = 'n'
+    abort = 'n'
+    taxrank = str(taxranks).split('+')
+    level_count = 1
+    species_count = 0
     tax_group_list = []
     uniq_tax_group_list = []
     species_dict = collections.defaultdict(list)
-    for item in ranks:
-        count = count + 1
+    for item in taxrank:
+        level_count = level_count + 1
         if item == tax_level:
+            level_position = level_count
             break
-    with open(file_in, 'r') as f_in:
-        for line in f_in:
-            taxgroup = line.split('\t')[count] #.split(',')[2]
-            species = line.split('\t')[8] #.split(',')[2]
-            tax_group_list.append(taxgroup)
-            species_dict[taxgroup].append(species)
-            if taxgroup not in uniq_tax_group_list:
-                uniq_tax_group_list.append(taxgroup)
-    
-    return tax_group_list, uniq_tax_group_list, species_dict
+    for item in taxrank:
+        if item == 'species':
+            species_position = species_count + 2
+        else:
+            species_count = species_count + 1
+    if species_position == 'n':
+        abort = 'yes'
+        print(f'\nspecies information not found, please include "species" in the taxonomic lineage')
+    elif level_position == 'n':
+        abort = 'yes'
+        print(f'\ntaxonomic level "{tax_level}" not included in the taxonomic lineage')
+    else:
+        with open(file_in, 'r') as f_in:
+            for line in f_in:
+                taxgroup = line.split('\t')[level_count] 
+                species = line.split('\t')[species_position] 
+                tax_group_list.append(taxgroup)
+                species_dict[taxgroup].append(species)
+                if taxgroup not in uniq_tax_group_list:
+                    uniq_tax_group_list.append(taxgroup)
+        
+    return tax_group_list, uniq_tax_group_list, species_dict, abort
 
 def num_spec_seq_taxgroup(uniq_tax_group_list, species_dict, sequence_counter):
     dict_list = []
@@ -60,28 +77,35 @@ def horizontal_barchart(sorted_info):
     plt.tight_layout()
     plt.show()
 
-def get_amp_length(file_in, tax_level):
-    ranks = ['superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
+def get_amp_length(file_in, tax_level, subset, taxranks):
+    taxrank = str(taxranks).split('+')
+    level_position = 'n'
     count = 1
-    for item in ranks:
+    abort = 'n'
+    final_dict = {}
+    for item in taxrank:
         count = count + 1
         if item == tax_level:
+            level_position = count
             break
-    amplength_dict = collections.defaultdict(list)
-    with open(file_in, 'r') as f_in:
-        for line in f_in:
-            l = line.rstrip('\n')
-            seq_len = len(l.rsplit('\t', 1)[1])
-            taxgroup = l.split('\t')[count] #.split(',')[2]
-            amplength_dict['overall'].append(seq_len)
-            amplength_dict[taxgroup].append(seq_len)
-    sorted_dict = sorted(amplength_dict.items(), key = lambda item: len(item[1]), reverse = True)
-    final_dict = {}
-    for item in islice(sorted_dict, 6):
-        length = sorted(Counter(item[1]).most_common(), key = lambda tup: tup[0])
-        final_dict[item[0]] = length
+    if level_position == 'n':
+        abort = 'yes'
+        print(f'\ntaxonomic level "{tax_level}" not included in the taxonomic lineage')
+    else:
+        amplength_dict = collections.defaultdict(list)
+        with open(file_in, 'r') as f_in:
+            for line in f_in:
+                l = line.rstrip('\n')
+                seq_len = len(l.rsplit('\t', 1)[1])
+                taxgroup = l.split('\t')[count] #.split(',')[2]
+                amplength_dict['overall'].append(seq_len)
+                amplength_dict[taxgroup].append(seq_len)
+        sorted_dict = sorted(amplength_dict.items(), key = lambda item: len(item[1]), reverse = True)
+        for item in islice(sorted_dict, int(subset) + 1):
+            length = sorted(Counter(item[1]).most_common(), key = lambda tup: tup[0])
+            final_dict[item[0]] = length
     
-    return final_dict
+    return final_dict, abort
 
 def amplength_figure(amp_length_dict):
     for item in amp_length_dict.items():
