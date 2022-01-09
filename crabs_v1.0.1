@@ -684,84 +684,110 @@ def visualization(args):
     
     ## completeness table
     elif METHOD == 'db_completeness':
+        ## check if taxonomic lineage includes species, genus, and family information
+        taxrank = str(RANKS).split('+')
+        species_position = 'n'
+        sp_count = 2
+        genus_position = 'n'
+        gen_count = 2
+        family_position = 'n'
+        fam_count = 2
+        for item in taxrank:
+            if item == 'species':
+                species_position = sp_count
+            else:
+                sp_count = sp_count + 1
+        for item in taxrank:
+            if item == 'genus':
+                genus_position = gen_count
+            else:
+                gen_count = gen_count + 1
+        for item in taxrank:
+            if item == 'family':
+                family_position = fam_count
+            else:
+                fam_count = fam_count + 1
+        if species_position == 'n' or genus_position == 'n' or family_position == 'n':
+            print(f'\ntaxonomic lineage should include species, genus, and family information for db_completeness')
+            print('aborting visualization process...\n')
+        else:
+            ## read in the text file with species names
+            species_list = []
+            with open(SPECIES, 'r') as species_file:
+                for line in species_file:
+                    species = line.rstrip('\n').replace(' ', '_')
+                    species_list.append(species)
+            print(f'\nfound {len(species_list)} species of interest in {SPECIES}: {species_list}')
 
-        ## read in the text file with species names
-        species_list = []
-        with open(SPECIES, 'r') as species_file:
-            for line in species_file:
-                species = line.rstrip('\n').replace(' ', '_')
-                species_list.append(species)
-        print(f'\nfound {len(species_list)} species of interest in {SPECIES}: {species_list}')
+            ## retrieve taxonomic lineage
+            print(f'generating taxonomic lineage for {len(species_list)} species')
+            name, node, taxid = file_dmp_to_dict(NAME, TAXID)
+            species_taxid_dict, taxid_list = species_to_taxid(species_list, taxid)
+            lineage = lineage_retrieval(taxid_list, node, name)
+            final_dict = collections.defaultdict(list)
+            for k, v in species_taxid_dict.items():
+                final_dict[k] = lineage[v]
+            print(f'gathering data for {len(final_dict)} species\n')
 
-        ## retrieve taxonomic lineage
-        print(f'generating taxonomic lineage for {len(species_list)} species')
-        name, node, taxid = file_dmp_to_dict(NAME, TAXID)
-        species_taxid_dict, taxid_list = species_to_taxid(species_list, taxid)
-        lineage = lineage_retrieval(taxid_list, node, name)
-        final_dict = collections.defaultdict(list)
-        for k, v in species_taxid_dict.items():
-            final_dict[k] = lineage[v]
-        print(f'gathering data for {len(final_dict)} species\n')
+            ## retrieve information about potential number of taxa shared with species of interest on genus and family level based on NCBI taxonomy files
+            table_info_dict = collections.defaultdict(dict)
+            for k, v in species_taxid_dict.items():
+                species = k
+                genus_count = 0
+                family_count = 0
+                ## find genus taxids
+                if v in node:
+                    genus = node[v][1]
+                ## count number of species in genus
+                for k, v in node.items():
+                    if v[1] == genus and v[0] == 'species':
+                        genus_count = genus_count + 1
+                ## find family taxids
+                if genus in node:
+                    family = node[genus][1]
+                ## count number of species in family
+                for k, v in node.items():
+                    if v[1] == family and v[0] == 'genus':
+                        genus = k
+                        for key, value in node.items():
+                            if value[1] == genus and value[0] == 'species':
+                                family_count = family_count + 1
+                table_info_dict[species] = {'species' : species, 'genus_num_ncbi' : genus_count, 'family_num_ncbi' : family_count}
 
-        ## retrieve information about potential number of taxa shared with species of interest on genus and family level based on NCBI taxonomy files
-        table_info_dict = collections.defaultdict(dict)
-        for k, v in species_taxid_dict.items():
-            species = k
-            genus_count = 0
-            family_count = 0
-            ## find genus taxids
-            if v in node:
-                genus = node[v][1]
-            ## count number of species in genus
-            for k, v in node.items():
-                if v[1] == genus and v[0] == 'species':
-                    genus_count = genus_count + 1
-            ## find family taxids
-            if genus in node:
-                family = node[genus][1]
-            ## count number of species in family
-            for k, v in node.items():
-                if v[1] == family and v[0] == 'genus':
-                    genus = k
-                    for key, value in node.items():
-                        if value[1] == genus and value[0] == 'species':
-                            family_count = family_count + 1
-            table_info_dict[species] = {'species' : species, 'genus_num_ncbi' : genus_count, 'family_num_ncbi' : family_count}
-
-        ## retrieve information about number of taxa shared with species of interest on genus and family level in reference database
-        for k, v in final_dict.items():
-            species = k
-            genus = v[5]
-            family = v[4]
-            with open(INPUT, 'r') as file_in:
-                spec_db_count = []
-                genus_db_count = []
-                family_db_count = []
-                for line in file_in:
-                    spec_db = line.split('\t')[8]#.split(',')[2]
-                    genus_db = line.split('\t')[7]#.split(',')[2]
-                    family_db = line.split('\t')[6]#.split(',')[2]
-                    if spec_db == species:
-                        if spec_db not in spec_db_count:
-                            spec_db_count.append(spec_db)
-                    if genus_db == genus:
-                        if spec_db not in genus_db_count:
-                            genus_db_count.append(spec_db)
-                    if family_db == family:
-                        if spec_db not in family_db_count:
-                            family_db_count.append(spec_db)
-            for k, v in table_info_dict.items():
-                if k == species:
-                    v['species_in_ref_DB'] = len(spec_db_count)
-                    v['genus_num_ref_DB'] = len(genus_db_count)
-                    v['family_num_ref_DB'] = len(family_db_count)
-                    v['genus_list_ref_DB'] = genus_db_count
-                    v['family_list_ref_DB'] = family_db_count
-        df = pd.DataFrame.from_dict(table_info_dict, orient = 'index')
-        df['Completeness_genus'] = df['genus_num_ref_DB'] / df['genus_num_ncbi'] * 100
-        df['Completeness_family'] = df['family_num_ref_DB'] / df['family_num_ncbi'] * 100
-        df = df[['species', 'species_in_ref_DB', 'genus_num_ref_DB', 'genus_num_ncbi', 'Completeness_genus', 'family_num_ref_DB', 'family_num_ncbi', 'Completeness_family', 'genus_list_ref_DB', 'family_list_ref_DB']]
-        df.to_csv(OUTPUT, sep = '\t', index = None)
+            ## retrieve information about number of taxa shared with species of interest on genus and family level in reference database
+            for k, v in final_dict.items():
+                species = k
+                genus = v[5]
+                family = v[4]
+                with open(INPUT, 'r') as file_in:
+                    spec_db_count = []
+                    genus_db_count = []
+                    family_db_count = []
+                    for line in file_in:
+                        spec_db = line.split('\t')[species_position]
+                        genus_db = line.split('\t')[genus_position]
+                        family_db = line.split('\t')[family_position]
+                        if spec_db == species:
+                            if spec_db not in spec_db_count:
+                                spec_db_count.append(spec_db)
+                        if genus_db == genus:
+                            if spec_db not in genus_db_count:
+                                genus_db_count.append(spec_db)
+                        if family_db == family:
+                            if spec_db not in family_db_count:
+                                family_db_count.append(spec_db)
+                for k, v in table_info_dict.items():
+                    if k == species:
+                        v['species_in_ref_DB'] = len(spec_db_count)
+                        v['genus_num_ref_DB'] = len(genus_db_count)
+                        v['family_num_ref_DB'] = len(family_db_count)
+                        v['genus_list_ref_DB'] = genus_db_count
+                        v['family_list_ref_DB'] = family_db_count
+            df = pd.DataFrame.from_dict(table_info_dict, orient = 'index')
+            df['Completeness_genus'] = df['genus_num_ref_DB'] / df['genus_num_ncbi'] * 100
+            df['Completeness_family'] = df['family_num_ref_DB'] / df['family_num_ncbi'] * 100
+            df = df[['species', 'species_in_ref_DB', 'genus_num_ref_DB', 'genus_num_ncbi', 'Completeness_genus', 'family_num_ref_DB', 'family_num_ncbi', 'Completeness_family', 'genus_list_ref_DB', 'family_list_ref_DB']]
+            df.to_csv(OUTPUT, sep = '\t', index = None)
     
     ## phylogenetic tree
     elif METHOD == 'phylo':
@@ -1261,7 +1287,7 @@ def main():
     visualization_parser.add_argument('-i', '--input', help = 'input file name', dest = 'input', type = str, required = True)
     visualization_parser.add_argument('-o', '--output', help = 'output file name for db_completeness method', dest = 'output', type = str)
     visualization_parser.add_argument('-m', '--method', help = 'method of visualization: "diversity", "amplicon_length", "db_completeness", "phylo", "primer_efficiency"', dest = 'method', type = str, required = True)
-    visualization_parser.add_argument('-l', '--level', help = 'taxonomic level to split the database for diversity, amplicon_length, and phylo methods: "superkingdom", "phylum", "class", "order", "family", "genus", "species"', dest = 'level', type = str)
+    visualization_parser.add_argument('-l', '--level', help = 'taxonomic level to split the database for diversity, amplicon_length, and phylo method', dest = 'level', type = str)
     visualization_parser.add_argument('-s', '--species', help = 'list of species of interest for phylo and db_completeness methods', dest = 'species', type = str)
     visualization_parser.add_argument('-t', '--taxid', help = 'taxid file name for phylo and db_completeness methods', dest = 'taxid', type = str)
     visualization_parser.add_argument('-n', '--name', help = 'phylogeny file name for phylo and db_completeness methods', dest = 'name', type = str)
