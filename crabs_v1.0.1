@@ -810,59 +810,79 @@ def visualization(args):
         print(f'gathering data for {len(final_dict)} species')
 
         ## gather sequences from database that share taxonomic rank
-        ranks = ['superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
+        ranks = str(RANKS).split('+')
+        level_count = 'n'
         count = 0
         for item in ranks:
             if item == LEVEL:
+                level_count = count
                 break
             else:
                 count = count + 1
-        for k, v in final_dict.items():
-            species = k
-            taxrank = v[count]
-            species_file = []
-            try:
-                os.remove(f'{species}_phylo.fasta')
-            except OSError:
-                pass
-            with open(INPUT, 'r') as file_in:
-                for line in file_in:
-                    rank = line.split('\t')[count + 2]#.split(',')[2]
-                    #print(rank)
-                    if rank == taxrank:
-                        species_file.append(line)
-            for item in species_file:
-                if len(species_file) < 2:
-                    print(f'only {len(species_file)} sequence in database that shares the {LEVEL} taxonomic rank with {species}, omitted from phylogenetic analysis.')
-                elif len(species_file) > 100:
-                    print(f'{len(species_file)} sequences in database that share the {LEVEL} taxonomic rank with {species}, omitted from phylogenetic analysis')
+        if level_count == 'n':
+            print(f'taxonomic level "{LEVEL}" not included in the taxonomic lineage')
+            print('aborting visualization process...\n')
+        else:
+            lin_count = 0
+            for item in ['superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']:
+                if item == LEVEL:
+                    lin_pos = lin_count
+                    break
                 else:
-                    header = '>' + item.split('\t')[0] + '_' + item.split('\t')[8]#.split(',')[2]
-                    seq = item.rsplit('\t', 1)[1]
-                    with open(f'{species}_phylo.fasta', 'a') as file_out:
-                        file_out.write(header + '\n')
-                        file_out.write(seq)
-            
-        for species in species_list:
-            my_file = Path(f'{species}_phylo.fasta')
-            if my_file.is_file():
-                print(f'generating phylogenetic tree for {species}')
-                muscle_cline = MuscleCommandline(input = my_file, out = f'{species}_align.clw', diags = True, maxiters = 1, log = f'{species}_align_log.txt', clw = True)
-                muscle_cline()
-                with open(f'{species}_align.clw', 'r') as aln:
-                    alignment = AlignIO.read(aln, 'clustal')
-                calculator = DistanceCalculator('identity')
-                Distance_matrix = calculator.get_distance(alignment)
-                constructor = DistanceTreeConstructor(calculator, 'nj')
-                tree = constructor.build_tree(alignment)
-                fig = plt.figure(figsize = (25,15), dpi = 100)
-                matplotlib.rc('font', size=12)   
-                matplotlib.rc('xtick', labelsize=10)   
-                matplotlib.rc('ytick', labelsize=10)    
-                axes = fig.add_subplot(1, 1, 1)
-                Phylo.draw(tree, axes=axes, do_show = False)
-                fig.savefig(f'{species}_tree_figure.pdf')
-                print()
+                    lin_count = lin_count + 1
+            for k, v in final_dict.items():
+                species = k
+                taxrank = v[lin_pos]
+                species_file = []
+                os.makedirs(f'phylo_visualization/{species}/{LEVEL}')
+                try:
+                    os.remove(f'phylo_visualization/{species}/{LEVEL}/{species}_phylo.fasta')
+                except OSError:
+                    pass
+                with open(INPUT, 'r') as file_in:
+                    for line in file_in:
+                        rank = line.split('\t')[count + 2]
+                        if rank == taxrank:
+                            species_file.append(line)
+                for item in species_file:
+                    if len(species_file) < 2:
+                        abort = 'less'
+                    elif len(species_file) > 100:
+                        abort = 'more'
+                    else:
+                        abort = 'no'
+                        header = '>' + item.split('\t')[0] + '_' + item.split('\t')[len(item.split('\t')) - 2]#.split(',')[2]
+                        seq = item.rsplit('\t', 1)[1]
+                        with open(f'phylo_visualization/{species}/{LEVEL}/{species}_phylo.fasta', 'a') as file_out:
+                            file_out.write(header + '\n')
+                            file_out.write(seq)
+                if abort == 'less':
+                    print(f'only {len(species_file)} sequence in database that shares the {LEVEL} taxonomic rank with {species}, omitted from phylogenetic analysis.')
+                elif abort == 'more':
+                    print(f'{len(species_file)} sequences in database that share the {LEVEL} taxonomic rank with {species}, omitted from phylogenetic analysis')
+                elif abort == 'no':
+                    print(f'{len(species_file)} sequences in database that share the {LEVEL} taxonomic rank with {species}')
+                
+            for species in species_list:
+                my_file = Path(f'phylo_visualization/{species}/{LEVEL}/{species}_phylo.fasta')
+                if my_file.is_file():
+                    print(f'generating phylogenetic tree for {species}')
+                    muscle_cline = MuscleCommandline(input = my_file, out = f'phylo_visualization/{species}/{LEVEL}/{species}_align.clw', diags = True, maxiters = 1, log = f'phylo_visualization/{species}/{LEVEL}/{species}_align_log.txt', clw = True)
+                    muscle_cline()
+                    with open(f'phylo_visualization/{species}/{LEVEL}/{species}_align.clw', 'r') as aln:
+                        alignment = AlignIO.read(aln, 'clustal')
+                    calculator = DistanceCalculator('identity')
+                    Distance_matrix = calculator.get_distance(alignment)
+                    constructor = DistanceTreeConstructor(calculator, 'nj')
+                    tree = constructor.build_tree(alignment)
+                    fig = plt.figure(figsize = (25,15), dpi = 100)
+                    matplotlib.rc('font', size=12)   
+                    matplotlib.rc('xtick', labelsize=10)   
+                    matplotlib.rc('ytick', labelsize=10)    
+                    axes = fig.add_subplot(1, 1, 1)
+                    Phylo.draw(tree, axes=axes, do_show = False)
+                    fig.savefig(f'phylo_visualization/{species}/{LEVEL}/{species}_tree_figure.pdf')
+            print()
         
     elif METHOD == 'primer_efficiency':
         ## generate dictionary of pre-in silico PCR file to search against
