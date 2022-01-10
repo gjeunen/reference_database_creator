@@ -902,7 +902,7 @@ def visualization(args):
         with open(INPUT, 'r') as infile:
             for line in infile:
                 if line.find(TAXGROUP) != -1:
-                    id = line.split('\t')[0]
+                    id = line.split('\t')[0].split('.')[0]
                     seq = line.split('\t')[-1].rstrip('\n')
                     orig = str(raw_dict[id])
                     start = orig.find(seq)
@@ -928,8 +928,8 @@ def visualization(args):
         rev_list = list(reverse)
         with open(OUTPUT, 'r') as fi:
             for line in fi:
-                fwd_primer = line.split('\t')[10]
-                rev_primer = line.split('\t')[11].rstrip('\n')
+                fwd_primer = line.split('\t')[len(line.split('\t')) - 2]
+                rev_primer = line.split('\t')[len(line.split('\t')) -1].rstrip('\n')
                 fwd_primer_list = list(fwd_primer)
                 count = 0
                 for item in fwd_primer_list:
