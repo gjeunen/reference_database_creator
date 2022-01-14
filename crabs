@@ -1148,10 +1148,13 @@ def tax_format(args):
         with open(OUTPUT, 'w') as f_out:
             with open(INPUT, 'r') as f_in:
                 for line in f_in:
-                    line = line.rstrip('\n')
-                    parts = line.split('\t')
-                    rdp = '>' + parts[0] + '\t' + 'root;' + parts[2] + ';' + parts[3]+';'+parts[4]+';'+parts[5]+';'+parts[6]+';'+parts[7]+';'+parts[8]+'\n'+parts[9]+'\n'
-                    f_out.write(rdp)
+                    if line.startswith('seqID'):
+                        continue
+                    else:
+                        line = line.rstrip('\n')
+                        parts = line.split('\t')
+                        rdp = '>' + parts[0] + '\t' + 'root;' + parts[2] + ';' + parts[3]+';'+parts[4]+';'+parts[5]+';'+parts[6]+';'+parts[7]+';'+parts[8]+'\n'+parts[9]+'\n'
+                        f_out.write(rdp)
 
     ## format database to QIIf
     elif FORMAT == 'qiif':
@@ -1163,12 +1166,15 @@ def tax_format(args):
         
         with open(INPUT, 'r') as f_in:
             for line in f_in:
-                line = line.rstrip('\n')
-                parts = line.split('\t')
-                fasta = '>' + parts[0] + '\n' + parts[9] + '\n'
-                f_out.write(fasta)
-                tax = parts[0] + '\t' + 'k__' + parts[2] + ';p__' + parts[3] + ';c__' + parts[4] + ';o__' + parts[5] + ';f__' + parts[6] + ';g__' + parts[7] + ';s__' + parts[8] + '\n'
-                t_out.write(tax)
+                if line.startswith('seqID'):
+                    continue
+                else:
+                    line = line.rstrip('\n')
+                    parts = line.split('\t')
+                    fasta = '>' + parts[0] + '\n' + parts[9] + '\n'
+                    f_out.write(fasta)
+                    tax = parts[0] + '\t' + 'k__' + parts[2] + ';p__' + parts[3] + ';c__' + parts[4] + ';o__' + parts[5] + ';f__' + parts[6] + ';g__' + parts[7] + ';s__' + parts[8] + '\n'
+                    t_out.write(tax)
 
 
     ## format database to QIIz
@@ -1182,10 +1188,13 @@ def tax_format(args):
         with open(OUTPUT, 'w') as f_out:
             with open(INPUT, 'r') as f_in:
                 for line in f_in:
-                    line = line.rstrip('\n')
-                    parts = line.split('\t')
-                    dad = '>' + parts[2] + ';' + parts[3] + ';' + parts[4] + ';' + parts[5] + ';' + parts[6] + ';' + parts[7] + '\n' + parts[9] + '\n'
-                    f_out.write(dad)
+                    if line.startswith('seqID'):
+                        continue
+                    else:
+                        line = line.rstrip('\n')
+                        parts = line.split('\t')
+                        dad = '>' + parts[2] + ';' + parts[3] + ';' + parts[4] + ';' + parts[5] + ';' + parts[6] + ';' + parts[7] + '\n' + parts[9] + '\n'
+                        f_out.write(dad)
 
     ## format database to DADs
     elif FORMAT == 'dads':
@@ -1193,10 +1202,13 @@ def tax_format(args):
         with open(OUTPUT, 'w') as f_out:
             with open(INPUT, 'r') as f_in:
                 for line in f_in:
-                    line = line.rstrip('\n')
-                    parts = line.split('\t')
-                    dads = '>' + parts[0] + ' ' + parts[7] + ' ' + parts[8] + '\n' + parts[9] + '\n'
-                    f_out.write(dads)
+                    if line.startswith('seqID'):
+                        continue
+                    else:
+                        line = line.rstrip('\n')
+                        parts = line.split('\t')
+                        dads = '>' + parts[0] + ' ' + parts[7] + ' ' + parts[8] + '\n' + parts[9] + '\n'
+                        f_out.write(dads)
     
     ## format database to IDT
     elif FORMAT == 'idt':
@@ -1204,10 +1216,13 @@ def tax_format(args):
         with open(OUTPUT, 'w') as f_out:
             with open(INPUT, 'r') as f_in:
                 for line in f_in:
-                    line = line.rstrip('\n')
-                    parts = line.split('\t')
-                    idt = '>' + parts[2] + ';' + parts[3] + ';' + parts[4] + ';' + parts[5] + ';' + parts[6] + ';' + parts[7] + ';' + parts[8] + '\n' + parts[9] + '\n'
-                    f_out.write(idt)
+                    if line.startswith('seqID'):
+                        continue
+                    else:
+                        line = line.rstrip('\n')
+                        parts = line.split('\t')
+                        idt = '>' + parts[2] + ';' + parts[3] + ';' + parts[4] + ';' + parts[5] + ';' + parts[6] + ';' + parts[7] + ';' + parts[8] + '\n' + parts[9] + '\n'
+                        f_out.write(idt)
 
     ## unknown format specified
     else:
