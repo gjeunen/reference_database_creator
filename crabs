@@ -46,11 +46,17 @@ def db_download(args):
     if SOURCE == 'taxonomy':
         print('\ndownloading taxonomy information')
         url_acc2taxid = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz'
-        url_taxdump = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz'        
-        results = sp.run(['wget', url_acc2taxid, '-q', '--show-progress'])
+        url_taxdump = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz'
+        try:
+            results = sp.run(['wget', url_acc2taxid, '-q', '--show-progress'])
+        except:
+            results = sp.run(['wget', url_acc2taxid])
         print('unzipping nucl_gb.accession2taxid.gz...')
         results = sp.run(['gunzip', 'nucl_gb.accession2taxid.gz'])
-        results = sp.run(['wget', url_taxdump, '-q', '--show-progress'])
+        try:
+            results = sp.run(['wget', url_taxdump, '-q', '--show-progress'])
+        except:
+            results = sp.run(['wget', url_taxdump, '-q'])
         results = sp.run(['tar', '-zxvf', 'taxdump.tar.gz'], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
         print('removing intermediary files\n')
         files_to_remove = ['citations.dmp', 'delnodes.dmp', 'division.dmp', 'gencode.dmp', 'merged.dmp', 'gc.prt', 'readme.txt', 'taxdump.tar.gz']
