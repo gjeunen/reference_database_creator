@@ -47,15 +47,17 @@ def db_download(args):
         print('\ndownloading taxonomy information')
         url_acc2taxid = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz'
         url_taxdump = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz'
-        try:
+        wget_help = sp.check_output('wget -h', shell=True)
+        helstr=wget_help.decode('utf-8')
+        if 'show-progress' in helstr:
             results = sp.run(['wget', url_acc2taxid, '-q', '--show-progress'])
-        except:
+        else:
             results = sp.run(['wget', url_acc2taxid])
         print('unzipping nucl_gb.accession2taxid.gz...')
         results = sp.run(['gunzip', 'nucl_gb.accession2taxid.gz'])
-        try:
+        if 'show-progress' in helstr:
             results = sp.run(['wget', url_taxdump, '-q', '--show-progress'])
-        except:
+        else:
             results = sp.run(['wget', url_taxdump, '-q'])
         results = sp.run(['tar', '-zxvf', 'taxdump.tar.gz'], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
         print('removing intermediary files\n')
