@@ -32,7 +32,12 @@ def wget_ncbi(query, database, email, batchsize, output):
     for i in range(0, int(seqcount), batchsize):
         count = count+1
         url2 = f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db={database}&email={email}&query_key={querykey}&WebEnv={webenv}&rettype=fasta&retstart={i}&retmax={batchsize}'
-        results = sp.run(['wget', url2, '-O', f'temp_{output}_{count}.fasta',  '-q', '--show-progress'])
+        wget_help = sp.check_output('wget -h', shell=True)
+        helstr=wget_help.decode('utf-8')
+        if 'show-progress' in helstr:
+            results = sp.run(['wget', url2, '-O', f'temp_{output}_{count}.fasta',  '-q', '--show-progress'])
+        else:
+            results = sp.run(['wget', url2, '-O', f'temp_{output}_{count}.fasta'])
 
     tempfiles = [f for f in os.listdir() if f.startswith(f'temp_{output}_')]
     with open('CRABS_ncbi_download.fasta', 'a') as file_out:
@@ -123,7 +128,12 @@ def ncbi_formatting(file, original, discard):
 
 ## functions MitoFish
 def mitofish_download(website):
-    results = sp.run(['wget', website, '-q', '--show-progress'])
+    wget_help = sp.check_output('wget -h', shell=True)
+    helstr=wget_help.decode('utf-8')
+    if 'show-progress' in helstr:
+        results = sp.run(['wget', website, '-q', '--show-progress'])
+    else:
+        results = sp.run(['wget', website])
     results = sp.run(['unzip', 'complete_partial_mitogenomes.zip'], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
     fasta = 'complete_partial_mitogenomes.fa'
     os.remove('complete_partial_mitogenomes.zip')
@@ -165,7 +175,12 @@ def mitofish_format(file_in, file_out, original, discard):
 ## functions EMBL
 def embl_download(database):
     url = 'ftp://ftp.ebi.ac.uk/pub/databases/embl/release/std/rel_std_' + database
-    result = sp.run(['wget', url, '-q', '--show-progress'])
+    wget_help = sp.check_output('wget -h', shell=True)
+    helstr=wget_help.decode('utf-8')
+    if 'show-progress' in helstr:
+        result = sp.run(['wget', url, '-q', '--show-progress'])
+    else:
+        result = sp.run(['wget', url])
     gfiles = [f for f in os.listdir() if f.startswith('rel_std')]
     ufiles = []
     for gfile in gfiles:
@@ -257,7 +272,12 @@ def embl_crabs_format(f_in, f_out, original, discard):
 def bold_download(entry):
     url = 'http://v3.boldsystems.org/index.php/API_Public/sequence?taxon=' + entry 
     filename = 'CRABS_bold_download.fasta'
-    result = sp.run(['wget', url, '-O', filename, '-q', '--show-progress'])
+    wget_help = sp.check_output('wget -h', shell=True)
+    helstr=wget_help.decode('utf-8')
+    if 'show-progress' in helstr:
+        result = sp.run(['wget', url, '-O', filename, '-q', '--show-progress'])
+    else:
+        result = sp.run(['wget', url, '-O', filename])
     BLOCKSIZE = 1048576
     with codecs.open(filename, 'r', 'latin1') as sourcefile:
         with codecs.open('mid.fasta', 'w', 'utf-8') as targetfile:
