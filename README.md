@@ -22,18 +22,18 @@ Furthermore, CRABS requires access to the following python version and modules:
 6. matplotlib 3.3.1 or compatible
 7. pandas 0.23.4 or compatible
 
-Thus far, CRABS is not incorporated in a pip or conda package and can be installed by downloading the files from GitHub. Files to download are '*crabs_v1.0.0*' and the folder '*function*', plus all files contained within. The '*function*' folder should be placed in the same directory as the '*crabs_v1.0.0*' file on your personal computer. Depending on your settings, files might need to be made executable by running the '*chmod +x crabs_v1.0.0* command.
+Thus far, CRABS is not incorporated in a pip or conda package and can be installed by downloading the files from GitHub. Files to download are '*crabs*' and the folder '*function*', plus all files contained within. The '*function*' folder should be placed in the same directory as the '*crabs*' file on your personal computer. Depending on your settings, files might need to be made executable by running the '*chmod +x crabs* command.
 
 To check if installation was successful, type in the following command to pull up the help information.
 
 ```bash
-./crabs_v1.0.0 -h
+./crabs -h
 ```
 
 Help information is also available for each of the nine modules included in CRABS and can be accessed by:
 
 ```bash
-./crabs_v1.0.0 MODULE -h
+./crabs MODULE -h
 ```
 
 ## Running CRABS
@@ -66,7 +66,7 @@ To download sequences from NCBI, CRABS utilizes the '*Entrez*' module in Biopyth
 Example code:
 
 ```bash
-./crabs_v1.0.0 db_download --source ncbi --database nucleotide --query '16S[All Fields] AND ("1"[SLEN] : "50000"[SLEN])' --output 16S_ncbi_1_50000.fasta --keep_original yes --email johndoe@gmail.com --batchsize 5000
+./crabs db_download --source ncbi --database nucleotide --query '16S[All Fields] AND ("1"[SLEN] : "50000"[SLEN])' --output 16S_ncbi_1_50000.fasta --keep_original yes --email johndoe@gmail.com --batchsize 5000
 ```
 
 #### 1.2. *EMBL*
@@ -92,7 +92,7 @@ Sequences from EMBL are downloaded through the FTP site (<ftp://ftp.ebi.ac.uk/pu
 Example code:
 
 ```bash
-./crabs_v1.0.0 db_download --source embl --database 'mam*' --output embl_mam.fasta --keep_original yes 
+./crabs db_download --source embl --database 'mam*' --output embl_mam.fasta --keep_original yes 
 ```
 
 #### 1.3. *BOLD*
@@ -102,7 +102,7 @@ BOLD sequence data is downloaded through the BOLD website (<http://v3.boldsystem
 Example code:
 
 ```bash
-./crabs_v1.0.0 db_download --source bold --database 'Actinopterygii|Aves' --output bold_actinopterygii_aves.fasta --keep_original yes
+./crabs db_download --source bold --database 'Actinopterygii|Aves' --output bold_actinopterygii_aves.fasta --keep_original yes
 ```
 
 #### 1.4. *MitoFish*
@@ -112,7 +112,7 @@ To download the MitoFish database (<http://mitofish.aori.u-tokyo.ac.jp>), no add
 Example code:
 
 ```bash
-./crabs_v1.0.0 db_download --source mitofish --output mitofish.fasta --keep_original yes
+./crabs db_download --source mitofish --output mitofish.fasta --keep_original yes
 ```
 
 #### 1.5. *taxonomy*
@@ -122,7 +122,7 @@ To assign a taxonomic lineage to each sequence in the reference database (see se
 Example code:
 
 ```bash
-./crabs_v1.0.0 db_download --source taxonomy
+./crabs db_download --source taxonomy
 ```
 
 ### 2. *db_import*
@@ -132,7 +132,7 @@ In-house generated or curated data can be imported into CRABS by using the '*db_
 Example code:
 
 ```bash
-./crabs_v1.0.0 db_import --input input.fasta --output output.fasta --seq_header species --fwd AGTC --rev ATGC --delim '_'
+./crabs db_import --input input.fasta --output output.fasta --seq_header species --fwd AGTC --rev ATGC --delim '_'
 ```
 
 ### 3. *db_merge*
@@ -142,7 +142,7 @@ When sequencing data from multiple databases are downloaded or being supplemente
 Example code:
 
 ```bash
-./crabs_v1.0.0 db_merge --output output.fasta --uniq yes --input input_1.fasta input_2.fasta input_3.fasta
+./crabs db_merge --output output.fasta --uniq yes --input input_1.fasta input_2.fasta input_3.fasta
 ```
 
 ### 4. *insilico_pcr*
@@ -152,7 +152,7 @@ CRABS extracts the amplicon region of the primer set by conducting an *in silico
 Example code:
 
 ```bash
-./crabs_v1.0.0 insilico_pcr --input input.fasta --output output.fasta --fwd AGTC --rev ACTG --error 4.5
+./crabs insilico_pcr --input input.fasta --output output.fasta --fwd AGTC --rev ACTG --error 4.5
 ```
 
 ### 5. *assign_tax*
@@ -166,7 +166,7 @@ Currently, CRABS will include the following seven ranks: domain, phylum, class, 
 Example code:
 
 ```bash
-./crabs_v1.0.0 assign_tax --input input.fasta --output output.tsv --acc2tax nucl_gb.accession2taxid --taxid nodes.dmp --name names.dmp
+./crabs assign_tax --input input.fasta --output output.tsv --acc2tax nucl_gb.accession2taxid --taxid nodes.dmp --name names.dmp
 ```
 
 ### 6. *dereplicate*
@@ -180,7 +180,7 @@ The reference database can be dereplicated using one of three methods (parameter
 Example code:
 
 ```bash
-./crabs_v1.0.0 dereplicate --input input.tsv --output output.tsv --method uniq_species
+./crabs dereplicate --input input.tsv --output output.tsv --method uniq_species
 ```
 
 ### 7. *seq_cleanup*
@@ -197,7 +197,7 @@ The reference database can be further curated, using the '*seq_cleanup*' module.
 Example code:
 
 ```bash
-./crabs_v1.0.0 seq_cleanup --input input.tsv --output output.tsv --minlen 100 --maxlen 500 --maxns 0 --enviro yes --species yes --nans 0
+./crabs seq_cleanup --input input.tsv --output output.tsv --minlen 100 --maxlen 500 --maxns 0 --enviro yes --species yes --nans 0
 ```
 
 ### 8. *visualization*
@@ -211,7 +211,7 @@ The diversity method produces a horizontal bar plot with number of species (in b
 Example code:
 
 ```bash
-./crabs_v1.0.0 visualization --method diversity --input input.tsv --level class
+./crabs visualization --method diversity --input input.tsv --level class
 ```
 
 #### 8.2. *amplicon_length*
@@ -221,7 +221,7 @@ The amplicon_length method produces a line graph displaying the range of the amp
 Example code:
 
 ```bash
-./crabs_v1.0.0 visualization --method amplicon_length --input input.tsv --level class
+./crabs visualization --method amplicon_length --input input.tsv --level class
 ```
 
 #### 8.3. *db_completeness*
@@ -242,7 +242,7 @@ The db_completeness method will output a tab-delimited table (parameter: '*--out
 Example code:
 
 ```bash
-./crabs_v1.0.0 visualization --method db_completeness --input input.tsv --species species.txt --taxid nodes.dmp --name names.dmp
+./crabs visualization --method db_completeness --input input.tsv --species species.txt --taxid nodes.dmp --name names.dmp
 ```
 
 #### 8.4. *phylo*
@@ -252,7 +252,7 @@ The phylo method will generate an alignment file and produce a phylogenetic tree
 Example code:
 
 ```bash
-./crabs_v1.0.0 visualization --method phylo --input input.tsv --level family --species species.txt --taxid nodes.dmp --name names.dmp
+./crabs visualization --method phylo --input input.tsv --level family --species species.txt --taxid nodes.dmp --name names.dmp
 ```
 
 ### 9. *tax_format*
@@ -269,5 +269,5 @@ Once the reference database is curated by sections 6. *dereplicate* and 7. *seq_
 Example code:
 
 ```bash
-./crabs_v1.0.0 tax_format --input input.tsv --output output.fasta --format sintax
+./crabs tax_format --input input.tsv --output output.fasta --format sintax
 ```
