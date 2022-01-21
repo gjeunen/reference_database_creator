@@ -296,6 +296,8 @@ def pga(args):
     REV = args.rev
     SPEED = args.speed
     ID = args.id
+    COV = args.cov
+    FILTER = args.filter
 
     ## step 1: extract sequences from originally downloaded file that were not successful during in silico PCR analysis
     insilico_dict = {}
@@ -417,15 +419,27 @@ def pga(args):
                 qihi = int(line.split('\t')[4])
                 tcov = float(line.split('\t')[7])
                 end_pos = ql - qihi 
-                if tcov >= 99 and (qilo - 1 < len(FWD) or end_pos < len(REV)):
-                    count_pga_filter = count_pga_filter + 1
-                    seq = non_insilico_dict[query]
-                    seq = seq[qilo - 1 : qihi]
-                    pga_list.append('>' + query + '\n')
-                    pga_list.append(seq + '\n')
+                if FILTER == 'strict':
+                    if tcov >= float(COV) and (qilo - 1 < len(FWD) or end_pos < len(REV)):
+                        count_pga_filter = count_pga_filter + 1
+                        seq = non_insilico_dict[query]
+                        seq = seq[qilo - 1 : qihi]
+                        pga_list.append('>' + query + '\n')
+                        pga_list.append(seq + '\n')
+                elif FILTER == 'relaxed':
+                    if tcov >= float(COV):
+                        count_pga_filter = count_pga_filter + 1
+                        seq = non_insilico_dict[query]
+                        seq = seq[qilo - 1 : qihi]
+                        pga_list.append('>' + query + '\n')
+                        pga_list.append(seq + '\n')
+                else:
+                    print(f'{FILTER} not provided as an option for the METHOD parameter')
+                    print('please choose either "strict" or "relaxed"\n')
+                    break
     print(f'{count_align} out of {count} number of sequences aligned to {DB}')
-    print(f'{count_pga_filter + count} number of sequences achieved an alignment that passed filtering thresholds')
-    print(f'written {count_pga_filter} sequences to {OUTPUT}\n')
+    print(f'{count_pga_filter} number of sequences achieved an alignment that passed filtering thresholds')
+    print(f'written {count_pga_filter + count_insilico} sequences to {OUTPUT}\n')
     with open('CRABS_pga_results.fasta', 'w') as file:
         for item in pga_list:
             file.write(item)
@@ -1287,6 +1301,8 @@ def main():
     pga_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest =  'rev', type = str, required = True)
     pga_parser.add_argument('-s', '--speed', help = 'subsetting input file based on sequence length to increase speed: "fast" (<5,000 bp), "medium" (<10,000 bp), "slow" (all sequences). Default = "medium"', dest =  'speed', type = str, default = 'medium')
     pga_parser.add_argument('-id', '--percid', help = 'minimum percentage identity of the alignment score to be allowed. Default = 0.95', dest =  'id', type = str, default = '0.95')
+    pga_parser.add_argument('-c', '--coverage', help = 'minimum coverage of the alignment to be allowed. Default = 0.95', dest =  'cov', type = str, default = '0.95')
+    pga_parser.add_argument('-m', '--filter_method', help = 'Method of filtering the PGA results, "strict" or "relaxed. Default = "strict"', dest =  'filter', type = str, default = 'strict')
 
     ref_database_parser = subparser.add_parser('assign_tax', description = 'creating the reference database with taxonomic information')
     ref_database_parser.set_defaults(func = assign_tax)
