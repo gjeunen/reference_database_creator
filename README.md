@@ -6,7 +6,38 @@ CRABS (Creating Reference databases for Amplicon-Based Sequencing) is a versatil
 
 ## Installing CRABS
 
-CRABS is a command-line only toolkit running on typical Unix/Linux environments and is exclusively written in python3. However, CRABS makes use of the subprocess module in python to run several commands in bash syntax to circumvent python-specific idiosyncrasies and increase execution speed. Additionally, CRABS makes use of the following three programs through the subprocess module in python, which are required to be installed and globally accessible:
+CRABS is a command-line only toolkit running on typical Unix/Linux environments and is exclusively written in python3. However, CRABS makes use of the *subprocess* module in python to run several commands in bash syntax to circumvent python-specific idiosyncrasies and increase execution speed. There are two ways to install CRABS. The easiest way is through a conda package that we have created that is avaialable through bioconda. Or you can clone this repository and manually install all the dependencies. Below are details for both approaches.
+
+### Using conda
+
+To install the conda package, you must first install conda. See this [**link**](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) for details. If already have conda installed, it is good practice to update the conda tool with `conda update conda`.
+
+Once conda is installed, you can follow these steps to install CRABS and all dependencies. Make sure to enter these commands in order:
+
+```
+conda create -n CRABS
+conda activate CRABS
+conda config --add channels bioconda
+conda config --add channels conda-forge
+conda install -c bioconda crabs
+```
+
+Once you have entered the install command, conda will process the request (this might take a minute or so), and then display all the packages and programs that will be installed, and ask to confirm this. Type `y` to start the installation. After this finishes, CRABS should be ready to go.
+
+We have tested this installation on Mac and Linux systems. We have not yet tested on Windows Subsystem for Linux (WSL). 
+
+
+### Manual installation
+
+For the manual installation, you first download the files from GitHub. You need to clone the repository using the terminal:
+
+```
+git clone https://github.com/gjeunen/reference_database_creator.git
+```
+
+Depending on your settings, files might need to be made executable by running the '*chmod +x crabs* command.
+
+CRABS makes use of the following three programs through the subprocess module in python, which are required to be installed and globally accessible:
 
 1. CUTADAPT 3.4 or compatible (<https://cutadapt.readthedocs.io/en/stable/index.html>)
 2. VSEARCH 2.13.3 or compatible (<https://github.com/torognes/vsearch>)
@@ -22,9 +53,18 @@ Furthermore, CRABS requires access to the following python version and modules:
 6. matplotlib 3.3.1 or compatible
 7. pandas 0.23.4 or compatible
 
-Thus far, CRABS is not incorporated in a pip or conda package and can be installed by downloading the files from GitHub. Files to download are '*crabs*' and the folder '*function*', plus all files contained within. The '*function*' folder should be placed in the same directory as the '*crabs*' file on your personal computer. Depending on your settings, files might need to be made executable by running the '*chmod +x crabs* command.
+You can make the crabs command accessible throughout your system with this command:
 
-To check if installation was successful, type in the following command to pull up the help information.
+```
+export PATH="/path/to/crabs/folder:$PATH"
+```
+
+Substitute */path/to/crabs/folder* with the actual path to the repo folder on your system. You can also add this line to your *.bash_profile* or *.bashrc file* in your home folder, so you can access this anytime. 
+
+
+### Check your installation
+
+To check if either installation method was successful, type in the following command to pull up the help information.
 
 ```bash
 ./crabs -h
