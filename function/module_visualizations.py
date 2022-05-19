@@ -37,12 +37,16 @@ def split_db_by_taxgroup(file_in, tax_level, taxranks):
     else:
         with open(file_in, 'r') as f_in:
             for line in f_in:
-                taxgroup = line.split('\t')[level_count] 
-                species = line.split('\t')[species_position] 
-                tax_group_list.append(taxgroup)
-                species_dict[taxgroup].append(species)
-                if taxgroup not in uniq_tax_group_list:
-                    uniq_tax_group_list.append(taxgroup)
+                if line.startswith('seqID'):
+                    continue 
+                else:
+                    taxgroup = line.split('\t')[level_count] 
+                    species = line.split('\t')[species_position] 
+                    tax_group_list.append(taxgroup)
+                    if species not in species_dict[taxgroup]:
+                        species_dict[taxgroup].append(species)
+                    if taxgroup not in uniq_tax_group_list:
+                        uniq_tax_group_list.append(taxgroup)
         
     return tax_group_list, uniq_tax_group_list, species_dict, abort
 
