@@ -99,11 +99,14 @@ def get_amp_length(file_in, tax_level, subset, taxranks):
         amplength_dict = collections.defaultdict(list)
         with open(file_in, 'r') as f_in:
             for line in f_in:
-                l = line.rstrip('\n')
-                seq_len = len(l.rsplit('\t', 1)[1])
-                taxgroup = l.split('\t')[count] #.split(',')[2]
-                amplength_dict['overall'].append(seq_len)
-                amplength_dict[taxgroup].append(seq_len)
+                if line.startswith('seqID'):
+                    continue
+                else:
+                    l = line.rstrip('\n')
+                    seq_len = len(l.rsplit('\t', 1)[1])
+                    taxgroup = l.split('\t')[count] #.split(',')[2]
+                    amplength_dict['overall'].append(seq_len)
+                    amplength_dict[taxgroup].append(seq_len)
         sorted_dict = sorted(amplength_dict.items(), key = lambda item: len(item[1]), reverse = True)
         for item in islice(sorted_dict, int(subset) + 1):
             length = sorted(Counter(item[1]).most_common(), key = lambda tup: tup[0])
