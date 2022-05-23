@@ -174,14 +174,14 @@ def mitofish_format(file_in, file_out, original, discard):
 
 ## functions EMBL
 def embl_download(database):
-    url = 'ftp://ftp.ebi.ac.uk/pub/databases/embl/release/std/rel_std_' + database
+    url = 'ftp://ftp.ebi.ac.uk/pub/databases/ena/sequence/con-std_latest/std/STD_' + database + 'dat.gz'
     wget_help = sp.check_output('wget -h', shell=True)
     helstr=wget_help.decode('utf-8')
     if 'show-progress' in helstr:
         result = sp.run(['wget', url, '-q', '--show-progress'])
     else:
         result = sp.run(['wget', url])
-    gfiles = [f for f in os.listdir() if f.startswith('rel_std')]
+    gfiles = [f for f in os.listdir() if f.startswith('STD_')]
     ufiles = []
     for gfile in gfiles:
         unzip = gfile[:-3]
