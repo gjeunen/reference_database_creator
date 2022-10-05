@@ -62,6 +62,10 @@ export PATH="/path/to/crabs/folder:$PATH"
 Substitute */path/to/crabs/folder* with the actual path to the repo folder on your system. You can also add this line to your *.bash_profile* or *.bashrc file* in your home folder, so you can access this anytime. 
 
 
+### Docker installation
+TBA
+
+
 ### Check your installation
 
 To check if either installation method was successful, type in the following command to pull up the help information.
