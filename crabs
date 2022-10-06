@@ -22,7 +22,7 @@ from Bio import AlignIO
 from Bio import Phylo
 from Bio.Seq import Seq
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceMatrix, DistanceTreeConstructor
-from function.module_db_download import wget_ncbi, esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format, embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases
+from function.module_db_download import wget_ncbi, esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format, embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases, import_BOLD_reformatting
 from function.module_assign_tax import tax2dict, get_accession, acc_to_dict, get_lineage, final_lineage_comb, final_lineage_simple
 from function.module_db_cleanup import derep_strict, derep_single, derep_uniq, set_param, create_pd_cols
 from function.module_visualizations import split_db_by_taxgroup, num_spec_seq_taxgroup, horizontal_barchart, get_amp_length, amplength_figure, file_dmp_to_dict, species_to_taxid, lineage_retrieval
@@ -158,8 +158,24 @@ def db_import(args):
                 print('')
         else:
             print('\nnot all parameters have an input value\n')
+    
+    ## process BOLD downloaded file outside of CRABS
+    elif HEADER == 'BOLD':
+        if all(v is not None for v in [INPUT, OUTPUT]):
+            print(f'\nformatting BOLD downloaded sequences to CRABS format')
+            reformat = import_BOLD_reformatting(INPUT, OUTPUT)
+            if all(v is not None for v in [FWD, REV]):
+                print(f'appending primer sequences to {OUTPUT}')
+                numseq = append_primer_seqs(OUTPUT, FWD, REV)
+                print(f'added primers to {numseq} sequencing in {OUTPUT}\n')
+            else:
+                print('')
+        else:
+            print('\nnot all parameters have an input value\n')
+
+    ## missing or miswritten header information
     else:
-        print('\nplease specify header information: "accession" and "species"\n')
+        print('\nplease specify header information: "accession" or "species" or "BOLD"\n')
 
 ## function: merge multiple databases
 def db_merge(args):
@@ -1272,10 +1288,10 @@ def main():
     db_import_parser.set_defaults(func = db_import)
     db_import_parser.add_argument('-i', '--input', help = 'input database filename', dest = 'input', type = str, required = True)
     db_import_parser.add_argument('-o', '--output', help = 'output file name option', dest = 'output', type = str, required = True)
-    db_import_parser.add_argument('-s', '--seq_header', help = 'information provided in sequence header: "accession" or "species"', dest = 'header', type = str, required = True)
+    db_import_parser.add_argument('-s', '--seq_header', help = 'information provided in sequence header: "accession" or "species" or "BOLD"', dest = 'header', type = str, required = True)
     db_import_parser.add_argument('-f', '--fwd', help = 'forward primer sequence in 5-3 direction', dest = 'fwd', type = str)
     db_import_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest = 'rev', type = str)
-    db_import_parser.add_argument('-d', '--delim', help = 'delimiter specifying species or accession', dest = 'delim', type = str, required = True)
+    db_import_parser.add_argument('-d', '--delim', help = 'delimiter specifying species or accession', dest = 'delim', type = str)
 
     db_merge_parser = subparser.add_parser('db_merge', description = 'merge multiple databases')
     db_merge_parser.set_defaults(func = db_merge)

@@ -391,6 +391,50 @@ def generate_header(file_in, file_out, delimiter):
 
     return len(newfile)
 
+def import_BOLD_reformatting(input, output):
+    mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']
+    newfile = []
+    discarded = []
+    count = 0
+    total = 0
+    with tqdm(total = os.path.getsize(input)) as pbar:
+        for record in SeqIO.parse(input, 'fasta'):
+            pbar.update(len(record))
+            total = total + 1
+            if record.description.split('-')[-1] == 'SUPPRESSED':
+                discarded.append(record)
+            else:
+                if len(record.description.split('|')) == 4:
+                    acc = str(record.description.split('|')[3].split('.')[0])
+                    if not any(mistake in acc for mistake in mistakes):
+                        record.description = acc
+                        record.id = record.description
+                        record.seq = record.seq.strip('-')
+                        if record.seq.count('-') == 0:
+                            newfile.append(record)
+                    else:
+                        discarded.append(record)
+                else:
+                    count = count +1
+                    spec = str(record.description.split('|')[1].replace(' ', '_'))
+                    acc_crab = 'CRABS_' + str(count) + ':' + spec 
+                    record.description = acc_crab
+                    record.id = record.description
+                    record.name = record.description
+                    record.seq = record.seq.strip('-')
+                    if record.seq.count('-') == 0:
+                        newfile.append(record)
+    newfile_db = [FastaIO.as_fasta_2line(record) for record in newfile]
+    with open(output, 'w') as fout:
+        for item in newfile_db:
+            fout.write(item)
+    print(f'found {total} sequences in {input}')
+    print(f'found {len(discarded)} sequences with incorrect format')
+    print(f'written {len(newfile)} sequences to {output}')
+    numseq = len(newfile)
+
+    return numseq
+
 def merge_databases(file_in, file_out):
     seqdict = {}
     for file in file_in:
