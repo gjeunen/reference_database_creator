@@ -45,7 +45,7 @@ CRABS makes use of the following three programs through the subprocess module in
 
 Furthermore, CRABS requires access to the following python version and modules:
 
-1. python 3.6.10 or compatible
+1. python 3.6.10 or compatible (<https://github.com/pyenv/pyenv>)
 2. argparse 1.1 or compatible
 3. biopython 1.78 or compatible
 4. tqdm 4.59.0 or compatible
