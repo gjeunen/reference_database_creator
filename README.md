@@ -223,12 +223,12 @@ A taxonomic lineage can be generated for each sequence in the reference database
 
 accession    taxID   rank_1,taxID,name   rank_2,taxID,name   rank_3,taxID,name    rank_4,taxID,name    rank_5,taxID,name   rank_6,taxID,name    rank_7,taxID,name    sequence
 
-Currently, CRABS will include the following seven ranks: domain, phylum, class, order, family, genus, and species.
+The included ranks can be specified using the '*--ranks*' parameter and is set to include superkingdom, phylum, class, order, family, genus, and species as default. Sequences for which no taxonomic lineage can be generated (e.g., novel species, typo in accession number or species name) can be written to a separate file for manual manipulation using the '*--missing*' parameter. This output file follows the same format as the taxonomic lineage output file. Users can manually add in the missing taxonomic information if needed and append the sequences to the taxonomic lineage output file.
 
 Example code:
 
 ```bash
-crabs assign_tax --input input.fasta --output output.tsv --acc2tax nucl_gb.accession2taxid --taxid nodes.dmp --name names.dmp
+crabs assign_tax --input input.fasta --output output.tsv --acc2tax nucl_gb.accession2taxid --taxid nodes.dmp --name names.dmp --missing missing_taxa.tsv
 ```
 
 ### 6. *dereplicate*
