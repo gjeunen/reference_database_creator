@@ -87,7 +87,7 @@ CRABS includes nine modules:
 1. download sequencing data and taxonomy information from online repositories using '*db_download*'
 2. import in-house generated data using '*db_import*'
 3. merge multiple databases using '*db_merge*'
-4. conduct an *in silico* PCR to extract the amplicon region using '*insilico_pcr*'
+4. retrieve amplicon regions through (i) an *in silico* PCR step using '*insilico_pcr*', followed by (ii) an optional Pairwise Global Alignment step to retrieve amplicon sequences with missing primer-binding regions in the reference sequence using '*pga*'
 5. assign a taxonomic lineage to sequences using '*assign_tax*'
 6. dereplicate the reference database using '*dereplicate*'
 7. curate the reference database on sequence and header parameters using '*seq_cleanup*'
@@ -195,7 +195,9 @@ Example code:
 crabs db_merge --output output.fasta --uniq yes --input input_1.fasta input_2.fasta input_3.fasta
 ```
 
-### 4. *insilico_pcr*
+### 4. *Extract amplicon sequences from downloaded reference database*
+
+#### 4.1 *insilico_pcr*
 
 CRABS extracts the amplicon region of the primer set by conducting an *in silico* PCR. CRABS uses CUTADAPT and VSEARCH for this process to increase speed of execution over traditional python code. Input and output file names can be specified using the '*--input*' and '*--output*' parameters, respectively. Both the forward and reverse primer should be provided in 5'-3' direction using the '*--fwd*' and '*--rev*' parameters, respectively. CRABS will reverse complement the reverse primer. The *in silico* PCR will be executed twice. During the first iteration, amplicon regions will be retained if both forward and reverse primers are found in the sequence. Then, all sequences will be reverse complemented for which primers were not found and a second *in silico* PCR will be executed. This is to ensure sequences are incorporated into the final output when deposited in the opposite direction in the online repository. The maximum allowed number of errors found in the primer sequences can be specified using the '*--error*' parameter, with a default setting of 4.5.
 
@@ -203,6 +205,16 @@ Example code:
 
 ```bash
 crabs insilico_pcr --input input.fasta --output output.fasta --fwd AGTC --rev ACTG --error 4.5
+```
+
+#### 4.2 *pga*
+
+It is common practice to remove primer-binding regions from reference sequences when deposited in an online database. Therefore, when the reference sequence was generated using the same forward and/or reverse primer as searched for in the *insilico_pcr* function, the *insilico_pcr* function will have failed to recover the amplicon region of the reference sequence. To account for this possibility, CRABS has the option to run a Pairwise Global Alignment, implemented from VSEARCH, to extract amplicon regions for which the reference sequence does not contain the full forward and reverse primer-binding regions. To accomplish this, the *pga* function takes in the originally downloaded database file using the '*--input*' parameter. The database to be searched against is the output file from the *in silico* PCR and can be specified using the '*--database*' parameter. The output file can be specified using the '*--output*' parameter. The primer sequences, only used to calculate basepair length, can be set with the '*--fwd*' and '*--rev*' parameters. As the *pga* function can take a long time for large databases, sequence length can be restricted to speed up the process using the '*--speed*' parameter. Minimum percentage identity and query coverage can be specified using the '*--percid*' and '*--coverage*' parameters, respectively. Finally, the *pga* function can be restricted to retain sequences where primer sequences are not fully present in the reference sequence (alignment starting or ending within the length of the forward or reverse primer) using the '*--filter_method strict*' parameter. When '*--filter_method relaxed*' is used, positive hits will be included when the alignment is found outside the range of the primer-binding regions (missed by *insilico_pcr* function due to too many mismatches in the primer-binding region).
+
+Example code:
+
+```bash
+crabs pga --input input.fasta --output output.fasta --database insilico_pcr_database.fasta --fwd AGTC --rev ATGC --speed medium --percid 0.95 --coverage 0.95 --filter_method strict
 ```
 
 ### 5. *assign_tax*
