@@ -276,7 +276,7 @@ crabs geo_cleanup --input input.tsv --output output.tsv --species species_list.t
 
 ### 8. *visualization*
 
-Once the final reference database is curated, four visualization methods can be run to provide information on the contents of the reference database, including (i) diversity, (ii) amplicon_length, (iii) db_completeness, and (iv) phylo. The visualization method can be specified with the '*--method*' parameter.
+Once the final reference database is curated, five visualization methods can be run to provide information on the contents of the reference database, including (i) diversity, (ii) amplicon_length, (iii) db_completeness, (iv) phylo, and (v) primer_efficiency. The visualization method can be specified with the '*--method*' parameter.
 
 #### 8.1. *diversity*
 
@@ -316,7 +316,7 @@ The db_completeness method will output a tab-delimited table (parameter: '*--out
 Example code:
 
 ```bash
-crabs visualization --method db_completeness --input input.tsv --species species.txt --taxid nodes.dmp --name names.dmp
+crabs visualization --method db_completeness --input input.tsv --output output.txt --species species.txt --taxid nodes.dmp --name names.dmp
 ```
 
 #### 8.4. *phylo*
@@ -327,6 +327,16 @@ Example code:
 
 ```bash
 crabs visualization --method phylo --input input.tsv --level family --species species.txt --taxid nodes.dmp --name names.dmp
+```
+
+#### 8.5 *primer_efficiency*
+
+The primer_efficiency method will produce a bar graph, displaying the proportion of base pair occurrence in the primer-binding regions for a user-specified taxonomic group, thereby visualizing places in the forward and reverse primer-binding regions where mismatches might be occurring in the taxonomic group of interest, potentially influencing amplification efficiency. The primer_efficiency method takes a '.tsv' input file that contains taxonomic lineage information and the sequence on a single line (output from '*assign_tax*' and subsequent modules) using the '*--input*' parameter. To find the information on the primer-binding regions for each sequence in the input file, the initially downloaded sequence needs to be provided using the '*--raw_file*' parameter, and information on primer sequences and primer names need to be provided using the '*--fwd*', '*--rev*', '*--fwd_name*', '*--rev_name*' parameters. The taxonomic group of interest can be provided using the '*--tax_group*' parameter and can be set at any taxonomic level that is incorporated in the input file (e.g., species, genus, family, order, class, phylum). Finally, the output file containing all sequences contributing to the figure can be specified using the '*--output*' parameter.
+
+Example code:
+
+```bash
+crabs visualization --method primer_efficiency --input input.tsv --fwd ACGT --rev ACGT --fwd_name forward_primer --rev_name reverse_primer --raw_file initial_download.fasta --tax_group Actinopterygii --output Actinopterygii.fasta
 ```
 
 ### 9. *tax_format*
