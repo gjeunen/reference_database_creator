@@ -90,7 +90,7 @@ CRABS includes nine modules:
 4. retrieve amplicon regions through (i) an *in silico* PCR step using '*insilico_pcr*', followed by (ii) an optional Pairwise Global Alignment step to retrieve amplicon sequences with missing primer-binding regions in the reference sequence using '*pga*'
 5. assign a taxonomic lineage to sequences using '*assign_tax*'
 6. dereplicate the reference database using '*dereplicate*'
-7. curate the reference database on sequence and header parameters using '*seq_cleanup*'
+7. curate the reference database using multiple sequence and header parameters using '*seq_cleanup*', as well as an exclusion filter to subset the reference database using '*geo_cleanup*'
 8. visualize the output of the reference database using '*visualization*'
 9. export the reference database in six different formats using '*tax_format*'
 
@@ -245,9 +245,11 @@ Example code:
 crabs dereplicate --input input.tsv --output output.tsv --method uniq_species
 ```
 
-### 7. *seq_cleanup*
+### 7. *Clean database using multiple parameters and exclusion filters*
 
-The reference database can be further curated, using the '*seq_cleanup*' module. Sequences can be filtered on six parameters:
+#### 7.1 *seq_cleanup*
+
+The reference database can be further curated using the '*seq_cleanup*' module. Sequences can be filtered on six parameters:
 
 1. minimum length: '*--minlen*'
 2. maximum length: '*--maxlen*'
@@ -260,6 +262,16 @@ Example code:
 
 ```bash
 crabs seq_cleanup --input input.tsv --output output.tsv --minlen 100 --maxlen 500 --maxns 0 --enviro yes --species yes --nans 0
+```
+
+#### 7.2 *geo_cleanup*
+
+The reference database can be further curated using the '*geo_cleanup*' module. This module is an exclusion filter that works with a text file and can be used to subset the database to only include target organisms or limit the species to a geographic area, which has been shown to increase taxonomic assignment accuracy.
+
+Example code:
+
+```bash
+crabs geo_cleanup --input input.tsv --output output.tsv --species species_list.txt
 ```
 
 ### 8. *visualization*
