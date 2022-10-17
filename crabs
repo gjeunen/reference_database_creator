@@ -26,7 +26,7 @@ from function.module_db_download import wget_ncbi, esearch_fasta, efetch_seqs_fr
 from function.module_assign_tax import tax2dict, get_accession, acc_to_dict, get_lineage, final_lineage_comb, final_lineage_simple
 from function.module_db_cleanup import derep_strict, derep_single, derep_uniq, set_param, create_pd_cols
 from function.module_visualizations import split_db_by_taxgroup, num_spec_seq_taxgroup, horizontal_barchart, get_amp_length, amplength_figure, file_dmp_to_dict, species_to_taxid, lineage_retrieval
-
+from function import __version__
 ################################################
 ########### MODULE DATABASE DOWNLOAD ###########
 ################################################
@@ -1271,6 +1271,8 @@ def tax_format(args):
 ################################################
 def main():
     parser = argparse.ArgumentParser(description = 'creating a curated reference database')
+    # add argument here for version, which is taken from __init.py__ file in functions folder
+    parser.add_argument('--version', action='version', version=__version__)
     subparser = parser.add_subparsers()
 
     db_download_parser = subparser.add_parser('db_download', description = 'downloading sequence data from online databases')
