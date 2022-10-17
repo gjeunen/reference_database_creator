@@ -60,6 +60,7 @@ def acc_to_dict(acc_list, acc2taxid_dict, no_acc, acc2tax_name, web):
     taxlist = []
     no_info = []
     missing_species_name = []
+    missing_taxa = []
     for item in acc_list:
         if item.startswith('CRABS'):
             species_name = item.split(':')[1]
@@ -68,12 +69,14 @@ def acc_to_dict(acc_list, acc2taxid_dict, no_acc, acc2tax_name, web):
                 taxlist.append(acc_taxid_dict[item])
             else:
                 missing_species_name.append(species_name)
+                missing_taxa.append(item)
         else:
             if item in acc2taxid_dict:
                 acc_taxid_dict[item] = acc2taxid_dict[item]
                 taxlist.append(acc_taxid_dict[item])
             else:
                 no_info.append(item)
+                missing_taxa.append(item)
     if len(missing_species_name) > 0:
         print(f'did not find a tax ID found for {len(missing_species_name)} entries, most likely due to spelling mistakes.')
     if len(no_info) > 0 and web != 'no':
@@ -99,7 +102,7 @@ def acc_to_dict(acc_list, acc2taxid_dict, no_acc, acc2tax_name, web):
         print(f'did not find {len(no_info)} accession numbers in {acc2tax_name}')
     taxlist = list(dict.fromkeys(taxlist))
 
-    return acc_taxid_dict, taxlist
+    return acc_taxid_dict, taxlist, missing_taxa
 
 def get_lineage(taxranks, taxlist, taxid_dict, names_dict):
     #ranks = {'superkingdom' : 'yes', 'phylum' : 'yes', 'class' : 'yes', 'order' : 'yes', 'family' : 'yes', 'genus' : 'yes', 'species' : 'yes'}

@@ -484,6 +484,7 @@ def assign_tax(args):
     NAME = args.name
     WEB = args.web
     RANKS = args.ranks
+    MISS = args.missing
 
     ## process initial files
     print(f'\nretrieving accession numbers from {INPUT}')
@@ -497,14 +498,30 @@ def assign_tax(args):
 
     ## get taxonomic lineage
     print(f'assigning a tax ID number to {len(accession)} accession numbers from {INPUT}')
-    acc_taxid_dict, taxid_list = acc_to_dict(accession, acc2tax, no_acc, ACC2TAX, WEB)
+    acc_taxid_dict, taxid_list, missing_taxa = acc_to_dict(accession, acc2tax, no_acc, ACC2TAX, WEB)
     print(f'{len(acc_taxid_dict)} accession numbers resulted in {len(taxid_list)} unique tax ID numbers')
     print(f'generating taxonomic lineages for {len(taxid_list)} tax ID numbers')
     lineage = get_lineage(RANKS, taxid_list, taxid, name)
     print(f'assigning a taxonomic lineage to {len(accession)} accession numbers')
     #final_lineage = final_lineage_comb(acc_taxid_dict, lineage, INPUT, OUTPUT)
     final_lineage = final_lineage_simple(acc_taxid_dict, lineage, INPUT, OUTPUT)
-    print(f'written {len(final_lineage)} entries to {OUTPUT}\n')
+    print(f'written {len(final_lineage)} entries to {OUTPUT}')
+    if MISS != 'no':
+        missing_seqs = []
+        with tqdm(total = os.path.getsize(INPUT)) as pbar:
+            for record in SeqIO.parse(INPUT, 'fasta'):
+                pbar.update(len(record))
+                acc = str(record.id).split('.')[0]
+                if acc in missing_taxa:
+                    missing_seqs.append(acc + '\t' + str(record.seq))
+        with open(MISS, 'w') as fout:
+            for item in missing_seqs:
+                fout.write(item + '\n')
+        print(f'writting {len(missing_seqs)} sequences with missing taxonomic info to {MISS}\n')
+    else:
+        print()
+            
+
 
 ################################################
 ########### MODULE DATABASE CLEAN-UP ###########
@@ -1331,6 +1348,7 @@ def main():
     ref_database_parser.add_argument('-n', '--name', help = 'phylogeny file name', dest = 'name', type = str, required = True)
     ref_database_parser.add_argument('-w', '--web', help = 'retrieve missing taxonomic information through a web search. Default = "no"', dest = 'web', type = str, default = 'no')
     ref_database_parser.add_argument('-r', '--ranks', help = 'taxonomic ranks included in the taxonomic lineage. Default = "superkingdom+phylum+class+order+family+genus+species"', dest = 'ranks', type = str, default = 'superkingdom+phylum+class+order+family+genus+species')
+    ref_database_parser.add_argument('-m', '--missing', help = 'filename for sequences for which CRABS could not generate a taxonomic lineage (e.g., novel species, typo in species name)', dest = 'missing', type = str, default = 'no')
 
     dereplication_parser = subparser.add_parser('dereplicate', description = 'dereplicating the database')
     dereplication_parser.set_defaults(func = dereplicate)
