@@ -634,65 +634,66 @@ def db_filter(args):
         if DISCARD != 'no':
             discard_db.to_csv(DISCARD,sep='\t',index=False)
 
-## function: geo cleanup
-def geo_cleanup(args):
+## function: db_subset
+def db_subset(args):
     INPUT = args.input
     OUTPUT = args.output
-    SPECIES = args.species
-    RANKS = args.ranks
+    SUBSET = args.subset
+    DB = args.db
 
-    ## read file containing species into list
-    species_list = []
-    geo_list = []
-    geo_species_list = []
-    species_count = 0
-    geo_count = 0
-    with open(SPECIES, 'r') as file:
-        for line in file:
-            species_count = species_count + 1
-            species = line.rstrip('\n').replace(' ', '_')
-            species_list.append(species)
-    geo_dict = {key: None for key in species_list}
+    ## read in user-provided file with seq info
+    userlist = []
+    print(f'\nreading {DB} into memory')
+    with tqdm(total = os.path.getsize(DB)) as pbar:
+        with open(DB, 'r') as filein:
+            for line in filein:
+                pbar.update(len(line))
+                item = line.replace(' ', '_').rstrip('\n').upper()
+                userlist.append(item)
+    
+    ## subset the input file using "userlist"
+    if SUBSET == 'inclusion':
+        inclusionlist = []
+        count = 0
+        print(f'reading {INPUT} into memory and subsetting reference DB based on {DB}')
+        with tqdm(total = os.path.getsize(INPUT)) as pbar:
+            with open(INPUT, 'r') as infile:
+                for line in infile:
+                    count = count + 1
+                    pbar.update(len(line))
+                    for item in userlist:
+                        if item in line.upper():
+                            inclusionlist.append(line)
+        print(f'found {count} sequences in {INPUT}')
+        inclusionset = set(inclusionlist)
+        with open(OUTPUT, 'w') as outfile:
+            for item in inclusionset:
+                outfile.write(item)
+        print(f'written {len(inclusionset)} sequences to {OUTPUT}\n')
 
-    ## check species position in tax lineage
-    species_position = 'n'
-    taxranks = str(RANKS).split('+')
-    spec_pos = 0
-    for item in taxranks:
-        if item == 'species':
-            species_position = spec_pos + 2
-        else:
-            spec_pos = spec_pos + 1
-    if species_position == 'n':
-        print(f'species information not found, please include "species" in the taxonomic lineage')
-        print('aborting geo cleanup...\n')
+    elif SUBSET == 'exclusion':
+        exclusionlist = []
+        orig = []
+        count = 0
+        print(f'reading {INPUT} into memory and subsetting reference DB based on {DB}')
+        with tqdm(total = os.path.getsize(INPUT)) as pbar:
+            with open(INPUT, 'r') as infile:
+                for line in infile:
+                    orig.append(line)
+                    count = count + 1
+                    pbar.update(len(line))
+                    for item in userlist:
+                        if item in line.upper():
+                            exclusionlist.append(line)
+        print(f'found {count} sequences in {INPUT}')
+        exclusionset = set(exclusionlist)
+        final = [x for x in orig if x not in exclusionset]
+        with open(OUTPUT, 'w') as outfile:
+            for item in final:
+                outfile.write(item)
+        print(f'written {len(final)} sequences to {OUTPUT}\n')
     else:
-        ## read input file and extract species of interest
-        with open(INPUT, 'r') as file:
-            first_line = file.readline()
-            for line in file:
-                species = line.split('\t')[species_position]
-                if species in geo_dict:
-                    geo_count = geo_count + 1
-                    geo_list.append(line)
-                    geo_species_list.append(species)
-
-        ## write to output file and print statements
-        with open(OUTPUT, 'w') as file:
-            file.write(first_line)
-            for item in geo_list:
-                file.write(item)
-        diff_spec_list = set(species_list) - set(geo_species_list)
-        uniq_spec = set(geo_species_list)
-        print(f'\nfound {species_count} species in {SPECIES}')
-        print(f'written {geo_count} number of sequences to "{OUTPUT}", representing {len(uniq_spec)} species')
-        if len(diff_spec_list) != 0:
-            print('species not found in the database were:')
-            for item in diff_spec_list:
-                print('\t\t' + item)
-            print()
-        else:
-            print(f'all {species_count} species were found in the database\n')
+        print(f'Invalid option for the "--subset" parameter was entered: "{SUBSET}". Please enter "inclusion" or "exclusion"\n')
 
 ################################################
 ############# MODULE VISUALISATION #############
@@ -1370,12 +1371,12 @@ def main():
     seq_cleanup_parser.add_argument('-na', '--nans', help = 'discard sequences with at least N number of unspecified taxonomic levels', dest = 'nans', type = str, default = 'no')
     seq_cleanup_parser.add_argument('-r', '--ranks', help = 'taxonomic ranks included in the taxonomic lineage. Default = "superkingdom+phylum+class+order+family+genus+species"', dest = 'ranks', type = str, default = 'superkingdom+phylum+class+order+family+genus+species')
     
-    geo_cleanup_parser = subparser.add_parser('geo_cleanup', description = 'subsetting the database using a user-provided species list')
-    geo_cleanup_parser.set_defaults(func = geo_cleanup)
-    geo_cleanup_parser.add_argument('-i', '--input', help = 'input file name', dest = 'input', type = str, required = True)
-    geo_cleanup_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
-    geo_cleanup_parser.add_argument('-s', '--species', help = 'species list text file', dest = 'species', type = str, required = True)
-    geo_cleanup_parser.add_argument('-r', '--ranks', help = 'taxonomic ranks included in the taxonomic lineage. Default = "superkingdom+phylum+class+order+family+genus+species"', dest = 'ranks', type = str, default = 'superkingdom+phylum+class+order+family+genus+species')
+    db_subset_parser = subparser.add_parser('db_subset', description = 'subsetting the database using a user-provided file')
+    db_subset_parser.set_defaults(func = db_subset)
+    db_subset_parser.add_argument('-i', '--input', help = 'input file name', dest = 'input', type = str, required = True)
+    db_subset_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
+    db_subset_parser.add_argument('-s', '--subset', help = 'specifify "inclusion" or "exclusion" of sequences matching user-provided file', dest = 'subset', type = str, required = True)
+    db_subset_parser.add_argument('-d', '--database', help = 'user-provided text file of sequence or taxonomy info', dest = 'db', type = str, required = True)
 
     visualization_parser = subparser.add_parser('visualization', description = 'figure displaying various aspects of the reference database')
     visualization_parser.set_defaults(func = visualization)
