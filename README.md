@@ -264,14 +264,14 @@ Example code:
 crabs seq_cleanup --input input.tsv --output output.tsv --minlen 100 --maxlen 500 --maxns 0 --enviro yes --species yes --nans 0
 ```
 
-#### 7.2 *geo_cleanup*
+#### 7.2 *db_subset*
 
-The reference database can be further curated using the '*geo_cleanup*' module. This module is an exclusion filter that works with a text file and can be used to subset the database to only include target organisms or limit the species to a geographic area, which has been shown to increase taxonomic assignment accuracy.
+The reference database can be further curated using the inclusion/exclusion filter ('*db_subset*' function). This function can subset the reference database through a user-provided text file ('*--database*'). The user can specify if the sequences matching the list should be included or excluded using the '*--subset*' parameter. This inclusion/exclusion filter can be used to subset the data to, for example, remove erroneous sequences, include or remove specific taxonomic groups, or restrict included species to a geographical location.
 
 Example code:
 
 ```bash
-crabs geo_cleanup --input input.tsv --output output.tsv --species species_list.txt
+crabs db_subset --input input.tsv --output output.tsv --database userlist.txt --subset include
 ```
 
 ### 8. *visualization*
