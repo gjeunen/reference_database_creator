@@ -119,6 +119,12 @@ Please keep in mind to use the "AND" parameter in the search term to include syn
 crabs db_download --source ncbi --database nucleotide --query 'COI[All Fields] AND CO1[All Fields] AND COX1[All Fields]' --output coi_ncbi.fasta --keep_original yes --email johndoe@gmail.com --batchsize 5000
 ```
 
+If users are interested to download a specific list of target taxonomic groups, users can generate a text file with a single taxon name per line and an empty line as the last line of the file. Using the code below, users can loop over this file and download the specific subset of taxa.
+
+```bash
+while read line; do crabs db_download --source ncbi --database nucleotide --query "16S[All Fields] AND ${line}[All Fields]" --output "${line}_ncbi.fasta" --keep_original no --email johndoe@gmail.com --batchsize 5000; done < userlist.txt 
+```
+
 #### 1.2. *EMBL*
 
 Sequences from EMBL are downloaded through the FTP site (<ftp://ftp.ebi.ac.uk/pub/databases/embl/release/std/>). EMBL files will be downloaded in a '.dat' format and automatically transformed to the two-line fasta format. The database can be specified using the '*--database*' parameter. To download the whole EMBL database (not recommended, due to large storage requirements, pass option '*') Options for databases are:
