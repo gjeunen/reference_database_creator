@@ -2,7 +2,9 @@
 
 # Getting started using Crabs in Docker 
 
-Running your applications with Docker offers many advantages over other approaches, but it can be difficult to get used to. One of the main challenges is that Docker provides an additional layer of abstraction that is outside your own computer's file structure. While this added layer frees you from the frequent nightmares of software installation and dependencies, it can often trip you up. It is important to remember that to process any of the files on your computer with a Docker application it is necessary to copy those files to the Docker's own file system, and then provide a way to get the outputs back into your own computer's file system. Hopefully, the examples below will help make this easier.
+Running your applications with Docker offers many advantages over other approaches, but it can be difficult to get used to. One of the main challenges is that Docker provides an additional layer of abstraction that is outside your own computer's file structure. While this added layer frees you from the frequent nightmares of software installation and dependencies, it can often trip you up. It is important to remember that to process any of the files on your computer with a Docker application it is necessary to copy those files to the Docker's own file system, and then provide a way to get the outputs back into your own computer's file system. Hopefully, the examples below will help make this easier. 
+
+Note: the below examples will work for Mac or Linux. We will add examples for Windows systems soon.
 
 ## Help command
 
@@ -77,7 +79,7 @@ Here is an example command to just get the ITS1 region from our downloaded seque
 docker run --rm -it \
   -v $(pwd):/data \
   --workdir="/data" \
-  quay.io/hughcross/crabs:0.1.3 \
+  quay.io/hughcross/crabs:0.1.3.1 \
   crabs insilico_pcr \
   --input amanita.fasta \
   --output amanita_its1.fasta \
@@ -92,7 +94,7 @@ docker run --rm -it \
 docker run --rm -it \
   -v $(pwd):/data \
   --workdir="/data" \
-  quay.io/hughcross/crabs:0.1.3 \
+  quay.io/hughcross/crabs:0.1.3.1 \
   crabs pga \
   --input amanita.fasta \
   --output amanita_its1pga.fasta \
@@ -124,7 +126,7 @@ Then, from this directory, we download the taxonomy files:
 docker run --rm -it \
   -v $(pwd):/data \
   --workdir="/data" \
-  quay.io/hughcross/crabs:0.1.3 \
+  quay.io/hughcross/crabs:0.1.3.1 \
   crabs db_download \
   --source taxonomy
 ```
@@ -153,7 +155,7 @@ docker run --rm -it \
   -v ${TAX}:/src \
   --workdir="/data" \
   --cpus 4 \
-  quay.io/hughcross/crabs:0.1.3 \
+  quay.io/hughcross/crabs:0.1.3.1 \
   crabs assign_tax \
     --input amanita_its1pga.fasta \
     --output amanita_its1.tsv \
