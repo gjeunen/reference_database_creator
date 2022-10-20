@@ -6,25 +6,19 @@ CRABS (Creating Reference databases for Amplicon-Based Sequencing) is a versatil
 
 ## Installing CRABS
 
-CRABS is a command-line only toolkit running on typical Unix/Linux environments and is exclusively written in python3. However, CRABS makes use of the *subprocess* module in python to run several commands in bash syntax to circumvent python-specific idiosyncrasies and increase execution speed. There are two ways to install CRABS. The easiest way is through a conda package that we have created that is avaialable through bioconda. Or you can clone this repository and manually install all the dependencies. Below are details for both approaches.
+CRABS is a command-line only toolkit running on typical Unix/Linux environments and is exclusively written in python3. However, CRABS makes use of the *subprocess* module in python to run several commands in bash syntax to circumvent python-specific idiosyncrasies and increase execution speed. There are three ways to install CRABS, however, currently the conda package option is the most out of date so we do not recommend using this method until this has been updated to the current version. The other two options are using the Docker image we have created or doing a manual install. Below are details for all three approaches.
 
-### Using conda
+### Using Docker 
 
-To install the conda package, you must first install conda. See this <a href="https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html" target="_blank" rel="noopener noreferrer"><b>link</b></a> for details. If already have conda installed, it is good practice to update the conda tool with `conda update conda`.
+Docker is an open-source project that allows for deployment of software applications inside 'containers' that are isolated from your computer and run through a virtual host operating system called Docker Engine. The main advantage of running docker over virtual machines is that they use much less resources. This isolation means that you can run a Docker container on most operating systems, including Mac, Windows, and Linux. This [**link**](https://docker-curriculum.com/) has a nice introduction to the basics of using Docker. [**Here**](https://docs.docker.com/get-started/) is a link to get you started and oriented to the Docker multiverse.
 
-Once conda is installed, you can follow these steps to install CRABS and all dependencies. Make sure to enter these commands in order:
+There are only two steps to get the Crabs running on your computer. First, install Docker Desktop on your computer, which is free for most users. [**Here are the instructions for Mac**](https://docs.docker.com/desktop/install/mac-install/); [**Here are the instructions for Windows computers**](https://docs.docker.com/desktop/install/windows-install/), and [**here are the instructions for Linux**](https://docs.docker.com/desktop/install/linux-install/) (most major Linux platforms are supported). Once you have Docker Desktop installed and running (the Desktop application must be running for you to use any docker commands on the command line), you just have to 'pull' our Crabs image, and you are ready to go:
 
 ```
-conda create -n CRABS
-conda activate CRABS
-conda config --add channels bioconda
-conda config --add channels conda-forge
-conda install -c bioconda crabs
+docker pull quay.io/hughcross/crabs:0.1.3.1
 ```
 
-Once you have entered the install command, conda will process the request (this might take a minute or so), and then display all the packages and programs that will be installed, and ask to confirm this. Type `y` to start the installation. After this finishes, CRABS should be ready to go.
-
-We have tested this installation on Mac and Linux systems. We have not yet tested on Windows Subsystem for Linux (WSL). 
+While the installation of a docker application is easy, using those applications can be a little tricky at first. To help you get started we have provided some example commands using the docker version of crabs. These [**examples can be found in the docker_intro folder on this repo**](docker_intro/README.md). From these examples you should be able to run through setting up an entire reference database and be ready to go. We will continue to expand on these examples and test this in many different situations. Please ask questions and provide feedback in the Issues tab.  
 
 
 ### Manual installation
@@ -62,13 +56,10 @@ export PATH="/path/to/crabs/folder:$PATH"
 Substitute */path/to/crabs/folder* with the actual path to the repo folder on your system. You can also add this line to your *.bash_profile* or *.bashrc file* in your home folder, so you can access this anytime. 
 
 
-### Docker installation
-TBA
 
+#### Check your installation
 
-### Check your installation
-
-To check if either installation method was successful, type in the following command to pull up the help information.
+To check if the manual installation method was successful, type in the following command to pull up the help information.
 
 ```bash
 crabs -h
@@ -79,6 +70,27 @@ Help information is also available for each of the nine modules included in CRAB
 ```bash
 crabs MODULE -h
 ```
+
+
+### Using conda
+
+To install the conda package, you must first install conda. See this <a href="https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html" target="_blank" rel="noopener noreferrer"><b>link</b></a> for details. If already have conda installed, it is good practice to update the conda tool with `conda update conda`.
+
+Once conda is installed, you can follow these steps to install CRABS and all dependencies. Make sure to enter these commands in order:
+
+```
+conda create -n CRABS
+conda activate CRABS
+conda config --add channels bioconda
+conda config --add channels conda-forge
+conda install -c bioconda crabs
+```
+
+Once you have entered the install command, conda will process the request (this might take a minute or so), and then display all the packages and programs that will be installed, and ask to confirm this. Type `y` to start the installation. After this finishes, CRABS should be ready to go.
+
+We have tested this installation on Mac and Linux systems. We have not yet tested on Windows Subsystem for Linux (WSL). 
+
+
 
 ## Running CRABS
 
