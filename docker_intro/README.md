@@ -166,6 +166,8 @@ docker run --rm -it \
 
 You will notice that the additional `-v` command copies ('mounts' in docker lingo) the taxonomy files to the `/src` folder inside the docker container. In order for Crabs to find these files, we had to put `/src/` in front of the taxonomy files within this command. You DO NOT put the path to the files on your computer (e.g., ${TAX}/nodes.dmp), because the process is running inside the docker container. 
 
+Also notice we have added the parameter `--cpus 4` to this command. This will tell Docker how many processors to use for the container, which may be needed for computationally intensive processes.
+
 From these examples you should be able to run most of the Crabs commands to create your reference database. We will continue to add examples, explanations, and tips to this page over the coming weeks. Stay tuned, and stay in touch. 
 
 
