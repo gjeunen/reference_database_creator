@@ -137,6 +137,8 @@ If users are interested to download a specific list of target taxonomic groups, 
 while read line; do crabs db_download --source ncbi --database nucleotide --query "16S[All Fields] AND ${line}[All Fields]" --output "${line}_ncbi.fasta" --keep_original no --email johndoe@gmail.com --batchsize 5000; done < userlist.txt 
 ```
 
+Crafting good NCBI searches can be difficult. A good way to build a more complicated search query is to use the NCBI webpage search window. You can do an initial search and then modify it in the window. As you modify, a window in the lower right of the screen displays the text for the search term. You can simply copy this text and paste it in the query line of a the `crabs db_download` command (be sure to enclose it in quotes--if the text includes double quotes, use single quotes to enclose the entire query). The other benefit of this is that the NCBI search result will show how many items the search will download. [**Here is a link**](https://otagomohio.github.io/hacky2021/sessions/1005_ncbi/) to a short tutorial one of us has written that describes how to use this search function on the NCBI webpage. 
+
 #### 1.2. *EMBL*
 
 Sequences from EMBL are downloaded through the FTP site (<ftp://ftp.ebi.ac.uk/pub/databases/embl/release/std/>). EMBL files will be downloaded in a '.dat' format and automatically transformed to the two-line fasta format. The database can be specified using the '*--database*' parameter. To download the whole EMBL database (not recommended, due to large storage requirements, pass option '*') Options for databases are:
