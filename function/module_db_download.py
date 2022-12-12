@@ -131,11 +131,11 @@ def mitofish_download(website):
     wget_help = sp.check_output('wget -h', shell=True)
     helstr=wget_help.decode('utf-8')
     if 'show-progress' in helstr:
-        results = sp.run(['wget', website, '-q', '--show-progress'])
+        results = sp.run(['wget', website, '-O', 'complete_partial_mitogenomes.zip', '-q', '--show-progress'])
     else:
-        results = sp.run(['wget', website])
+        results = sp.run(['wget', website, '-O', 'complete_partial_mitogenomes.zip'])
     results = sp.run(['unzip', 'complete_partial_mitogenomes.zip'], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
-    fasta = 'complete_partial_mitogenomes.fa'
+    fasta = 'mito-all'
     os.remove('complete_partial_mitogenomes.zip')
 
     return fasta

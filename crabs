@@ -92,7 +92,7 @@ def db_download(args):
     elif SOURCE == 'mitofish':
         if all(v is not None for v in [OUTPUT]):
             print('\ndownloading sequences from the MitoFish database')
-            url = 'http://mitofish.aori.u-tokyo.ac.jp/files/complete_partial_mitogenomes.zip'
+            url = 'http://mitofish.aori.u-tokyo.ac.jp/species/detail/download/?filename=download%2F/complete_partial_mitogenomes.zip'
             dl_file = mitofish_download(url)
             print(f'formatting {dl_file} to CRABS format')
             mitoformat = mitofish_format(dl_file, OUTPUT, ORIG, DISCARD)
