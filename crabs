@@ -45,8 +45,8 @@ def db_download(args):
     ## download taxonomy data from NCBI
     if SOURCE == 'taxonomy':
         print('\ndownloading taxonomy information')
-        url_acc2taxid = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz'
-        url_taxdump = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz'
+        url_acc2taxid = 'https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz'
+        url_taxdump = 'https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz'
         wget_help = sp.check_output('wget -h', shell=True)
         helstr=wget_help.decode('utf-8')
         if 'show-progress' in helstr:
