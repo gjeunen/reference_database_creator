@@ -22,7 +22,7 @@ from Bio import AlignIO
 from Bio import Phylo
 from Bio.Seq import Seq
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceMatrix, DistanceTreeConstructor
-from function.module_db_download import wget_ncbi, esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format, embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases, import_BOLD_reformatting
+from function.module_db_download import wget_ncbi, esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format, embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases, import_BOLD_reformatting, retrieve_species, wget_ncbi_species
 from function.module_assign_tax import tax2dict, get_accession, acc_to_dict, get_lineage, final_lineage_comb, final_lineage_simple
 from function.module_db_cleanup import derep_strict, derep_single, derep_uniq, set_param, create_pd_cols
 from function.module_visualizations import split_db_by_taxgroup, num_spec_seq_taxgroup, horizontal_barchart, get_amp_length, amplength_figure, file_dmp_to_dict, species_to_taxid, lineage_retrieval
@@ -41,6 +41,7 @@ def db_download(args):
     EMAIL = args.email
     BATCHSIZE = args.batchsize
     DISCARD = args.discard
+    SPECIES = args.species
 
     ## download taxonomy data from NCBI
     if SOURCE == 'taxonomy':
@@ -69,7 +70,24 @@ def db_download(args):
     elif SOURCE == 'ncbi':
         if all(v is not None for v in [DATABASE, QUERY, OUTPUT, EMAIL]):
             print('\ndownloading sequences from NCBI')
-            ncbi_download = wget_ncbi(QUERY, DATABASE, EMAIL, BATCHSIZE, OUTPUT)
+            if SPECIES == None:
+                print(f'"--species" parameter not provided, downloading NCBI data based solely on "--query": {QUERY}')
+                ncbi_download = wget_ncbi(QUERY, DATABASE, EMAIL, BATCHSIZE, OUTPUT)
+            else:
+                specieslist = retrieve_species(SPECIES)
+                fullTempFileList = []
+                for speciesName in specieslist:
+                    speciesTempFileList = wget_ncbi_species(QUERY, DATABASE, EMAIL, BATCHSIZE, OUTPUT, speciesName)
+                    for item in speciesTempFileList:
+                        fullTempFileList.append(item)
+                with open('CRABS_ncbi_download.fasta', 'w') as outfile:
+                    for tempfile in fullTempFileList:
+                        with open(tempfile, 'r') as infile:
+                            for line in infile:
+                                outfile.write(line)
+                os.remove('esearch_output.txt')
+                for tempfile in fullTempFileList:
+                    os.remove(tempfile)
             print('formatting the downloaded sequencing file to CRABS format')
             format_seqs = ncbi_formatting(OUTPUT, ORIG, DISCARD)
             print(f'written {format_seqs} sequences to {OUTPUT}\n')
@@ -1298,6 +1316,7 @@ def main():
     db_download_parser.add_argument('-s', '--source', help = 'specify online database used to download sequences. Currently supported options are: (1) ncbi, (2) embl, (3) mitofish, (4) bold, (5) taxonomy', dest = 'source', type = str, required = True)
     db_download_parser.add_argument('-db', '--database', help = 'specific database used to download sequences. Example NCBI: nucleotide. Example EMBL: mam*. Example BOLD: Actinopterygii', dest = 'database', type = str)
     db_download_parser.add_argument('-q', '--query', help = 'NCBI query search to limit portion of database to be downloaded. Example: "16S[All Fields] AND ("1"[SLEN] : "50000"[SLEN])"', dest = 'query', type = str)
+    db_download_parser.add_argument('-p', '--species', help = 'species to be downloaded, either as a string separated by "+" or as a list in a .txt file', dest = 'species', type = str)
     db_download_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str)
     db_download_parser.add_argument('-k', '--keep_original', help = 'keep original downloaded file, default = "no"', dest = 'orig', type = str, default = 'no')
     db_download_parser.add_argument('-d', '--discard', help = 'output filename for sequences with incorrect formatting, default = not saved', dest = 'discard', type = str, default = 'no')

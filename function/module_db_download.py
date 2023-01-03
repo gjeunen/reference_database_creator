@@ -126,6 +126,54 @@ def ncbi_formatting(file, original, discard):
 
     return numseq
 
+
+def retrieve_species(species):
+    if os.path.isfile(species) == False:
+        specieslist = species.split('+')
+        print(f'identified "--species" as an input string containing {len(specieslist)} species names')
+    else:
+        specieslist = []
+        with open(species, 'r') as speciesfile:
+            for line in speciesfile:
+                line = line.rstrip('\n')
+                specieslist.append(line)
+                print(f'identified "--species" as an input file containing {len(specieslist)} species names')
+    
+    return specieslist
+
+
+def wget_ncbi_species(QUERY, DATABASE, EMAIL, BATCHSIZE, OUTPUT, speciesName):
+    speciesName = speciesName.lstrip(' ').rstrip(' ')
+    speciesSearchTerm = QUERY + ' AND (' + '"' + speciesName + '"[Organism]' + ')'
+    url_esearch = f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db={DATABASE}&usehistory=y&email={EMAIL}&term={speciesSearchTerm}'
+    result = sp.run(['wget', url_esearch, '-O', 'esearch_output.txt'], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
+    with open('esearch_output.txt', 'r') as file_in:
+        for line in file_in:
+            if line.startswith('<eSearchResult>'):
+                seqcount = line.split('Count>')[1].rstrip('</')
+                querykey = line.split('QueryKey>')[1].rstrip('</')
+                webenv = line.split('WebEnv>')[1].rstrip('</')
+    print(f'downloading {seqcount} sequences from NCBI using the searchterm: {speciesSearchTerm}')
+    count = 0
+    speciesTempFileList = []
+    for i in range(0, int(seqcount), BATCHSIZE):
+        count = count + 1
+        url2 = f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db={DATABASE}&email={EMAIL}&query_key={querykey}&WebEnv={webenv}&rettype=fasta&retstart={i}&retmax={BATCHSIZE}'
+        wget_help = sp.check_output('wget -h', shell=True)
+        helstr=wget_help.decode('utf-8')
+        if 'show-progress' in helstr:
+            results = sp.run(['wget', url2, '-O', f'temp_{speciesName}_{count}.fasta',  '-q', '--show-progress'])
+        else:
+            results = sp.run(['wget', url2, '-O', f'temp_{speciesName}_{count}.fasta'])
+        speciesTempFileList.append(f'temp_{speciesName}_{count}.fasta')
+    
+    return speciesTempFileList
+        
+
+
+
+
+
 ## functions MitoFish
 def mitofish_download(website):
     wget_help = sp.check_output('wget -h', shell=True)
