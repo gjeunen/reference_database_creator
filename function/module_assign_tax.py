@@ -138,29 +138,6 @@ def get_lineage(taxranks, taxlist, taxid_dict, names_dict):
     
     return true_lineage
 
-def final_lineage_comb(acc_tax_dict, lineage_dict, file_in, file_out):
-    final_dict = collections.defaultdict(list)
-    for record in SeqIO.parse(file_in, 'fasta'):
-        acc = str(record.id)
-        seq = str(record.seq)
-        if acc in acc_tax_dict:
-            v = acc_tax_dict[acc]
-            final_dict[acc].append(acc_tax_dict[acc])
-            final_dict[acc].append(lineage_dict[v])
-            final_dict[acc].append(seq)
-    with open(file_out, 'w') as fout:
-        for k, v in final_dict.items():
-            fout.write(k)
-            for i in v:
-                if type(i) == str:
-                    fout.write('\t' + i)
-                else:
-                    for element in i:
-                        joined_str = ','.join(element)
-                        fout.write('\t' + joined_str)
-            fout.write('\n')
-    
-    return final_dict
 
 ## added this module to replace final_lineage_comb
 def final_lineage_simple(acc_tax_dict, lineage_dict, file_in, file_out):

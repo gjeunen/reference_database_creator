@@ -50,51 +50,6 @@ def wget_ncbi(query, database, email, batchsize, output):
     for tempfile in tempfiles:
         os.remove(tempfile)
 
-def esearch_fasta(query, database, email):
-    Entrez.email = email
-    first_handle = Entrez.esearch(db=database, term=query, rettype='fasta')
-    first_record = Entrez.read(first_handle)
-    first_handle.close()
-    count = int(first_record['Count'])
-    # now, second round from first
-    second_handle = Entrez.esearch(db=database, term=query, retmax=count, rettype='fasta', usehistory = 'y')
-    second_record = Entrez.read(second_handle)
-    second_handle.close()
-    return second_record
-
-def efetch_seqs_from_webenv(web_record, database, email, batch_size, output):
-    Entrez.email = email
-    id_list = web_record['IdList']
-    count = int(web_record['Count'])
-    assert(count == len(id_list))
-    webenv = web_record['WebEnv']
-    query_key = web_record['QueryKey']
-
-    out_handle = open(output, 'w')
-    for start in tqdm(range(0, count, batch_size)):
-        attempt = 1
-        success = False
-        while attempt <= 3 and not success:
-            attempt += 1
-            try:
-                fetch_handle = Entrez.efetch(db=database, rettype='fasta',
-                                            retstart=start, retmax=batch_size,
-                                            webenv=webenv, query_key=query_key)
-                success = True
-            except HTTPError as err:
-                if 500 <= err.code <= 599:
-                    print(f"Received error from server {err}")
-                    print("Attempt {attempt} of 3")
-                    time.sleep(15)
-                else:
-                    raise
-        data = fetch_handle.read()
-        fetch_handle.close()
-        out_handle.write(data)
-    out_handle.close()
-    numseq = len(list(SeqIO.parse(output, 'fasta')))
-
-    return numseq
 
 def ncbi_formatting(file, original, discard):
     mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']

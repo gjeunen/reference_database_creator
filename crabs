@@ -22,8 +22,8 @@ from Bio import AlignIO
 from Bio import Phylo
 from Bio.Seq import Seq
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceMatrix, DistanceTreeConstructor
-from function.module_db_download import wget_ncbi, esearch_fasta, efetch_seqs_from_webenv, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format, embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases, import_BOLD_reformatting, retrieve_species, wget_ncbi_species
-from function.module_assign_tax import tax2dict, get_accession, acc_to_dict, get_lineage, final_lineage_comb, final_lineage_simple
+from function.module_db_download import wget_ncbi, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format, embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases, import_BOLD_reformatting, retrieve_species, wget_ncbi_species
+from function.module_assign_tax import tax2dict, get_accession, acc_to_dict, get_lineage, final_lineage_simple
 from function.module_db_cleanup import derep_strict, derep_single, derep_uniq, set_param, create_pd_cols
 from function.module_visualizations import split_db_by_taxgroup, num_spec_seq_taxgroup, horizontal_barchart, get_amp_length, amplength_figure, file_dmp_to_dict, species_to_taxid, lineage_retrieval
 from function import __version__
