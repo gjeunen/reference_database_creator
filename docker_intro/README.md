@@ -8,11 +8,11 @@ Note: the below examples will work for Mac or Linux. We will add examples for Wi
 
 ## Help command
 
-After installing any software, most of us will try it out with a help command. Here is an example using crabs on Docker. (All following commands assume that you have already pulled the docker image using `docker pull quay.io/hughcross/crabs:0.1.3.1`.)
+After installing any software, most of us will try it out with a help command. Here is an example using crabs on Docker. (All following commands assume that you have already pulled the docker image using `docker pull quay.io/swordfish/crabs:0.1.4`.)
 
 ```
 docker run --rm -it \
-  quay.io/hughcross/crabs:0.1.3.1 \
+  quay.io/swordfish/crabs:0.1.4 \
   crabs -h
 ```
 
@@ -46,7 +46,7 @@ Then run the docker command:
 docker run --rm -it \
   -v $(pwd):/data \
   --workdir="/data" \
-  quay.io/hughcross/crabs:0.1.3.1 \
+  quay.io/swordfish/crabs:0.1.4 \
   crabs db_download \
   --source ncbi \
   --database nucleotide \
@@ -79,7 +79,7 @@ Here is an example command to just get the ITS1 region from our downloaded seque
 docker run --rm -it \
   -v $(pwd):/data \
   --workdir="/data" \
-  quay.io/hughcross/crabs:0.1.3.1 \
+  quay.io/swordfish/crabs:0.1.4 \
   crabs insilico_pcr \
   --input amanita.fasta \
   --output amanita_its1.fasta \
@@ -94,7 +94,7 @@ docker run --rm -it \
 docker run --rm -it \
   -v $(pwd):/data \
   --workdir="/data" \
-  quay.io/hughcross/crabs:0.1.3.1 \
+  quay.io/swordfish/crabs:0.1.4 \
   crabs pga \
   --input amanita.fasta \
   --output amanita_its1pga.fasta \
@@ -126,7 +126,7 @@ Then, from this directory, we download the taxonomy files:
 docker run --rm -it \
   -v $(pwd):/data \
   --workdir="/data" \
-  quay.io/hughcross/crabs:0.1.3.1 \
+  quay.io/swordfish/crabs:0.1.4 \
   crabs db_download \
   --source taxonomy
 ```
@@ -155,7 +155,7 @@ docker run --rm -it \
   -v ${TAX}:/src \
   --workdir="/data" \
   --cpus 4 \
-  quay.io/hughcross/crabs:0.1.3.1 \
+  quay.io/swordfish/crabs:0.1.4 \
   crabs assign_tax \
     --input amanita_its1pga.fasta \
     --output amanita_its1.tsv \
@@ -171,4 +171,24 @@ Also notice we have added the parameter `--cpus 4` to this command. This will te
 From these examples you should be able to run most of the Crabs commands to create your reference database. We will continue to add examples, explanations, and tips to this page over the coming weeks. Stay tuned, and stay in touch. 
 
 
+## Visualizations using the Docker image 
+
+Due to complicated issues with visuals in Docker images, the `crab visualization` command will work differently when using a docker container compared to the regular command line. We are working on a solution that provides maximum flexibility for all users, but for now this command will not open the image in a separate window, but will save a .png file generically named *crabs_visual.png*. A typical visualization command would look like this: 
+
+```
+docker run --rm -it \
+  -v $(pwd):/data \
+  --workdir="/data" \
+  quay.io/swordfish/crabs:0.1.4 \
+  crabs visualization \
+  --method diversity \
+  --input amanita_its1.tsv \
+  --level genus
+```
+
+You could then change the output file using the `mv` command. For example:
+
+```
+mv crabs_visual.png amanita_diversity_visual.png
+```
 
