@@ -42,6 +42,7 @@ def db_download(args):
     BATCHSIZE = args.batchsize
     DISCARD = args.discard
     SPECIES = args.species
+    BOLDGAP = args.boldgap
 
     ## download taxonomy data from NCBI
     if SOURCE == 'taxonomy':
@@ -125,7 +126,7 @@ def db_download(args):
             bold_file = bold_download(DATABASE)
             print(f'downloaded {bold_file} sequences from BOLD')
             print(f'formatting {bold_file} sequences to CRABS format')
-            boldformat = bold_format(OUTPUT, ORIG, DISCARD)
+            boldformat = bold_format(OUTPUT, ORIG, DISCARD, BOLDGAP)
             print(f'written {boldformat} sequences to {OUTPUT}\n')
         else:
             print('\nnot all parameters have an input value\n')
@@ -1320,6 +1321,7 @@ def main():
     db_download_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str)
     db_download_parser.add_argument('-k', '--keep_original', help = 'keep original downloaded file, default = "no"', dest = 'orig', type = str, default = 'no')
     db_download_parser.add_argument('-d', '--discard', help = 'output filename for sequences with incorrect formatting, default = not saved', dest = 'discard', type = str, default = 'no')
+    db_download_parser.add_argument('-g', '--boldgap', help = 'incorporate or discard sequences with gaps from BOLD (DISCARD/INCORPORATE). Default = DISCARD', dest = 'boldgap', type = str, default = 'DISCARD')
     db_download_parser.add_argument('-e', '--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str)
     db_download_parser.add_argument('-b', '--batchsize', help = 'number of sequences downloaded from NCBI per iteration. Default = 5000', dest = 'batchsize', type = int, default = 5000)
 

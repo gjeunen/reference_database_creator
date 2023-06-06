@@ -171,12 +171,12 @@ crabs db_download --source embl --database 'mam*' --output embl_mam.fasta --keep
 
 #### 1.3. *BOLD*
 
-BOLD sequence data is downloaded through the BOLD website (<http://v3.boldsystems.org/index.php/resources/api?type=webservices#sequenceParameters>) by specifying one or multiple taxonomic groups in the '*--database*' parameter. When multiple taxonomic groups are of interest, names should be separated by '|'.
+BOLD sequence data is downloaded through the BOLD website (<http://v3.boldsystems.org/index.php/resources/api?type=webservices#sequenceParameters>) by specifying one or multiple taxonomic groups in the '*--database*' parameter. When multiple taxonomic groups are of interest, names should be separated by '|'. BOLD sequences containing gaps (identifier: 'SUPPRESSED') are by default discarded from the analysis. To incorporate the sequences into the downstream analysis, set the `--boldgap` parameter to *INCORPORATE*. No further tests on the impact of incorporating these sequences in downstream analyses has been conducted thus far. This parameter has only been made available from CRABS version 0.1.5. To check your version of CRABS, use the code: `crabs --version`.
 
 Example code:
 
 ```bash
-crabs db_download --source bold --database 'Actinopterygii|Aves' --output bold_actinopterygii_aves.fasta --keep_original yes
+crabs db_download --source bold --database 'Actinopterygii|Aves' --output bold_actinopterygii_aves.fasta --keep_original yes --boldgap DISCARD
 ```
 
 #### 1.4. *MitoFish*
