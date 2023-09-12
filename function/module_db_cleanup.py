@@ -108,6 +108,29 @@ def derep_uniq(file_in, file_out, taxranks):
 
 
 ## functions: sequence cleanup
+def set_param2(env, spec, Nans, ranks):
+    if env == 'no':
+        envList = ['KEEP ALL ENVIRONMENTAL SEQUENCES']
+    else:
+        envList = ['ENVIRONMENTAL','environmental','Environmental']
+    if spec == 'no':
+        spList = ['KEEP ALL SPECIES NO MATTER DESIGNATION']
+    else:
+        if 'species' in ranks.split('+'):
+            spList = ['_sp\.','_SP\.','_indet.', '_sp.', '_SP.']
+        else:
+            print('species information requested for filtering but not found, please include "species" in the taxonomic lineage')
+            print('aborting database filtering...')
+            exit()
+    if Nans == 'no':
+        nans = int(len(ranks.split('+')))
+    else:
+        nans = int(Nans)
+    
+    return envList, spList, nans
+
+
+
 def set_param(env, spec, Nans):
     if env == 'no':
         envList = ['KEEP ALL ENVIRONMENTAL SEQUENCES']
