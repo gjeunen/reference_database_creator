@@ -1239,7 +1239,7 @@ def tax_format(args):
                         parts = lineparts[2:-1]
                         # a list comprehension to get the third section
                         #parts = [i.split(',')[2] for i in taxa]
-                        sintax = '>'+otu+';tax=d:'+parts[0]+',p:'+parts[1]+',c:'+parts[2]+',o:'+parts[3]+',f:'+parts[4]+',g:'+parts[5]+',s:'+parts[6]+'\n'+seq+'\n'
+                        sintax = '>'+otu+';tax=d:'+parts[0]+',p:'+parts[1]+',c:'+parts[2]+',o:'+parts[3]+',f:'+parts[4]+',g:'+parts[5]+',s:'+"_".join(parts[6].split("_", 2)[:2]).lstrip("(").rstrip(")")+'\n'+seq+'\n'
                         #sintax = '>' + line.split('\t')[0] + ';tax=d:' + line.split('\t')[2].split(',')[2] + ',p:' + line.split('\t')[3].split(',')[2] + ',c:' + line.split('\t')[4].split(',')[2] + ',o:' + line.split('\t')[5].split(',')[2] + ',f:' + line.split('\t')[6].split(',')[2] + ',g:' + line.split('\t')[7].split(',')[2] + ',s:' + line.split('\t')[8].split(',')[2] + '\n' + line.split('\t')[9] + '\n'
                         f_out.write(sintax)
 
