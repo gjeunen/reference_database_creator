@@ -272,8 +272,11 @@ def embl_crabs_format(f_in, f_out, original, discard):
     return numseq
 
 ## functions BOLD
-def bold_download(entry):
-    url = 'http://v3.boldsystems.org/index.php/API_Public/sequence?taxon=' + entry 
+def bold_download(entry, MARKER):
+    if MARKER == None:
+        url = 'http://v3.boldsystems.org/index.php/API_Public/sequence?taxon=' + entry 
+    else:
+        url = 'http://v3.boldsystems.org/index.php/API_Public/sequence?taxon=' + entry + '&marker=' + MARKER
     filename = 'CRABS_bold_download.fasta'
     wget_help = sp.check_output('wget -h', shell=True)
     helstr=wget_help.decode('utf-8')

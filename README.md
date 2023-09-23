@@ -171,12 +171,12 @@ crabs db_download --source embl --database 'mam*' --output embl_mam.fasta --keep
 
 #### 1.3. *BOLD*
 
-BOLD sequence data is downloaded through the BOLD website (<http://v3.boldsystems.org/index.php/resources/api?type=webservices#sequenceParameters>) by specifying one or multiple taxonomic groups in the '*--database*' parameter. When multiple taxonomic groups are of interest, names should be separated by '|'. BOLD sequences containing gaps (identifier: 'SUPPRESSED') are by default discarded from the analysis. To incorporate the sequences into the downstream analysis, set the `--boldgap` parameter to *INCORPORATE*. No further tests on the impact of incorporating these sequences in downstream analyses has been conducted thus far. This parameter has only been made available from CRABS version 0.1.5. To check your version of CRABS, use the code: `crabs --version`.
+BOLD sequence data is downloaded through the BOLD website (<http://v3.boldsystems.org/index.php/resources/api?type=webservices#sequenceParameters>) by specifying one or multiple taxonomic groups in the '*--database*' parameter. When multiple taxonomic groups are of interest, names should be separated by '|'. BOLD sequences containing gaps (identifier: 'SUPPRESSED') are by default discarded from the analysis. To incorporate the sequences into the downstream analysis, set the `--boldgap` parameter to *INCORPORATE*. No further tests on the impact of incorporating these sequences in downstream analyses has been conducted thus far. This parameter has only been made available from CRABS version 0.1.5. To check your version of CRABS, use the code: `crabs --version`. From CRABS version 0.1.7, genetic marker selection has been added for BOLD through the `-m`, `--marker` parameter. When multiple genetic markers are of interest, names should be separated by '|'. The four main DNA barcoding markers on BOLD are **COI-5P**, **ITS**, **matK**, and **rbcL**. Input for the `--marker` parameter is case sensitive.
 
 Example code:
 
 ```bash
-crabs db_download --source bold --database 'Actinopterygii|Aves' --output bold_actinopterygii_aves.fasta --keep_original yes --boldgap DISCARD
+crabs db_download --source bold --database 'Actinopterygii|Aves' --output bold_actinopterygii_aves.fasta --keep_original yes --boldgap DISCARD --marker 'COI-5P'
 ```
 
 #### 1.4. *MitoFish*
