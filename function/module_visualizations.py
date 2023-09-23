@@ -62,7 +62,7 @@ def num_spec_seq_taxgroup(uniq_tax_group_list, species_dict, sequence_counter):
     
     return dict_list
 
-def horizontal_barchart(sorted_info):
+def horizontal_barchart(sorted_info, OUTPUT):
     tax_group = []
     tax_species = []
     tax_sequence = []
@@ -79,7 +79,10 @@ def horizontal_barchart(sorted_info):
     plt.yticks(ticks = y_indexs + width / 2, labels = tax_group)
     plt.legend()
     plt.tight_layout()
-    plt.show()
+    if OUTPUT == None:
+        plt.show()
+    else:
+        plt.savefig(OUTPUT)
 
 def get_amp_length(file_in, tax_level, subset, taxranks):
     taxrank = str(taxranks).split('+')

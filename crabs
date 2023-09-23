@@ -773,7 +773,7 @@ def visualization(args):
             sorted_info = sorted(list_info_dict, key = lambda i: (i['sequence']))
             dict_len = len(sorted_info)
             final_dict = sorted_info[dict_len - int(SUBSET) : dict_len]
-            figure = horizontal_barchart(final_dict)
+            figure = horizontal_barchart(final_dict, OUTPUT)
     
     ## length distribution
     elif METHOD == 'amplicon_length':
