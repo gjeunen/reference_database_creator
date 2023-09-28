@@ -384,12 +384,15 @@ def bold_format(f_out, original, discard, boldgap):
 
 
 ## function: import
-def check_accession(file_in, file_out, delimiter):
+def check_accession(file_in, file_out, delimiter, leftdelimiter):
     mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']
     newfile = []
     discarded = []
     for record in SeqIO.parse(file_in, 'fasta'):
-        acc = str(record.description.split(delimiter)[0])
+        if leftdelimiter != None:
+            acc = f'>{str(record.description.split(delimiter)[0].split(leftdelimiter)[1])}'
+        else:
+            acc = str(record.description.split(delimiter)[0])
         if not any(mistake in acc for mistake in mistakes):
             record.description = acc 
             record.id = record.description
