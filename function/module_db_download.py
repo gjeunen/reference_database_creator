@@ -137,7 +137,7 @@ def mitofish_download(website):
         results = sp.run(['wget', website, '-O', 'complete_partial_mitogenomes.zip', '-q', '--show-progress'])
     else:
         results = sp.run(['wget', website, '-O', 'complete_partial_mitogenomes.zip'])
-    results = sp.run(['unzip', 'complete_partial_mitogenomes.zip'], stdout = sp.DEVNULL, stderr = sp.DEVNULL)
+    results = sp.run(['unzip', 'complete_partial_mitogenomes.zip'], stdout = sp.DEVNULL, stderr = sp.DEVNULL, shell=True)
     fasta = 'mito-all'
     os.remove('complete_partial_mitogenomes.zip')
 
