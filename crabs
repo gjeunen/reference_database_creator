@@ -24,7 +24,7 @@ from Bio.Seq import Seq
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceMatrix, DistanceTreeConstructor
 from function.module_db_download import wget_ncbi, ncbi_formatting, mitofish_download, mitofish_format, embl_download, embl_fasta_format, embl_crabs_format, bold_download, bold_format, check_accession, append_primer_seqs, generate_header, merge_databases, import_BOLD_reformatting, retrieve_species, wget_ncbi_species
 from function.module_assign_tax import tax2dict, get_accession, acc_to_dict, get_lineage, final_lineage_simple
-from function.module_db_cleanup import derep_strict, derep_single, derep_uniq, set_param, create_pd_cols
+from function.module_db_cleanup import derep_strict, derep_single, derep_uniq, set_param, create_pd_cols, set_param2
 from function.module_visualizations import split_db_by_taxgroup, num_spec_seq_taxgroup, horizontal_barchart, get_amp_length, amplength_figure, file_dmp_to_dict, species_to_taxid, lineage_retrieval
 from function import __version__
 ################################################
@@ -42,6 +42,8 @@ def db_download(args):
     BATCHSIZE = args.batchsize
     DISCARD = args.discard
     SPECIES = args.species
+    BOLDGAP = args.boldgap
+    MARKER = args.marker
 
     ## download taxonomy data from NCBI
     if SOURCE == 'taxonomy':
@@ -122,10 +124,10 @@ def db_download(args):
     elif SOURCE == 'bold':
         if all(v is not None for v in [DATABASE, OUTPUT]):
             print('\ndownloading sequences from BOLD')
-            bold_file = bold_download(DATABASE)
+            bold_file = bold_download(DATABASE, MARKER)
             print(f'downloaded {bold_file} sequences from BOLD')
             print(f'formatting {bold_file} sequences to CRABS format')
-            boldformat = bold_format(OUTPUT, ORIG, DISCARD)
+            boldformat = bold_format(OUTPUT, ORIG, DISCARD, BOLDGAP)
             print(f'written {boldformat} sequences to {OUTPUT}\n')
         else:
             print('\nnot all parameters have an input value\n')
@@ -142,12 +144,13 @@ def db_import(args):
     FWD = args.fwd
     REV = args.rev
     DELIM = args.delim
+    LEFT = args.leftdelim
 
     ## process file with accession number in header
     if HEADER == 'accession':
         if all(v is not None for v in [INPUT, OUTPUT, DELIM]):
             print(f'\nchecking correct formatting of accession numbers in {INPUT}')
-            incorrect_accession = check_accession(INPUT, OUTPUT, DELIM)
+            incorrect_accession = check_accession(INPUT, OUTPUT, DELIM, LEFT)
             if len(incorrect_accession) != 0:
                 print('found incorrectly formatted accession numbers, please check file: "incorrect_accession_numbers.txt"')
                 with open('incorrect_accession_numbers.txt', 'w') as fout:
@@ -435,7 +438,7 @@ def pga(args):
     ## step 3: run the pairwise global alignment with vsearch
     print(f'running pairwise global alignment on {count} number of sequences. This may take a while!')
     cmnd_vsearch_pga = ['vsearch', '--usearch_global', 'CRABS_pga_subset.fasta', '--db', DB, '--id', ID, '--userout', 'CRABS_pga_info.txt', '--userfields', 'query+ql+qcov+qilo+qihi+target+tl+tcov+tilo+tihi+id']#, '--quiet']
-    result = sp.run(cmnd_vsearch_pga, stdout = sp.DEVNULL, stderr = sp.DEVNULL)
+    result = sp.run(cmnd_vsearch_pga)#, stdout = sp.DEVNULL, stderr = sp.DEVNULL)
 
     ## step 4: extract the sequence regions that conform to parameter settings
     count_align = 0
@@ -596,61 +599,87 @@ def db_filter(args):
     NANS = args.nans
     RANKS = args.ranks
 
-    ## set filtering parameters
-    print(f'\nfiltering parameters:\nremoving sequences shorter than {MINLEN} and longer than {MAXLEN}\nremoving sequences containing more than {MAXNS} "N"')
-    envList, spList, nans = set_param(ENV, SPEC, NANS)
-    ## read the input file and clean up given the parameters
-    cols = create_pd_cols(RANKS)
-    ## check if species info is in tax rank
-    if 'species' not in cols:
-        print('species information not found, please include "species" in the taxonomic lineage')
-        print('aborting database filtering...')
-    else:
-        df = pd.read_csv(INPUT, sep='\t', names=cols)
-        df_filt = df[(df['sequence'].str.len() > MINLEN) & (df['sequence'].str.len() < MAXLEN) & (~df['species'].str.contains('|'.join(spList),regex=True, na=False)) & (~df['species'].str.contains('|'.join(envList),regex=True, na=False)) & (df['sequence'].str.count('N') <= MAXNS)]
-        df_final = df_filt.dropna(thresh=nans)
-        # get number of rows with na
-        df_rows = df_final.index.values
-        df_initial_filt_rows = df_filt.index.values 
-        orig_rows = df.index.values 
-        nancount = len(df_initial_filt_rows)- len(df_rows)
-        discarded_rows = set(orig_rows) - set(df_rows)
-        disList = list(discarded_rows)
-        discard_db = df.loc[df.index.isin(disList)]
-        count = len(orig_rows)
-        count_clean = len(df_rows)
-        ## write cleaned database to file
-        cleaned = count - count_clean
-        print(f'found {count} number of sequences in {INPUT}')
-        print(f'removed {cleaned} sequences during filtering')
-        print(f'written {count_clean} sequences to {OUTPUT}\n')
-        # try to break down the number of each category removed
-        mincount = len(discard_db[discard_db['sequence'].str.len() < MINLEN])
-        maxcount = len(discard_db[discard_db['sequence'].str.len() > MAXLEN])
-        mxncount = len(discard_db[discard_db['sequence'].str.count('N') >= MAXNS])
-        speccount = len(discard_db[discard_db['species'].str.contains('|'.join(spList),regex=True, na=False)])
-        envcount = len(discard_db[discard_db['species'].str.contains('|'.join(envList),regex=True, na=False)])
+## starting print statement
+    print(f'\nCRABS v{__version__}\nhttps://github.com/gjeunen/reference_database_creator\n\n')
 
-        if mincount > 0:
-            print(f'\tfound {mincount} sequences below Minimum count')
-        if maxcount > 0:
-            print(f'\tfound {maxcount} sequences above Maximum count')
-        if mxncount > 0:
-            print(f'\tfound {mxncount} sequences with too many Ns')
-        if ENV == 'yes':
-            if envcount > 0:
-                print(f'\tfound {envcount} sequences listed as "Environmental"')
-        if SPEC == 'yes':
-            if speccount > 0:
-                print(f'\tfound {speccount} sequences listed as sp.')
-        if NANS != 'no':
-            if nancount > 0:
-                print(f'\tfound {nancount} sequences with missing taxonomic information')
+## determine which parameters to filter on
+    envList, spList, nans = set_param2(ENV, SPEC, NANS, RANKS)
 
-        # now output to files
-        df_final.to_csv(OUTPUT,sep='\t',index=False)
-        if DISCARD != 'no':
-            discard_db.to_csv(DISCARD,sep='\t',index=False)
+## read input file and parse data
+    keepList = []
+    discardList = []
+    minlenCount = 0
+    maxlenCount = 0
+    maxnCount = 0
+    envCount = 0
+    specCount = 0
+    nansCount = 0
+    try:
+        with tqdm(total = os.path.getsize(INPUT), desc = 'Filter INPUT: ', bar_format = '{desc}{percentage:.1f}%|{bar}|{elapsed}<{remaining}') as pbar:
+            with open(INPUT, 'r') as infile:
+                for line in infile:
+                    pbar.update(len(line))
+                    keepSeq = True
+                    if len(line.split('\t')[-1].rstrip('\n')) < MINLEN:
+                        keepSeq = False
+                        minlenCount += 1
+                    if len(line.split('\t')[-1].rstrip('\n')) > MAXLEN:
+                        keepSeq = False
+                        maxlenCount += 1
+                    if line.split('\t')[-1].rstrip('\n').count('N') > MAXNS:
+                        keepSeq = False
+                        maxnCount += 1
+                    if any(x in line.rpartition('\t')[0] for x in envList) == True:
+                        keepSeq = False
+                        envCount += 1
+                    if any(x in line.rpartition('\t')[0] for x in spList) == True:
+                        keepSeq = False
+                        specCount += 1
+                    if line.rpartition('\t')[0].count('\tnan\t') > nans:
+                        keepSeq = False
+                        nansCount += 1
+                    if keepSeq == True:
+                        keepList.append(line)
+                    else:
+                        discardList.append(line)
+    except TypeError:
+        print(f'FATAL ERROR: "-i", "--input" parameter not provided, aborting analysis...\n')
+        exit()
+    except FileNotFoundError:
+        print(f'FATAL ERROR: {INPUT} file not found, aborting analysis...\n')
+        exit()
+
+## write output files
+    try:
+        if os.path.exists(OUTPUT) == True:
+            print(f'WARNING: the filename "{OUTPUT}" already exists in directory, not overwriting data...')
+        else:
+            with open(OUTPUT, 'w') as outfile:
+                for item in keepList:
+                    outfile.write(item)
+    except TypeError:
+        print(f'WARNING: "-o", "--output" parameter not provided, not writing data to output file...\n')
+    
+    try:
+        if os.path.exists(DISCARD) == True:
+            print(f'WARNING: the filename "{DISCARD}" already exists in directory, not overwriting data...')
+        else:
+            with open(DISCARD, 'w') as discardfile:
+                for item in discardList:
+                    discardfile.write(item)
+    except TypeError:
+        pass
+
+## write log
+    print(f'\nSUMMARY STATISTICS:\nNumber of sequences analysed: {len(keepList) + len(discardList)}')
+    print(f'Sequences kept: {len(keepList)} ({float("{:.2f}".format(len(keepList) / (len(keepList) + len(discardList)) * 100))}%)')
+    print(f'Sequences removed: {len(discardList)} ({float("{:.2f}".format(len(discardList) / (len(keepList) + len(discardList)) * 100))}%)')
+    print(f'Too short sequences: {minlenCount}')
+    print(f'Too long sequences: {maxlenCount}')
+    print(f'Sequences with too many "N": {maxnCount}')
+    print(f'Environmental sequences: {envCount}')
+    print(f'Sequences without proper species ID: {specCount}')
+    print(f'Sequences with too many undefined taxonomic levels: {nansCount}\n')
 
 ## function: db_subset
 def db_subset(args):
@@ -746,7 +775,7 @@ def visualization(args):
             sorted_info = sorted(list_info_dict, key = lambda i: (i['sequence']))
             dict_len = len(sorted_info)
             final_dict = sorted_info[dict_len - int(SUBSET) : dict_len]
-            figure = horizontal_barchart(final_dict)
+            figure = horizontal_barchart(final_dict, OUTPUT)
     
     ## length distribution
     elif METHOD == 'amplicon_length':
@@ -916,8 +945,10 @@ def visualization(args):
                 with open(INPUT, 'r') as file_in:
                     for line in file_in:
                         rank = line.split('\t')[count + 2]
+                        print(rank)
                         if rank == taxrank:
                             species_file.append(line)
+                print(species_file)
                 for item in species_file:
                     if len(species_file) < 2:
                         abort = 'less'
@@ -1212,7 +1243,7 @@ def tax_format(args):
                         parts = lineparts[2:-1]
                         # a list comprehension to get the third section
                         #parts = [i.split(',')[2] for i in taxa]
-                        sintax = '>'+otu+';tax=d:'+parts[0]+',p:'+parts[1]+',c:'+parts[2]+',o:'+parts[3]+',f:'+parts[4]+',g:'+parts[5]+',s:'+parts[6]+'\n'+seq+'\n'
+                        sintax = '>'+otu+';tax=d:'+parts[0]+',p:'+parts[1]+',c:'+parts[2]+',o:'+parts[3]+',f:'+parts[4]+',g:'+parts[5]+',s:'+"_".join(parts[6].split("_", 2)[:2]).lstrip("(").rstrip(")")+'\n'+seq+'\n'
                         #sintax = '>' + line.split('\t')[0] + ';tax=d:' + line.split('\t')[2].split(',')[2] + ',p:' + line.split('\t')[3].split(',')[2] + ',c:' + line.split('\t')[4].split(',')[2] + ',o:' + line.split('\t')[5].split(',')[2] + ',f:' + line.split('\t')[6].split(',')[2] + ',g:' + line.split('\t')[7].split(',')[2] + ',s:' + line.split('\t')[8].split(',')[2] + '\n' + line.split('\t')[9] + '\n'
                         f_out.write(sintax)
 
@@ -1317,9 +1348,11 @@ def main():
     db_download_parser.add_argument('-db', '--database', help = 'specific database used to download sequences. Example NCBI: nucleotide. Example EMBL: mam*. Example BOLD: Actinopterygii', dest = 'database', type = str)
     db_download_parser.add_argument('-q', '--query', help = 'NCBI query search to limit portion of database to be downloaded. Example: "16S[All Fields] AND ("1"[SLEN] : "50000"[SLEN])"', dest = 'query', type = str)
     db_download_parser.add_argument('-p', '--species', help = 'species to be downloaded, either as a string separated by "+" or as a list in a .txt file', dest = 'species', type = str)
+    db_download_parser.add_argument('-m', '--marker', help = 'genetic marker to download for BOLD', dest = 'marker', type = str)
     db_download_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str)
     db_download_parser.add_argument('-k', '--keep_original', help = 'keep original downloaded file, default = "no"', dest = 'orig', type = str, default = 'no')
     db_download_parser.add_argument('-d', '--discard', help = 'output filename for sequences with incorrect formatting, default = not saved', dest = 'discard', type = str, default = 'no')
+    db_download_parser.add_argument('-g', '--boldgap', help = 'incorporate or discard sequences with gaps from BOLD (DISCARD/INCORPORATE). Default = DISCARD', dest = 'boldgap', type = str, default = 'DISCARD')
     db_download_parser.add_argument('-e', '--email', help = 'email address to connect to NCBI servers', dest = 'email', type = str)
     db_download_parser.add_argument('-b', '--batchsize', help = 'number of sequences downloaded from NCBI per iteration. Default = 5000', dest = 'batchsize', type = int, default = 5000)
 
@@ -1330,7 +1363,8 @@ def main():
     db_import_parser.add_argument('-s', '--seq_header', help = 'information provided in sequence header: "accession" or "species" or "BOLD"', dest = 'header', type = str, required = True)
     db_import_parser.add_argument('-f', '--fwd', help = 'forward primer sequence in 5-3 direction', dest = 'fwd', type = str)
     db_import_parser.add_argument('-r', '--rev', help = 'reverse primer sequence in 5-3 direction', dest = 'rev', type = str)
-    db_import_parser.add_argument('-d', '--delim', help = 'delimiter specifying species or accession', dest = 'delim', type = str)
+    db_import_parser.add_argument('-d', '--delim', help = 'right-hand side delimiter specifying species or accession', dest = 'delim', type = str)
+    db_import_parser.add_argument('-l', '--leftdelim', help = 'left-hand side delimiter specifying species or accession', dest = 'leftdelim', type = str)
 
     db_merge_parser = subparser.add_parser('db_merge', description = 'merge multiple databases')
     db_merge_parser.set_defaults(func = db_merge)
@@ -1387,7 +1421,7 @@ def main():
     seq_cleanup_parser.add_argument('-d', '--discard', help = 'file name of discarded sequences', dest = 'discard', type = str, default = 'no')
     seq_cleanup_parser.add_argument('-e', '--enviro', help = 'discard environmental sequences from the dataset. yes/no', dest = 'env', type = str, default = 'no')
     seq_cleanup_parser.add_argument('-s', '--species', help = 'discard sequences for which the species name is unspecified. yes/no', dest = 'spec', type = str, default = 'no')
-    seq_cleanup_parser.add_argument('-na', '--nans', help = 'discard sequences with at least N number of unspecified taxonomic levels', dest = 'nans', type = str, default = 'no')
+    seq_cleanup_parser.add_argument('-na', '--nans', help = 'discard sequences with more than N number of unspecified taxonomic levels', dest = 'nans', type = str, default = 'no')
     seq_cleanup_parser.add_argument('-r', '--ranks', help = 'taxonomic ranks included in the taxonomic lineage. Default = "superkingdom+phylum+class+order+family+genus+species"', dest = 'ranks', type = str, default = 'superkingdom+phylum+class+order+family+genus+species')
     
     db_subset_parser = subparser.add_parser('db_subset', description = 'subsetting the database using a user-provided file')

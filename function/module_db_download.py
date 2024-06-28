@@ -272,8 +272,11 @@ def embl_crabs_format(f_in, f_out, original, discard):
     return numseq
 
 ## functions BOLD
-def bold_download(entry):
-    url = 'http://v3.boldsystems.org/index.php/API_Public/sequence?taxon=' + entry 
+def bold_download(entry, MARKER):
+    if MARKER == None:
+        url = 'http://v3.boldsystems.org/index.php/API_Public/sequence?taxon=' + entry 
+    else:
+        url = 'http://v3.boldsystems.org/index.php/API_Public/sequence?taxon=' + entry + '&marker=' + MARKER
     filename = 'CRABS_bold_download.fasta'
     wget_help = sp.check_output('wget -h', shell=True)
     helstr=wget_help.decode('utf-8')
@@ -294,7 +297,7 @@ def bold_download(entry):
     
     return num_bold
 
-def bold_format(f_out, original, discard):
+def bold_format(f_out, original, discard, boldgap):
     mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']
     newfile = []
     discarded = []
@@ -303,7 +306,37 @@ def bold_format(f_out, original, discard):
         for record in SeqIO.parse('CRABS_bold_download.fasta', 'fasta'):
             pbar.update(len(record))
             if record.description.split('-')[-1] == 'SUPPRESSED':
-                discarded.append(record)
+                if boldgap.upper() != 'DISCARD':
+                    if len(record.description.split('|')) == 4:
+                        acc = str(record.description.split('|')[3].split('.')[0])
+                        if not any(mistake in acc for mistake in mistakes):
+                            record.description = acc
+                            record.id = record.description
+                            record.seq = record.seq.strip('-')
+                            if record.seq.count('-') == 0:
+                                newfile.append(record)
+                            else:
+                                if boldgap.upper() != 'DISCARD':
+                                    record.seq = record.seq.replace('-', '')
+                                    newfile.append(record)
+                        else:
+                            discarded.append(record)
+                    else:
+                        count = count +1
+                        spec = str(record.description.split('|')[1].replace(' ', '_'))
+                        acc_crab = 'CRABS_' + str(count) + ':' + spec 
+                        record.description = acc_crab
+                        record.id = record.description
+                        record.name = record.description
+                        record.seq = record.seq.strip('-')
+                        if record.seq.count('-') == 0:
+                            newfile.append(record)
+                        else:
+                            if boldgap.upper() != 'DISCARD':
+                                record.seq = record.seq.replace('-', '')
+                                newfile.append(record)
+                else:
+                    discarded.append(record)
             else:
                 if len(record.description.split('|')) == 4:
                     acc = str(record.description.split('|')[3].split('.')[0])
@@ -313,6 +346,10 @@ def bold_format(f_out, original, discard):
                         record.seq = record.seq.strip('-')
                         if record.seq.count('-') == 0:
                             newfile.append(record)
+                        else:
+                            if boldgap.upper() != 'DISCARD':
+                                record.seq = record.seq.replace('-', '')
+                                newfile.append(record)
                     else:
                         discarded.append(record)
                 else:
@@ -325,6 +362,10 @@ def bold_format(f_out, original, discard):
                     record.seq = record.seq.strip('-')
                     if record.seq.count('-') == 0:
                         newfile.append(record)
+                    else:
+                        if boldgap.upper() != 'DISCARD':
+                            record.seq = record.seq.replace('-', '')
+                            newfile.append(record)
     newfile_db = [FastaIO.as_fasta_2line(record) for record in newfile]
     with open(f_out, 'w') as fout:
         for item in newfile_db:
@@ -343,12 +384,15 @@ def bold_format(f_out, original, discard):
 
 
 ## function: import
-def check_accession(file_in, file_out, delimiter):
+def check_accession(file_in, file_out, delimiter, leftdelimiter):
     mistakes = ['@', '#', '$', '%', '&', '(', ')', '!', '<', '?', '|', ',', '.', '+', '=', '`', '~']
     newfile = []
     discarded = []
     for record in SeqIO.parse(file_in, 'fasta'):
-        acc = str(record.description.split(delimiter)[0])
+        if leftdelimiter != None:
+            acc = f'>{str(record.description.split(delimiter)[0].split(leftdelimiter)[1])}'
+        else:
+            acc = str(record.description.split(delimiter)[0])
         if not any(mistake in acc for mistake in mistakes):
             record.description = acc 
             record.id = record.description
