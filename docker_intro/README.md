@@ -8,11 +8,11 @@ Note: the below examples will work for Mac or Linux. We will add examples for Wi
 
 ## Help command
 
-After installing any software, most of us will try it out with a help command. Here is an example using crabs on Docker. (All following commands assume that you have already pulled the docker image using `docker pull quay.io/swordfish/crabs:0.1.4`.)
+After installing any software, most of us will try it out with a help command. Here is an example using crabs on Docker. (All following commands assume that you have already pulled the docker image using `docker pull quay.io/swordfish/crabs:0.1.7`.)
 
 ```
 docker run --rm -it \
-  quay.io/swordfish/crabs:0.1.4 \
+  quay.io/swordfish/crabs:0.1.7 \
   crabs -h
 ```
 
@@ -46,7 +46,7 @@ Then run the docker command:
 docker run --rm -it \
   -v $(pwd):/data \
   --workdir="/data" \
-  quay.io/swordfish/crabs:0.1.4 \
+  quay.io/swordfish/crabs:0.1.7 \
   crabs db_download \
   --source ncbi \
   --database nucleotide \
@@ -79,7 +79,7 @@ Here is an example command to just get the ITS1 region from our downloaded seque
 docker run --rm -it \
   -v $(pwd):/data \
   --workdir="/data" \
-  quay.io/swordfish/crabs:0.1.4 \
+  quay.io/swordfish/crabs:0.1.7 \
   crabs insilico_pcr \
   --input amanita.fasta \
   --output amanita_its1.fasta \
@@ -94,7 +94,7 @@ docker run --rm -it \
 docker run --rm -it \
   -v $(pwd):/data \
   --workdir="/data" \
-  quay.io/swordfish/crabs:0.1.4 \
+  quay.io/swordfish/crabs:0.1.7 \
   crabs pga \
   --input amanita.fasta \
   --output amanita_its1pga.fasta \
@@ -126,7 +126,7 @@ Then, from this directory, we download the taxonomy files:
 docker run --rm -it \
   -v $(pwd):/data \
   --workdir="/data" \
-  quay.io/swordfish/crabs:0.1.4 \
+  quay.io/swordfish/crabs:0.1.7 \
   crabs db_download \
   --source taxonomy
 ```
@@ -155,7 +155,7 @@ docker run --rm -it \
   -v ${TAX}:/src \
   --workdir="/data" \
   --cpus 4 \
-  quay.io/swordfish/crabs:0.1.4 \
+  quay.io/swordfish/crabs:0.1.7 \
   crabs assign_tax \
     --input amanita_its1pga.fasta \
     --output amanita_its1.tsv \
@@ -179,7 +179,7 @@ Due to complicated issues with visuals in Docker images, the `crab visualization
 docker run --rm -it \
   -v $(pwd):/data \
   --workdir="/data" \
-  quay.io/swordfish/crabs:0.1.4 \
+  quay.io/swordfish/crabs:0.1.7 \
   crabs visualization \
   --method diversity \
   --input amanita_its1.tsv \
