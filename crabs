@@ -286,7 +286,7 @@ def insilico_pcr(args):
                     if line.startswith('>'):
                         count_untrimmed_init = count_untrimmed_init + 1
         print('reverse complementing {} untrimmed sequences'.format(count_untrimmed_init))
-        cmnd_vsearch_revcomp = ['vsearch', '--fastx_revcomp', UNTRIMMED_INIT, '--fastaout', REVCOMP_UNTRIMMED_INIT, '--quiet']
+        cmnd_vsearch_revcomp = ['vsearch', '--fastx_revcomp', UNTRIMMED_INIT, '--fastaout', REVCOMP_UNTRIMMED_INIT, '--quiet', '--threads', THREADS]
         sp.call(cmnd_vsearch_revcomp)
 
         ## run cutadapt on reverse complemented untrimmed sequences
@@ -335,6 +335,7 @@ def pga(args):
     ID = args.id
     COV = args.cov
     FILTER = args.filter
+    THREADS = args.threads
 
     ## step 1: extract sequences from originally downloaded file that were not successful during in silico PCR analysis
     insilico_dict = {}
@@ -437,7 +438,7 @@ def pga(args):
 
     ## step 3: run the pairwise global alignment with vsearch
     print(f'running pairwise global alignment on {count} number of sequences. This may take a while!')
-    cmnd_vsearch_pga = ['vsearch', '--usearch_global', 'CRABS_pga_subset.fasta', '--db', DB, '--id', ID, '--userout', 'CRABS_pga_info.txt', '--userfields', 'query+ql+qcov+qilo+qihi+target+tl+tcov+tilo+tihi+id']#, '--quiet']
+    cmnd_vsearch_pga = ['vsearch', '--usearch_global', 'CRABS_pga_subset.fasta', '--db', DB, '--id', ID, '--userout', 'CRABS_pga_info.txt', '--userfields', 'query+ql+qcov+qilo+qihi+target+tl+tcov+tilo+tihi+id', '--threads', THREADS]#, '--quiet']
     result = sp.run(cmnd_vsearch_pga)#, stdout = sp.DEVNULL, stderr = sp.DEVNULL)
 
     ## step 4: extract the sequence regions that conform to parameter settings
@@ -1392,6 +1393,7 @@ def main():
     pga_parser.add_argument('-id', '--percid', help = 'minimum percentage identity of the alignment score to be allowed. Default = 0.95', dest =  'id', type = str, default = '0.95')
     pga_parser.add_argument('-c', '--coverage', help = 'minimum coverage of the alignment to be allowed. Default = 0.95', dest =  'cov', type = str, default = '0.95')
     pga_parser.add_argument('-m', '--filter_method', help = 'Method of filtering the PGA results, "strict" or "relaxed. Default = "strict"', dest =  'filter', type = str, default = 'strict')
+    pga_parser.add_argument('-t', '--threads', help = 'number of threads used to compute perform PGA. Default = autodetection', dest = 'threads', type = str, default = '0')
 
     ref_database_parser = subparser.add_parser('assign_tax', description = 'creating the reference database with taxonomic information')
     ref_database_parser.set_defaults(func = assign_tax)
