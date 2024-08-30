@@ -1315,6 +1315,20 @@ def tax_format(args):
                         dads = '>' + parts[0] + ' ' + parts[7] + ' ' + parts[8] + '\n' + parts[9] + '\n'
                         f_out.write(dads)
     
+    ## format database to DADA2 NEW
+    elif FORMAT == 'dada2':
+        print(f'\nformatting {INPUT} to dada2\n')
+        with open(OUTPUT, 'w') as f_out:
+            with open(INPUT, 'r') as f_in:
+                for line in f_in:
+                    if line.startswith('seqID'):
+                        continue
+                    else:
+                        line = line.rstrip('\n')
+                        parts = line.split('\t')
+                        dad = '>' + parts[2] + ';' + parts[3] + ';' + parts[4] + ';' + parts[5] + ';' + parts[6] + ';' + parts[7] + ';' + parts[8] + '\n' + parts[9] + '\n'
+                        f_out.write(dad)
+    
     ## format database to IDT
     elif FORMAT == 'idt':
         print(f'\nformatting {INPUT} to IDT format\n')
@@ -1453,7 +1467,7 @@ def main():
     format_database_parser.set_defaults(func = tax_format)
     format_database_parser.add_argument('-i', '--input', help = 'input file name', dest = 'input', type = str, required = True)
     format_database_parser.add_argument('-o', '--output', help = 'output file name', dest = 'output', type = str, required = True)
-    format_database_parser.add_argument('-f', '--format', help = 'process database to format: "sintax", "rdp", "qiif", "qiiz", "dad", "dads", "idt"', dest = 'format', type = str, required = True)
+    format_database_parser.add_argument('-f', '--format', help = 'process database to format: "sintax", "rdp", "qiif", "qiiz", "dad", "dads", "dada2", "idt"', dest = 'format', type = str, required = True)
 
     args = parser.parse_args()
     args.func(args)

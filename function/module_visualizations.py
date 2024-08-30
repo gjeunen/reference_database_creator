@@ -126,7 +126,7 @@ def amplength_figure(amp_length_dict):
             frequency.append(i[1])
         label = str(item[0]) + '; ' + str(sum(frequency)) + ' seqs'
         if item[0] == 'overall':
-            plt.plot(amplicon_size, frequency, color = '#444444', linestyle = '--', linewidth = 0)
+            #plt.plot(amplicon_size, frequency, color = '#444444', linestyle = '--', linewidth = 0)
             plt.fill_between(amplicon_size, frequency, color = '#444444', interpolate = True, alpha = 0.25, label = label)
         else:
             plt.plot(amplicon_size, frequency, label = label)
