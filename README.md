@@ -2,7 +2,7 @@
 
 ## Introduction
 
-CRABS (Creating Reference databases for Amplicon-Based Sequencing) is a versatile software program that generates curated reference databases for metagenomic analysis. CRABS workflow consists of six parts: (i) downloading data from online repositories and importing into CRABS; (ii) retrieving amplicon regions through *in silico* PCR analysis; (iii) generating the taxonomic lineage for sequences; (iv) curating the database via multiple filtering parameters; (v) post-processing functions to provide a summary overview of the final reference database; and (vi) saving the database in various formats covering most format requirements of taxonomic assignment tools. These six parts are split into nine modules or functions and are described below. Additionally, example code is provided for each of the nine modules.
+CRABS (<ins>C</ins>reating Reference databases for Amplicon-Based Sequencing) is a versatile software program that generates curated reference databases for metagenomic analysis. CRABS workflow consists of six parts: (i) downloading data from online repositories and importing into CRABS; (ii) retrieving amplicon regions through *in silico* PCR analysis; (iii) generating the taxonomic lineage for sequences; (iv) curating the database via multiple filtering parameters; (v) post-processing functions to provide a summary overview of the final reference database; and (vi) saving the database in various formats covering most format requirements of taxonomic assignment tools. These six parts are split into nine modules or functions and are described below. Additionally, example code is provided for each of the nine modules.
 
 ## Installing CRABS
 
