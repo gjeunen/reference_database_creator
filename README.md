@@ -4,7 +4,30 @@
 
 CRABS (<ins>C</ins>reating <ins>R</ins>eference databases for <ins>A</ins>mplicon-<ins>B</ins>ased <ins>S</ins>equencing) is a versatile software program that generates curated reference databases for metagenomic analysis. CRABS workflow consists of seven modules: (i) download data from online repositories; (ii) import downloaded data into CRABS format; (iii) extract amplicon regions through *in silico* PCR analysis; (iv) retrieve amplicons without primer-binding regions through alignments with *in silico* extracted barcodes; (v) curate and subset the local database via multiple filtering parameters; (vi) export the local database in various formats according to the taxonomic classifier requirements; and (vi) post-processing functions, i.e., visualisations, to explore and provide a summary overview of the local reference database. These seven modules are split into eighteen functions and are described below. Additionally, example code is provided for each of the eighteen functions. Finally, a tutorial to build a local shark reference database for the [MiFish-E primer set](https://royalsocietypublishing.org/doi/10.1098/rsos.150088) is provided at the end of this README document to provide an example script for reference.
 
-## 2. Citation
+## 2. Update: CRABS *v 1.0.0*
+
+We are happy to announce that CRABS has seen a major update and code redesign based on user feedback, which we hope will improve the user experience of building your very own local reference database!
+
+Please find below a list of features and improvements added to CRABS *v 1.0.0*:
+
+1. increased speed through code optimisation;
+2. improved error handling to facilite easy debugging;
+3. altered workflow to improve flexibility (the CRABS format is now used throughout each step and steps can be run in any order);
+4. enhanced flexibility by splitting previous functions into multiple steps in case an error occurred mid-way code execution;
+5. improved file handling to enable multiple CRABS commands to run concurrently;
+6. reduced intermediate file generation to limit storage requirements for local generating reference databases;
+7. uniform design within CRABS and between other software programs developed by our team (e.g., [*tombRaider*](https://github.com/gjeunen/tombRaider));
+8. reduced number of dependencies by native Python 3 coding and facilitate easy installation;
+9. added functionality, including:
+   1. split online download and data import;
+   2. ability to parse synonym and unaccepted names, thereby incorporating a larger number of sequences and diversity in the final reference database;
+   3. extract amplicons through *in silico* PCR analysis in both directions at once;
+   4. export the local reference database to BLAST format, thereby enabling blastn and megablast to be run locally;
+   5. export the local reference database to IDTAXA format.
+
+CRABS *v 1.0.0* can now be downloaded manually by cloning this GitHub repository (see [4.1 Manual installation](#41-manual-installation) for detailed info). We will update the Docker container and conda package as soon as possible to facilitate easy installation of the newest version.
+
+## 3. Citation
 
 When using CRABS in your research projects, please cite the following paper:
 
@@ -12,11 +35,11 @@ When using CRABS in your research projects, please cite the following paper:
 [Jeunen, G.-J., Dowle, E., Edgecombe, J., von Ammon, U., Gemmell, N. J., & Cross, H. (2022). crabs—A software program to generate curated reference databases for metabarcoding sequencing data. Molecular Ecology Resources, 00, 1– 14.](https://doi.org/10.1111/1755-0998.13741)
 ```
 
-## 3. Installing CRABS
+## 4. Installing CRABS
 
-CRABS is a command-line only toolkit running on typical Unix/Linux environments and is exclusively written in python3. However, CRABS makes use of the *subprocess* module in python to run several commands in bash syntax to circumvent python-specific idiosyncrasies and increase execution speed. We provide three ways to install CRABS. For the most up-to-date version of CRABS, we recommend the manual installation by cloning this GitHub repository and installing 10 dependencies separately (installation instructions for all dependencies provided in [3.1 Manual installation](#31-manual-installation)). CRABS can also be installed via Docker and conda. Both methods allow for easy installation by automatically co-installing all dependencies. We aim to keep the Docker container and conda package up-to-date, though a certain delay to update to the newest version can occur, especially for the conda package. Below are details for all three approaches.
+CRABS is a command-line only toolkit running on typical Unix/Linux environments and is exclusively written in python3. However, CRABS makes use of the *subprocess* module in python to run several commands in bash syntax to circumvent python-specific idiosyncrasies and increase execution speed. We provide three ways to install CRABS. For the most up-to-date version of CRABS, we recommend the manual installation by cloning this GitHub repository and installing 10 dependencies separately (installation instructions for all dependencies provided in [4.1 Manual installation](#41-manual-installation)). CRABS can also be installed via Docker and conda. Both methods allow for easy installation by automatically co-installing all dependencies. We aim to keep the Docker container and conda package up-to-date, though a certain delay to update to the newest version can occur, especially for the conda package. Below are details for all three approaches.
 
-### 3.1 Manual installation
+### 4.1 Manual installation
 
 For the manual installation, first clone the CRABS repository. This step requires GitHub to be available to the command line ([installation instructions for GitHub](https://cli.github.com/)).
 
@@ -56,7 +79,7 @@ export PATH="/path/to/crabs/folder:$PATH"
 
 Substitute */path/to/crabs/folder* with the actual path to the GitHub repository folder on the OS, i.e, the folder created during the `git clone` command above. Adding the `export` code to the *.bash_profile* or *.bashrc file* will make CRABS globally accessible at any time.
 
-### 3.2 Docker container
+### 4.2 Docker container
 
 Docker is an open-source project that allows for deployment of software applications inside 'containers' that are isolated from your computer and run through a virtual host operating system called Docker Engine. The main advantage of running docker over virtual machines is that they use much less resources. This isolation means that you can run a Docker container on most operating systems, including Mac, Windows, and Linux. You may need to set up a free account to use Docker Desktop. This [**link**](https://docker-curriculum.com/) has a nice introduction to the basics of using Docker. [**Here**](https://docs.docker.com/get-started/) is a link to get you started and oriented to the Docker multiverse.
 
@@ -68,7 +91,7 @@ docker pull quay.io/swordfish/crabs:0.1.7
 
 While the installation of a docker application is easy, using those applications can be a little tricky at first. To help you get started we have provided some example commands using the docker version of crabs. These [**examples can be found in the docker_intro folder on this repo**](docker_intro/README.md). From these examples you should be able to run through setting up an entire reference database and be ready to go. We will continue to expand on these examples and test this in many different situations. Please ask questions and provide feedback in the Issues tab.
 
-### 3.3 Conda package
+### 4.3 Conda package
 
 To install the conda package, you must first install conda. See this [link](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) for details. If conda is already installed, it is good practice to update the conda tool with `conda update conda` before installing CRABS.
 
@@ -86,7 +109,7 @@ Once you have entered the install command, conda will process the request (this 
 
 We have tested this installation on Mac and Linux systems. We have not yet tested on Windows Subsystem for Linux (WSL).
 
-### 3.4 Check the installation
+### 4.4 Check the installation
 
 Use the code below to check if CRABS is successfully installed and pull up the help information.
 
@@ -98,7 +121,7 @@ The help information splits the eighteen functions into different groups, with e
 
 ![crabs help](figures_readme/crabs_help.png)
 
-## 4. CRABS workflow
+## 5. CRABS workflow
 
 CRABS contains seven modules, which incorporate eighteen functions:
 
@@ -141,15 +164,15 @@ CRABS contains seven modules, which incorporate eighteen functions:
 17. `--amplification-efficiency-figure`: creates a bar graph displaying mismatches in the primer-binding regions;
 18. `--completeness-table`: creates a spreadsheet containing barcode availability for taxonomic groups.
 
-### 4.1 Module 1: download data from online repositories
+### 5.1 Module 1: download data from online repositories
 
 Initial sequencing data can be downloaded by CRABS from four online repositories, including (i) [BOLD](https://www.boldsystems.org/), (ii) [EMBL](https://www.ebi.ac.uk/ena/browser/home), (iii) [MitoFish](https://mitofish.aori.u-tokyo.ac.jp/), and [NCBI](https://www.ncbi.nlm.nih.gov/). From version *v 1.0.0* onwards, the downloading of data from each repository is split up into its own function. Additionally, CRABS does not automatically format the data after downloading to increase flexibility and enable debugging when the download of data fails.
 
 Besides downloading sequence data, CRABS is also capable of downloading the NCBI taxonomy information, which CRABS uses for creating the taxonomic lineage for each sequence.
 
-#### 4.1.1 `--download-taxonomy`
+#### 5.1.1 `--download-taxonomy`
 
-To assign a taxonomic lineage to each downloaded sequence in the reference database (see [4.2 Module 2](#42-module-2-import-downloaded-data-into-crabs-format)), the taxonomic information needs to be downloaded. CRABS utilizes NCBI's taxonomy and downloads three specific files to your computer: (i) a file linking accession numbers to taxonomic IDs (*nucl_gb.accession2taxid*), (ii) a file containing information about the phylogenetic name associated with each taxonomic ID (*names.dmp*), and (iii) a file containing information how taxonomic IDs are linked (*nodes.dmp*). The output directory for the downloaded files can be specified using the `--output` parameter. To exclude either file *nucl_gb.accession2taxid* or files *names.dmp* and *nodes.dmp*, the `--exclude acc2tax` or `--exclude taxdump` parameter can be provided, respectively. The first code below does not download any file, as both `acc2tax` and `taxdump` are provided for the `--exclude` parameter. The second line of code downloads all three files to the subdirectory `--output crabs_testing`. The screenshot underneath displays what is printed to the console when executing this line of code.
+To assign a taxonomic lineage to each downloaded sequence in the reference database (see [5.2 Module 2](#52-module-2-import-downloaded-data-into-crabs-format)), the taxonomic information needs to be downloaded. CRABS utilizes NCBI's taxonomy and downloads three specific files to your computer: (i) a file linking accession numbers to taxonomic IDs (*nucl_gb.accession2taxid*), (ii) a file containing information about the phylogenetic name associated with each taxonomic ID (*names.dmp*), and (iii) a file containing information how taxonomic IDs are linked (*nodes.dmp*). The output directory for the downloaded files can be specified using the `--output` parameter. To exclude either file *nucl_gb.accession2taxid* or files *names.dmp* and *nodes.dmp*, the `--exclude acc2tax` or `--exclude taxdump` parameter can be provided, respectively. The first code below does not download any file, as both `acc2tax` and `taxdump` are provided for the `--exclude` parameter. The second line of code downloads all three files to the subdirectory `--output crabs_testing`. The screenshot underneath displays what is printed to the console when executing this line of code.
 
 ```{code-block} bash
 crabs --download-taxonomy --exclude 'acc2taxid,taxdump'
@@ -158,7 +181,7 @@ crabs --download-taxonomy --output crabs_testing
 
 ![crabs download taxonomy](figures_readme/crabs_download_taxonomy.png)
 
-#### 4.1.2 `--download-bold`
+#### 5.1.2 `--download-bold`
 
 BOLD sequences are downloaded through the [BOLD website](http://v3.boldsystems.org/index.php/resources/api?type=webservices#sequenceParameters). The output file, which is structured as a two-line fasta document, can be specified using the `--output` parameter. Users can specify which taxonomic group to download using the `--taxon` parameter. We recommend writing a simple for loop (example provided below) when users want to download multiple taxonomic groups, thereby limiting the amount of data to be downloaded from BOLD per instance. However, if only a limited number of taxonomic groups are of interest, taxonomic group names can also be separated by `|` (example provided below). We also recommend users to check if the taxonomic group name to be downloaded is listed within the [BOLD archive](http://v3.boldsystems.org/index.php/resources/api?type=webservices#sequenceParameters) or if alternative names need to be used. For example, specifying `--taxon Chondrichthyes` will not download all cartilaginous fish sequences from BOLD, since this class name is not listed on BOLD. Users should rather use `--taxon Elasmobranchii` in this instance. Users can also specify to limit the download to a specific genetic marker by providing the `--marker` parameter. When multiple genetic markers are of interest, marker names should be separated by `|`. The four main DNA barcoding markers on BOLD are **COI-5P**, **ITS**, **matK**, and **rbcL**. Input for the `--marker` parameter is case sensitive.
 
@@ -176,7 +199,7 @@ for taxon in Elasmobranchii Mammalia; do crabs --download-bold --taxon ${taxon} 
 crabs --download-bold --taxon 'Elasmobranchii|Mammalia' --output crabs_testing/bold_elasmobranchii_mammalia.fasta
 ```
 
-#### 4.1.3 `--download-embl`
+#### 5.1.3 `--download-embl`
 
 Sequences from EMBL are downloaded through the [ENA FTP site](ftp://ftp.ebi.ac.uk/pub/databases/embl/release/std/). EMBL files will first be downloaded in a '.fasta.gz' format and be automatically unzipped once the download is complete. This database does not provide as much flexibility with regards to selective downloading compared to BOLD or NCBI. Rather, EMBL data is structured into 15 tax divisions, which can be downloaded separately. The tax division to download can be specified using the `--taxon` parameter. Since each tax division is split into several files, a `*` is provided after the name to download all files. Users can also download a specific file by writing the file name in full. A list of all 15 tax division options is provided below. The output directory and file name can be specified using the `--output` parameter.
 
@@ -202,7 +225,7 @@ Sequences from EMBL are downloaded through the [ENA FTP site](ftp://ftp.ebi.ac.u
 crabs --download-embl --taxon 'mam*' --output crabs_testing/embl_mam.fasta
 ```
 
-#### 4.1.4 `--download-mitofish`
+#### 5.1.4 `--download-mitofish`
 
 CRABS can also download the [MitoFish database](http://mitofish.aori.u-tokyo.ac.jp). This database is a single two-line fasta file. The output directory and file name can be specified using the `--output` parameter.
 
@@ -212,7 +235,7 @@ crabs --download-mitofish --output crabs_testing/mitofish.fasta
 
 ![crabs download mitofish](figures_readme/crabs_download_mitofish.png)
 
-#### 4.1.5 `--download-ncbi`
+#### 5.1.5 `--download-ncbi`
 
 Sequences from the [NCBI database](https://www.ncbi.nlm.nih.gov/) are downloaded through the [Entrez Programming Utilities](https://www.ncbi.nlm.nih.gov/books/NBK25497/). NCBI allows the downloading of data from various databases, which users can specify with the `--database` parameter. For most users, the `--database nucleotide` database will be most appropriate for building a local reference database.
 
@@ -228,9 +251,9 @@ crabs --download-ncbi --query '("Chondrichthyes"[Organism] OR Chondrichthyes[All
 
 ![crabs download ncbi output](figures_readme/crabs_download_ncbi_output.png)
 
-### 4.2 Module 2: import downloaded data into CRABS format
+### 5.2 Module 2: import downloaded data into CRABS format
 
-#### 4.2.1 `--import`
+#### 5.2.1 `--import`
 
 Once the data from online repositories are downloaded, files will need to be imported into CRABS using the `--import` function. CRABS format constitutes a single tab-delimited line per sequence containing all information, including (i) sequence ID, (ii) taxonomic name parsed from the initial download, (iii) NCBI taxon ID number, (iv) taxonomic lineage according to NCBI taxonomy, and (v) the sequence. CRABS will try to obtain the NCBI accession number for each sequence as a sequence ID. If the sequence does not contain an accession number, i.e., it is not deposited on NCBI, CRABS will generate unique sequence IDs using the following format: `crabs_*[num]*_taxonomic_name`. The format of the input document is specified using the `--import-format` parameter and specifies the name of the repository from which the data was downloaded, i.e., **BOLD**, **EMBL**, **MITOFISH**, or **NCBI**. The taxonomic lineage CRABS creates is based on the NCBI taxonomy and CRABS requires the three files downloaded using the `--download-taxonomy` function, i.e., `--names`, `--nodes`, and `--acc2tax`. From version *v 1.0.0*, CRABS is capable of resolving synonym and unaccepted names to incorporate a larger number of sequences and diversity in the local reference database. The taxonomic ranks to be included in the taxonomic lineage can be specified using the `--ranks` parameters. While any taxonomic rank can be included, we recommend using the following input to include all necessary information for most taxonomic classifiers `--ranks 'superkingdom;phylum;class;order;family;genus;species'`. The output file can be specified using the `--output` parameter and is a simple .txt file. In the Terminal Window, CRABS prints the results of the number of sequences imported, as well as any sequences for which no taxonomic lineage could be generated.
 
@@ -240,9 +263,9 @@ crabs --import --import-format bold --input crabs_testing/bold_Elasmobranchii.fa
 
 ![crabs import](figures_readme/crabs_import.png)
 
-#### 4.2.2 `--merge`
+#### 5.2.2 `--merge`
 
-When sequence data from multiple online repositories are downloaded, files can be merged into a single file after importing (see [4.2.1 `--import`](#421---import)) using the `--merge` function. Input files to merge can be entered using the `--input` parameter, with files separated by `;`. It is possible that a sequence was downloaded multiple times when deposited on various online repositories. Using the `--uniq` parameter retains only a single version of each accession number. The output file can be specified using the `--output` parameter. In the Terminal Window, CRABS prints the results of the number of sequences merged, as well as the number of sequences retained when using the `--uniq` parameter.
+When sequence data from multiple online repositories are downloaded, files can be merged into a single file after importing (see [5.2.1 `--import`](#521---import)) using the `--merge` function. Input files to merge can be entered using the `--input` parameter, with files separated by `;`. It is possible that a sequence was downloaded multiple times when deposited on various online repositories. Using the `--uniq` parameter retains only a single version of each accession number. The output file can be specified using the `--output` parameter. In the Terminal Window, CRABS prints the results of the number of sequences merged, as well as the number of sequences retained when using the `--uniq` parameter.
 
 ```{code-block} bash
 crabs --merge --input 'crabs_testing/crabs_bold.txt;crabs_testing/crabs_mitofish.txt;crabs_testing/crabs_ncbi.txt' --uniq --output crabs_testing/merged.txt
@@ -250,7 +273,7 @@ crabs --merge --input 'crabs_testing/crabs_bold.txt;crabs_testing/crabs_mitofish
 
 ![crabs merge](figures_readme/crabs_merge.png)
 
-### 4.3 Module 3: extract amplicon regions through *in silico* PCR analysis
+### 5.3 Module 3: extract amplicon regions through *in silico* PCR analysis
 
 CRABS extracts the amplicon region of the primer set by conducting an *in silico* PCR (function: `--in-silico-pcr`). CRABS uses [cutadapt *v 4.4*](https://pypi.org/project/cutadapt/) for the *in silico* PCR to increase speed of execution of traditional python code. Input and output file names can be specified using the '*--input*' and '*--output*' parameters, respectively. Both the forward and reverse primer should be provided in 5'-3' direction using the '*--forward*' and '*--reverse*' parameters, respectively. CRABS will reverse complement the reverse primer. From version *v 1.0.0*, CRABS is capable of retaining barcodes in both direction using a single *in silico* PCR analysis. Hence, no reverse complementation step and rerunning of the *in silico* PCR is conducted, thereby significantly increasing execution speed. To retain sequences for which no primer-binding regions could be found, an output file can be specified for the `--untrimmed` parameter. The maximum allowed number of mismatches found in the primer-binding regions can be specified using the `--mismatch` parameter, with a default setting of 4. Finally, the *in silico* PCR analysis can be multithreaded in CRABS. By default the maximum number of threads are being used, but users can specify the number of threads to use with the `--threads` parameter.
 
@@ -260,7 +283,7 @@ crabs --in-silico-pcr --input crabs_testing/merged.txt --output crabs_testing/in
 
 ![crabs in silico](figures_readme/crabs_insilico.png)
 
-### 4.4 Module 4: retrieve amplicons without primer-binding regions
+### 5.4 Module 4: retrieve amplicons without primer-binding regions
 
 It is common practice to remove primer-binding regions from reference sequences when deposited in an online database. Therefore, when the reference sequence was generated using the same forward and/or reverse primer as searched for in the `--in-silico-pcr` function, the `--in-silico-pcr` function will have failed to recover the amplicon region of the reference sequence. To account for this possibility, CRABS has the option to run a Pairwise Global Alignment, implemented using [VSEARCH *v 2.16.0*](https://formulae.brew.sh/formula/vsearch), to extract amplicon regions for which the reference sequence does not contain the full forward and reverse primer-binding regions. To accomplish this, the `--pairwise-global-alignment` function takes in the originally downloaded database file using the `--input` parameter. The database to be searched against is the output file from the `--in-silico-pcr` and can be specified using the `--amplicons` parameter. The output file can be specified using the `--output` parameter. The primer sequences, only used to calculate basepair length, can be set with the `--forward` and `--reverse` parameters. As the `--pairwise-global-alignment` function can take a long time to run for large databases, sequence length can be restricted to speed up the process using the `--size-select` parameter. Minimum percentage identity and query coverage can be specified using the `--percent-identity` and `--coverage` parameters, respectively. Both `--percent-identity` and `--coverage` should be provided as a percentage value between 0 and 1 (e.g., 95% = 0.95) By default, the `--pairwise-global-alignment` function is restricted to retain sequences where primer sequences are not fully present in the reference sequence (alignment starting or ending within the length of the forward or reverse primer). When the `--all-start-positions` parameter is provided, positive hits will be included when the alignment is found outside the range of the primer-binding regions (missed by `--in-silico-pcr` function due to too many mismatches in the primer-binding region). We do not recommend using the `--all-start-positions`, as it is very unlikely a barcode will be amplified using the specified primer set of the `--in-silico-pcr` function when more than 4 mismatches are present in the primer-binding regions.
 
@@ -270,11 +293,11 @@ crabs --pairwise-global-alignment --input crabs_testing/merged.txt --amplicons c
 
 ![crabs pairwise global alignment](figures_readme/crabs_pga.png)
 
-### 4.5 Module 5: curate and subset the local database via multiple filtering parameters
+### 5.5 Module 5: curate and subset the local database via multiple filtering parameters
 
 Once all potential barcodes for the primer set have been extracted by the `--in-silico-pcr` and `--pairwise-global-alignment` functions, the local reference database can undergo further curation and subsetting within CRABS using various functions, including `--dereplicate`, `--filter`, and `--subset`.
 
-#### 4.5.1 `--dereplicate`
+#### 5.5.1 `--dereplicate`
 
 The first curation method is to dereplicate the local reference database using the `--dereplicate` function. It is possible that for certain taxa multiple identical barcodes are contained within the local reference database at this point. This can occur when different research groups have deposited identical sequences or if the intra-specific variation between sequences for a taxon is not contained within the extracted barcode. It is best to remove these identical reference barcodes to speed up taxonomy assignment, as well as improve taxonomy assignment results (especially for taxonomic classifiers providing a limited number of results, i.e., BLAST).
 
@@ -290,7 +313,7 @@ crabs --dereplicate --input crabs_testing/aligned.txt --output crabs_testing/der
 
 ![crabs dereplicate](figures_readme/crabs_dereplicate.png)
 
-#### 4.5.2 `--filter`
+#### 5.5.2 `--filter`
 
 The second curation method is to filter the local reference database using various parameters using the `--filter` function. The input and output files can be specified using the `--input` and `--output` parameters, respectively. From version *v 1.0.0*. CRABS incorporates the filtering based on six parameters, including:
 
@@ -307,7 +330,7 @@ crabs --filter --input crabs_testing/dereplicated.txt --output crabs_testing/fil
 
 ![crabs filter](figures_readme/crabs_filter.png)
 
-#### 4.5.3 `--subset`
+#### 5.5.3 `--subset`
 
 The third and final curation method incorporated in CRABS is to subset the local reference database to include (parameter: `--include`) or exclude (parameter: `--exclude`) specific taxa using the `--subset` function. This function allows for the removal of reference barcodes from taxonomic groups not of interest to the research question. These taxonomic groups could have been incorporated into the local reference database due to potential unspecific amplification of the primer set. Another use-case for `--subset` is to remove known erroneous sequences.
 
@@ -321,7 +344,7 @@ crabs --subset --input crabs_testing/filtered.txt --output crabs_testing/subset.
 
 ![crabs subset](figures_readme/crabs_subset.png)
 
-### 4.6 Module 6: export the local database
+### 5.6 Module 6: export the local database
 
 Once the reference database is finalised, it can be exported into various formats to accomodate specifications required by most software tools assigning taxonomy to metagenomic data. The input and output files can be specified using the `--input` and `--output` parameters, respectively. From version *v 1.0.0*, CRABS incorporate the formatting of the reference database for six different classifiers (parameter: `--export-format`), including:
 
@@ -347,11 +370,11 @@ for format in sintax.fasta rdp.fasta idt-fasta.fasta idt-text.txt; do crabs --ex
 
 ![crabs export](figures_readme/crabs_export.png)
 
-### 4.7 Module 7: post-processing functions to explore and provide a summary overview of the local reference database
+### 5.7 Module 7: post-processing functions to explore and provide a summary overview of the local reference database
 
 Once the reference database is finalised, CRABS can run five post-processing functions to explore and provide a summary overview of the local reference database, including (i) `--diversity-figure`, (ii) `--amplicon-length-figure`, (iii) `--phylogenetic-tree`, (iv) `--amplification-efficiency-figure`, and (v) `--completeness-table`.
 
-#### 4.7.1 `--diversity-figure`
+#### 5.7.1 `--diversity-figure`
 
 The `--diversity-figure` function produces a horizontal bar plot with number of species (in blue) and number of sequences (in orange) per for each taxonomic group in the reference database. The user can specify the taxonomic rank to split up the reference database with the `--tax-level` parameter. The tax level is the number of the rank in which it appeared during the `--import` function. For example, if `--ranks 'superkingdom;phylum;class;order;family;genus;species'` was used during `--import` splitting based on superkingdom would require `--tax-level 1`, phylum = `--tax-level 2`, class = `--tax-level 3`, etc. The input file in CRABS format can be specified using the `--input` parameter. The figure, in .png format, will be written to the output file, which can be specified using the `--output` parameter.
 
@@ -361,7 +384,7 @@ crabs --diversity-figure --input crabs_testing/subset.txt --output crabs_testing
 
 ![crabs diversity figure](figures_readme/diversity-figure.png)
 
-#### 4.7.2 `--amplicon-length-figure`
+#### 5.7.2 `--amplicon-length-figure`
 
 The `--amplicon-length-figure` function produces a line graph displaying the range of the amplicon length. The overall range in amplicon length across all sequences in the reference database is displayed in a shaded grey color, while the results split per taxonomic group (parameter: `--tax-level`) are overlayed by coloured lines. Additionally, the legend displays the number of sequences assigned to each of the taxonomic groups and the total number of sequences in the reference database. The input file in CRABS format can be specified using the `--input` parameter. The figure, in .png format, will be written to the output file, which can be specified using the `--output` parameter.
 
@@ -371,7 +394,7 @@ crabs --amplicon-length-figure --input crabs_testing/subset.txt --output crabs_t
 
 ![crabs amplicon length figure](figures_readme/amplicon-length-figure.png)
 
-#### 4.7.3 `--phylogenetic-tree`
+#### 5.7.3 `--phylogenetic-tree`
 
 The `--phylogenetic-tree` function will generate a phylogenetic tree for a list of species of interest. This list of species of interest can be imported using the `--species` parameter and consists of either an input string separated by `+` or a .txt file with a single species name on each line. For each species of interest, sequences will be extracted from the reference database that share a user-defined taxonomic rank (parameter: `--tax-level`) with the species of interest. CRABS will generate an alignment of all extracted sequences using [clustalw2 v 2.1](https://anaconda.org/bioconda/clustalw) and generate a neighbour-joining phylogenetic tree using [FastTree](https://anaconda.org/bioconda/fasttree). This phylogenetic tree in newick format will be written to the output file using the `--output` parameter and can be visualised in software programs such as [FigTree](http://tree.bio.ed.ac.uk/software/figtree/) or [Geneious](https://www.geneious.com/). Since a separate phylogenetic tree will be generated for each species of interest, `--output` takes in a generic file name, while the exact output file will contain this generic name followed by '_species_name.tree'.
 
@@ -381,7 +404,7 @@ crabs --phylogenetic-tree --input crabs_testing/subset.txt --output crabs_testin
 
 ![phylo tree](figures_readme/phylo_tree.png)
 
-#### 4.7.4 `--amplification-efficiency-figure`
+#### 5.7.4 `--amplification-efficiency-figure`
 
 The `--amplification-efficiency-figure` function will produce a bar graph, displaying the proportion of base pair occurrence in the primer-binding regions for a user-specified taxonomic group, thereby visualizing places in the forward and reverse primer-binding regions where mismatches might be occurring in the taxonomic group of interest, potentially influencing amplification efficiency. The `--amplification-efficiency-figure` function takes a final CRABS-formatted reference database as input using the `--amplicons` parameter. To find the information on the primer-binding regions for each sequence in the input file, the initially downloaded sequences after import need to be provided using the `--input` parameter. The forward and reverse primer sequences (in 5' - 3' direction) are provided using the `--forward` and `--reverse` parameters. The name of the taxonomic group of interest can be provided using the `--tax-group` parameter and can be set at any taxonomic level that is incorporated in the input file. Finally, the figure in .png format will be written to the output file specified by the `--output` parameter.
 
@@ -391,7 +414,7 @@ crabs --amplification-efficiency-figure --input crabs_testing/merged.txt --ampli
 
 ![crabs amplification efficiency](figures_readme/amplification-efficiency.png)
 
-#### 4.7.5 `--completeness-table`
+#### 5.7.5 `--completeness-table`
 
 The `--completeness-table` function will output a tab-delimited table (parameter: `--output`) with information about a list of species of interest. This list of species of interest can be imported using the `--species` parameter and consists of either an input string separated by `+` or a .txt file with a single species name on each line. A taxonomic lineage will be generated for each species of interest using the '*names.dmp*' and '*nodes.dmp*' files downloaded using the `--download-taxonomy` function using the `--names` and `--nodes` parameters, respectively. The output table will have 10 columns providing the following information:
 
