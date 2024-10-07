@@ -6,12 +6,12 @@ CRABS (<ins>C</ins>reating <ins>R</ins>eference databases for <ins>A</ins>mplico
 
 ## 2. Update: CRABS *v 1.0.0*
 
-We are happy to announce that CRABS has seen a major update and code redesign based on user feedback, which we hope will improve the user experience of building your very own local reference database!
+We are excited to announce that CRABS has seen a major update and code redesign based on user feedback, which we hope will improve the user experience of building your very own local reference database!
 
 Please find below a list of features and improvements added to CRABS *v 1.0.0*:
 
 1. increased speed through code optimisation;
-2. improved error handling to facilite easy debugging;
+2. improved error handling to facilitate easy debugging;
 3. altered workflow to improve flexibility (the CRABS format is now used throughout each step and steps can be run in any order);
 4. enhanced flexibility by splitting previous functions into multiple steps in case an error occurred mid-way code execution;
 5. improved file handling to enable multiple CRABS commands to run concurrently;
