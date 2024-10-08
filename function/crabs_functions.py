@@ -274,7 +274,7 @@ def build_query(species_list, query_):
         query_list.append(query_)
     else:
         for item in species_list:
-            query_list.append(f'{query_} AND ("{item}"[Organism])')
+            query_list.append(f'{query_} AND ("{item}"[Organism] OR ("{item}"[Organism] OR {item}[All Fields]))')
     return query_list
 
 def ncbi_download_info(console, columns, query_list, database_, email_):
