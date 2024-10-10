@@ -539,7 +539,10 @@ def crabs(**kwargs):
         # download NCBI sequences
         total_downloaded_seqs = download_ncbi_seqs(console, columns, total_read_count, batchsize_, database_, email_, ncbi_info_dict, output_)
         # write log to Terminal window
-        console.print(f"[cyan]|             Results[/] | Number of sequences downloaded: {total_downloaded_seqs}/{total_read_count} ({round(total_downloaded_seqs / total_read_count * 100, 2)}%)")
+        try:
+            console.print(f"[cyan]|             Results[/] | Number of sequences downloaded: {total_downloaded_seqs}/{total_read_count} ({round(total_downloaded_seqs / total_read_count * 100, 2)}%)")
+        except ZeroDivisionError:
+            console.print(f"[cyan]|             Results[/] | Number of sequences downloaded: 0")
 
 ##########
 # IMPORT #
