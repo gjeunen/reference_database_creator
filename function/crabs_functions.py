@@ -235,19 +235,28 @@ def download_ftp_file(console, columns, url, output_directory):
     # return file list
     return matching_files
 
-def retrieve_init_ncbi_info(database_, email_, query_):
+def retrieve_init_ncbi_info(console, columns, task, progress_bar, database_, email_, query_, query_list):
     '''
     downloads initial NCBI info containing query key, web environment, and number of sequences to dict
     '''
-    url = f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db={database_}&usehistory=y&email={email_}&term={query_}'
-    response = requests.get(url, stream = True)
-    content_chunks = []
-    for chunk in response.iter_content(chunk_size=1024):
-        content_chunks.append(chunk.decode('utf-8'))
-    content_str = ''.join(content_chunks)
-    query_key = content_str.split('<QueryKey>')[1].split('</QueryKey>')[0]
-    web_env = content_str.split('<WebEnv>')[1].split('</WebEnv>')[0]
-    matching_seq_count = content_str.split('<Count>')[1].split('</Count>')[0]
+    for i in range(3):
+        url = f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db={database_}&usehistory=y&email={email_}&term={query_}'
+        response = requests.get(url, stream = True)
+        content_chunks = []
+        for chunk in response.iter_content(chunk_size=1024):
+            content_chunks.append(chunk.decode('utf-8'))
+        content_str = ''.join(content_chunks)
+        try:
+            query_key = content_str.split('<QueryKey>')[1].split('</QueryKey>')[0]
+            web_env = content_str.split('<WebEnv>')[1].split('</WebEnv>')[0]
+            matching_seq_count = content_str.split('<Count>')[1].split('</Count>')[0]
+            break
+        except IndexError:
+            if i == 2:
+                progress_bar.update(task, completed = len(query_list))
+                console.print(f"[cyan]|               ERROR[/] | [bold yellow]Failed connection to NCBI servers, aborting analysis...[/]\n")
+                exit()
+            continue
     return query_key, web_env, matching_seq_count
 
 def retrieve_species(console, columns, species_):
@@ -286,7 +295,7 @@ def ncbi_download_info(console, columns, query_list, database_, email_):
     with rich.progress.Progress(*columns) as progress_bar:
         task = progress_bar.add_task(console = console, description = f"[cyan]|Retrieving NCBI info[/] |", total=len(query_list))
         for item in query_list:
-            query_key, web_env, matching_seq_count = retrieve_init_ncbi_info(database_, email_, item)
+            query_key, web_env, matching_seq_count = retrieve_init_ncbi_info(console, columns, task, progress_bar, database_, email_, item, query_list)
             total_read_count += int(matching_seq_count)
             ncbi_info_dict[web_env]['query_key'] = query_key
             ncbi_info_dict[web_env]['read count'] = matching_seq_count
