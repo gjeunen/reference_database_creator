@@ -4,7 +4,7 @@
 
 CRABS (<ins>C</ins>reating <ins>R</ins>eference databases for <ins>A</ins>mplicon-<ins>B</ins>ased <ins>S</ins>equencing) is a versatile software program that generates curated reference databases for metagenomic analysis. CRABS workflow consists of seven modules: (i) download data from online repositories; (ii) import downloaded data into CRABS format; (iii) extract amplicon regions through *in silico* PCR analysis; (iv) retrieve amplicons without primer-binding regions through alignments with *in silico* extracted barcodes; (v) curate and subset the local database via multiple filtering parameters; (vi) export the local database in various formats according to the taxonomic classifier requirements; and (vi) post-processing functions, i.e., visualisations, to explore and provide a summary overview of the local reference database. These seven modules are split into eighteen functions and are described below. Additionally, example code is provided for each of the eighteen functions. Finally, a tutorial to build a local shark reference database for the [MiFish-E primer set](https://royalsocietypublishing.org/doi/10.1098/rsos.150088) is provided at the end of this README document to provide an example script for reference.
 
-## 2. Update: CRABS *v 1.0.0*
+## 2. Major update: CRABS *v 1.0.0*
 
 We are excited to announce that CRABS has seen a major update and code redesign based on user feedback, which we hope will improve the user experience of building your very own local reference database!
 
@@ -293,6 +293,14 @@ crabs --pairwise-global-alignment --input crabs_testing/merged.txt --amplicons c
 
 ![crabs pairwise global alignment](figures_readme/crabs_pga.png)
 
+#### 5.4.1 TIP: speed up code execution for `--pairwise-global-alignment`
+
+The `--pairwise-global-alignment` function can take a substantial amount of time to execute when CRABS is processing large sequence files, even though multithreading is supported. Since the update to CRABS *v 1.0.0*, an identical file structure is in place from `--import` to `--export`, thereby enabling functions to be executed in any order. While we still recommend to follow the order of the CRABS workflow, the `--pairwise-global-alignment` function can be significantly sped up when executing the `--dereplicate` and `--filter` functions prior to the `--in-silico-pcr` function. By executing these curation steps prior to `--in-silico-pcr`, the number of sequences needed to be processed by CRABS for the `--pairwise-global-alignment` function will be signficantly reduced.
+
+**NOTE 1**: when executing the `--filter` function prior to `--in-silico-pcr`, please make sure to omit any parameters that are directly impacting the sequence, as `--filter` will base this on the entire sequence and not the extracted amplicon. Hence, omit the following parameters: `--minimum-length`, `--maximum-length`, `--maximum-n`.
+
+**NOTE 2**: when executing the `--dereplicate` and `--filter` functions prior to `--in-silico-pcr`, it would be advisable to run both functions again after `--pairwise-global-alignment`, as the database could be further curated now that the amplicons are extracted.
+
 ### 5.5 Module 5: curate and subset the local database via multiple filtering parameters
 
 Once all potential barcodes for the primer set have been extracted by the `--in-silico-pcr` and `--pairwise-global-alignment` functions, the local reference database can undergo further curation and subsetting within CRABS using various functions, including `--dereplicate`, `--filter`, and `--subset`.
@@ -434,3 +442,11 @@ crabs --completeness-table --input crabs_testing/subset.txt --output crabs_testi
 ```
 
 ![crabs completeness](figures_readme/crabs_completeness.png)
+
+## 6. Version updates
+
+* `crabs --version v 1.0.5`: bug fix --> added a length restriction to seq ID when building BLAST databases, as needed for the BLAST+ software.
+* `crabs --version v 1.0.4`: added info --> provided correct information on value input for `--pairwise-global-alignment --coverage --percent-identity`.
+* `crabs --version v 1.0.3`: bug fix --> checking NCBI server response 3 times before aborting analysis.
+* `crabs --version v 1.0.2`: bug fix --> capable of reporting when 0 sequences are returned after analysis.
+* `crabs --version v 1.0.1`: bug fix --> successful building NCBI query using the `--species` parameter.

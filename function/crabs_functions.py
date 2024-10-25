@@ -951,7 +951,7 @@ def blast_no_tax(console, columns, input_, output_):
                 initial_read_count += 1
                 line = line.rstrip('\n')
                 line_parts = line.split('\t')
-                seq_file.append(f'>{line_parts[0]}\n{line_parts[-1]}\n')
+                seq_file.append(f'>{line_parts[0][0:50]}\n{line_parts[-1]}\n')
     with tempfile.NamedTemporaryFile(delete = False, mode = 'w') as temp_fasta:
         fasta_path = temp_fasta.name
         for item in seq_file:
@@ -980,8 +980,8 @@ def blast_tax(console, columns, input_, output_):
                 progress_bar.update(task, advance = len(line))
                 line = line.rstrip('\n')
                 line_parts = line.split('\t')
-                seq_input_dict[line_parts[0]] = f'>{line_parts[0]}\n{line_parts[-1]}\n'
-                map_dict[line_parts[0]] = line_parts[2]
+                seq_input_dict[line_parts[0][0:50]] = f'>{line_parts[0][0:50]}\n{line_parts[-1]}\n'
+                map_dict[line_parts[0][0:50]] = line_parts[2]
     # add sequences for which we don't have a taxonomic ID to a separate dict
     missing_accessions = {}
     for acc in seq_input_dict:
