@@ -445,6 +445,7 @@ crabs --completeness-table --input crabs_testing/subset.txt --output crabs_testi
 
 ## 6. Version updates
 
+* `crabs --version v 1.0.6`: bug fix --> improved parsing of BOLD headers during `--import`.
 * `crabs --version v 1.0.5`: bug fix --> added a length restriction to seq ID when building BLAST databases, as needed for the BLAST+ software.
 * `crabs --version v 1.0.4`: added info --> provided correct information on value input for `--pairwise-global-alignment --coverage --percent-identity`.
 * `crabs --version v 1.0.3`: bug fix --> checking NCBI server response 3 times before aborting analysis.

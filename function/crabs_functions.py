@@ -356,7 +356,7 @@ def bold_to_memory(task, progress_bar, input_):
                     species_name = ''
                     sequence = ''
                 species_name = line.split('|')[1]
-                if len(line.split('|')) == 4:
+                if len(line.split('|')) == 4 and 'Pending (#' not in line.split('|')[3]:
                     seq_name = line.split('|')[3].split('.')[0].split('-')[0]
                 else:
                     seq_name = 'crabs_' + str(count) + f"_{species_name.replace(' ', '_')}"
