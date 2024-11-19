@@ -615,7 +615,7 @@ def crabs(**kwargs):
         # write data to output
         write_list_to_output(console, columns, trimmed_seqs, output_)
         if untrimmed_:
-            write_list_to_output(console, columns, untrimmed_seqs, output_)
+            write_list_to_output(console, columns, untrimmed_seqs, untrimmed_)
         # remove temporary files
         os.remove(temp_input_path)
         # write log to Terminal window
