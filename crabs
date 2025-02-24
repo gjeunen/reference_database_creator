@@ -81,6 +81,7 @@ click.rich_click.HEADER_TEXT = (f"[yellow]/[/][cyan]/[/][yellow]/[/] [bold][link
 click.rich_click.FOOTER_TEXT = "See [link=https://github.com/gjeunen/reference_database_creator]https://github.com/gjeunen/reference_database_creator[/] for more details."
 click.rich_click.ERRORS_SUGGESTION = f"This is CRABS [cyan]v{__version__}[/]\nFor more help, run '[yellow]crabs --help[/]' or visit [link=https://github.com/gjeunen/reference_database_creator]https://github.com/gjeunen/reference_database_creator[/]"
 click.rich_click.STYLE_ERRORS_SUGGESTION = ""
+click.rich_click.GROUP_ARGUMENTS_OPTIONS = True
 
 # grouping of options
 click.rich_click.OPTION_GROUPS = {
@@ -546,9 +547,6 @@ def crabs(**kwargs):
         # remove intermediary files
         os.remove(f'{output_directory}{zipfilename}')
         
-
-
-            
 #####################
 # DOWNLOAD MITOFISH #
 #####################
@@ -599,7 +597,7 @@ def crabs(**kwargs):
     if import_:
         # print function to console
         console.print(f"[cyan]|            Function[/] | Import sequence data into CRABS format")
-        # check if all parameters have been provided
+        # check if all parameters have been provided (need to make a distinction in neccesary parameters between different formats)
         check_params(console, {'"--input"': input_, '"--output"': output_, '"--format"': import_format_, '"--names"': names_, '"--nodes"': nodes_, '"--acc2taxid"': acc2tax_})
         # read documents into memory
         input_files = [input_, names_, nodes_, acc2tax_]
