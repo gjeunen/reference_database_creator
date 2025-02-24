@@ -123,7 +123,7 @@ The help information splits the eighteen functions into different groups, with e
 
 ## 5. CRABS workflow
 
-CRABS contains seven modules, which incorporate eighteen functions:
+CRABS contains seven modules, which incorporate nineteen functions:
 
 **Module 1:** download data from online repositories
 
@@ -132,37 +132,38 @@ CRABS contains seven modules, which incorporate eighteen functions:
 3. `--download-embl`: download sequence data from the [European Nucleotide Archive (ENA; EMBL)](https://www.ebi.ac.uk/ena/browser/home);
 4. `--download-mitofish`: download sequence data from the [MitoFish database](https://mitofish.aori.u-tokyo.ac.jp/);
 5. `--download-ncbi`: download sequence data from the [National Center for Biotechnology Information (NCBI)](https://www.ncbi.nlm.nih.gov/).
+6. `--download-midori`: download sequence data from the [MIDORI and MIDORI2 databases](https://www.reference-midori.info/download.php).
 
 **Module 2:** import downloaded data into CRABS format
 
-6. `--import`: import downloaded sequences or custom barcodes into CRABS format;
-7. `--merge`: merge different CRABS-formatted files into a single file.
+7. `--import`: import downloaded sequences or custom barcodes into CRABS format;
+8. `--merge`: merge different CRABS-formatted files into a single file.
 
 **Module 3:** extract amplicon regions through *in silico* PCR analysis
 
-8. `--in-silico-pcr`: extract amplicons from downloaded data by locating and removing primer-binding regions.
+9. `--in-silico-pcr`: extract amplicons from downloaded data by locating and removing primer-binding regions.
 
 **Module 4:** retrieve amplicons without primer-binding regions
 
-9. `--pairwise-global-alignment`: retrieve amplicons without primer-binding regions by aligning downloaded sequences to *in silico* extracted barcodes.
+10. `--pairwise-global-alignment`: retrieve amplicons without primer-binding regions by aligning downloaded sequences to *in silico* extracted barcodes.
 
 **Module 5:** curate and subset the local database via multiple filtering parameters
 
-10. `--dereplicate`: discard duplicate sequences;
-11. `--filter`: discard sequences via multiple filtering parameters;
-12. `--subset`: subset the local database to retain or exclude specified taxonomic groups.
+11. `--dereplicate`: discard duplicate sequences;
+12. `--filter`: discard sequences via multiple filtering parameters;
+13. `--subset`: subset the local database to retain or exclude specified taxonomic groups.
 
 **Module 6:** export the local database
 
-13. `--export`: export the CRABS-formatted database to various formats according to the requirements of the taxonomic classifier to be used.
+14. `--export`: export the CRABS-formatted database to various formats according to the requirements of the taxonomic classifier to be used.
 
 **Module 7:** post-processing functions to explore and provide a summary overview of the local reference database
 
-14. `--diversity-figure`: creates a horizontal bar chart displaying the number of species and sequences group per specified level included in the reference database;
-15. `--amplicon-length-figure`: creates a line chart depicting amplicon length distributions separated by taxonomic group;
-16. `--phylogenetic-tree`: creates a phylogenetic tree with barcodes from the reference database for a target list of species;
-17. `--amplification-efficiency-figure`: creates a bar graph displaying mismatches in the primer-binding regions;
-18. `--completeness-table`: creates a spreadsheet containing barcode availability for taxonomic groups.
+15. `--diversity-figure`: creates a horizontal bar chart displaying the number of species and sequences group per specified level included in the reference database;
+16. `--amplicon-length-figure`: creates a line chart depicting amplicon length distributions separated by taxonomic group;
+17. `--phylogenetic-tree`: creates a phylogenetic tree with barcodes from the reference database for a target list of species;
+18. `--amplification-efficiency-figure`: creates a bar graph displaying mismatches in the primer-binding regions;
+19. `--completeness-table`: creates a spreadsheet containing barcode availability for taxonomic groups.
 
 ### 5.1 Module 1: download data from online repositories
 
@@ -225,7 +226,19 @@ Sequences from EMBL are downloaded through the [ENA FTP site](ftp://ftp.ebi.ac.u
 crabs --download-embl --taxon 'mam*' --output crabs_testing/embl_mam.fasta
 ```
 
-#### 5.1.4 `--download-mitofish`
+#### 5.1.4 `--download-midori`
+
+The MIDORI and MIDORI2 databases can be downloaded through the [dedicated website](https://www.reference-midori.info/download.php). Since multiple database versions, gene regions, and database types are available, CRABS requires some specific information to download the correct version. This information can be passed through using the `--gb-number` (MIDORI database number and date in the format of "XXX_YYYY-MM-DD"; supported database versions range currently between 237_2020-04-18 and 264_2024-12-14; note that new database versions will be automatically supported by CRABS until format changes occur), `--gene` (the gene region of the sequence data; MIDORI currently splits databases into 14 gene regions, including A6, A8, CO1, CO2, CO3, Cytb, ND1, ND2, ND3, ND4, ND5, ND6, lrRNA, and srRNA), and `--gb-type` (MIDORI database type, including "longest", "total", and "uniq") parameters. The easiest way to determine the values for these parameters is to visit the [website](https://www.reference-midori.info/download.php). Besides these specific parameters, the output folder and file can be specified using the `--output` parameter. The screenshot below indicates where all information can be found on the MIDORI website.
+
+![crabs midori](figures_readme/crabs_midori.png)
+
+When using the MIDORI database to generate your own local reference database, please make sure to cite the relevant literature as described on the MIDORI2 website.
+
+```{code-block} bash
+crabs --download-midori --output cytb_total_264.fasta --gb-number 264_2024-12-14 --gene Cytb --gb-type total
+```
+
+#### 5.1.5 `--download-mitofish`
 
 CRABS can also download the [MitoFish database](http://mitofish.aori.u-tokyo.ac.jp). This database is a single two-line fasta file. The output directory and file name can be specified using the `--output` parameter.
 
@@ -235,7 +248,7 @@ crabs --download-mitofish --output crabs_testing/mitofish.fasta
 
 ![crabs download mitofish](figures_readme/crabs_download_mitofish.png)
 
-#### 5.1.5 `--download-ncbi`
+#### 5.1.6 `--download-ncbi`
 
 Sequences from the [NCBI database](https://www.ncbi.nlm.nih.gov/) are downloaded through the [Entrez Programming Utilities](https://www.ncbi.nlm.nih.gov/books/NBK25497/). NCBI allows the downloading of data from various databases, which users can specify with the `--database` parameter. For most users, the `--database nucleotide` database will be most appropriate for building a local reference database.
 
@@ -445,6 +458,7 @@ crabs --completeness-table --input crabs_testing/subset.txt --output crabs_testi
 
 ## 6. Version updates
 
+* `crabs --version v 1.1.0`: support for downloading the MIDORI2 database (`--download-midori`)
 * `crabs --version v 1.0.6`: bug fix --> improved parsing of BOLD headers during `--import`.
 * `crabs --version v 1.0.5`: bug fix --> added a length restriction to seq ID when building BLAST databases, as needed for the BLAST+ software.
 * `crabs --version v 1.0.4`: added info --> provided correct information on value input for `--pairwise-global-alignment --coverage --percent-identity`.

@@ -4,7 +4,7 @@ setup(name='crabs',
       author='Gert-Jan Jeunen',
 	  author_email='gjeunen@gmail.com',
 	  url='https://github.com/gjeunen/reference_database_creator',
-	  version='1.0.7',
+	  version='1.1.0',
       packages=['function'],
       scripts=['crabs']
 )

@@ -3,7 +3,7 @@
 ##################
 # IMPORT MODULES #
 ##################
-import requests, tarfile, rich, os, zipfile, shutil, ftplib, fnmatch, collections, tempfile, time
+import requests, tarfile, rich, os, zipfile, shutil, ftplib, fnmatch, collections, tempfile, time, re
 import rich.progress
 import rich_click as click
 import subprocess as sp
@@ -26,6 +26,46 @@ def check_params(console, param_dict):
         outputstring = ', '.join(missing_params)
         console.print(f"[cyan]|               ERROR[/] | [bold yellow]{outputstring} not provided, aborting analysis...[/]\n")
         exit()
+
+def is_valid_format(string):
+    pattern = r'^\d{3}_\d{4}-\d{2}-\d{2}$'
+    return bool(re.match(pattern, string))
+
+def check_midori_values(console, gene_, gb_type_, gb_number_):
+    '''
+    Check if Midori values are correctly formatted
+    '''
+    available_genes = {'A6': 1, 'A8': 1, 'CO1': 1, 'CO2': 1, 'CO3': 1, 'Cytb': 1, 'ND1': 1, 'ND2': 1, 'ND3': 1, 'ND4': 1, 'ND5': 1, 'ND6': 1, 'lrRNA': 1, 'srRNA': 1}
+    available_types = {'LONGEST': 1, 'TOTAL': 1, 'UNIQ': 1}
+    error_messages = []
+    if gene_ not in available_genes:
+        error_messages.append(f'{gene_} not available as gene region in MIDORI2, aborting analysis...')
+    if gb_type_.upper() not in available_types:
+        error_messages.append(f'{gb_type_} not a recognised database type, aborting analysis...')
+    if not is_valid_format(gb_number_):
+        error_messages.append(f'database version "{gb_number_}" not formatted appropriately, aborting analysis...')
+    if len(error_messages) != 0:
+        for item in error_messages:
+            console.print(f"[cyan]|               ERROR[/] | [bold yellow]{item}[/]")
+        exit()
+
+def midori_url(gb_number_, gb_type_, gene_):
+    '''
+    generate MIDORI url
+    '''
+    if int(gb_number_.split('_')[0]) < 242:
+        url = f'https://www.reference-midori.info/download/Databases/GenBank{gb_number_}/RAW/{gb_type_.lower()}/MIDORI_{gb_type_.upper()}_GB{gb_number_.split("_")[0]}_{gene_}_RAW.fasta.zip'
+        zip_type = 'unzip'
+    elif int(gb_number_.split('_')[0]) == 242:
+        url = f'https://www.reference-midori.info/download/Databases/GenBank{gb_number_}/RAW/{gb_type_.lower()}/MIDORI_{gb_type_.upper()}_GB{gb_number_.split("_")[0]}_{gene_}_RAW.fasta.zip'
+        zip_type = 'unzip'
+    elif int(gb_number_.split('_')[0]) < 250:
+        url = f'https://www.reference-midori.info/download/Databases/GenBank{gb_number_}/RAW/{gb_type_.lower()}/MIDORI_{gb_type_.upper()}_NUC_GB{gb_number_.split("_")[0]}_{gene_}_RAW.fasta.gz'
+        zip_type = 'gunzip'
+    else:
+        url = f'https://www.reference-midori.info/download/Databases/GenBank{gb_number_}/RAW/{gb_type_.lower()}/MIDORI2_{gb_type_.upper()}_NUC_GB{gb_number_.split("_")[0]}_{gene_}_RAW.fasta.gz'
+        zip_type = 'gunzip'
+    return zip_type, url
 
 def parse_exclude(exclude_):
     '''

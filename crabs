@@ -6,7 +6,9 @@
 import os, rich, rich.progress, collections
 import rich_click as click
 from function import __version__
-from function.crabs_functions import (check_params, 
+from function.crabs_functions import (check_params,
+                                      check_midori_values, 
+                                      midori_url,
                                       parse_exclude, 
                                       set_output_dir, 
                                       download_file, 
@@ -105,6 +107,16 @@ click.rich_click.OPTION_GROUPS = {
             "options": [
                 "--download-embl",
                 "--taxon",
+                "--output",
+            ],
+        },
+        {
+            "name": "Download MIDORI2 Database",
+            "options": [
+                "--download-midori",
+                "--gene",
+                "--gb-number",
+                "--gb-type",
                 "--output",
             ],
         },
@@ -282,6 +294,7 @@ click.rich_click.OPTION_GROUPS = {
 @click.option("--download-taxonomy", "download_taxonomy_", is_flag = True, help = "Function to download NCBI taxonomy")
 @click.option("--download-bold", "download_bold_", is_flag = True, help = "Function to download BOLD database")
 @click.option("--download-embl", "download_embl_", is_flag = True, help = "Function to download EMBL database")
+@click.option("--download-midori", "download_midori_", is_flag = True, help = "Function to download MIDORI2 database")
 @click.option("--download-ncbi", "download_ncbi_", is_flag = True, help = "Function to download NCBI database")
 @click.option("--import", "import_", is_flag = True, help = "Function to import sequences into CRABS format")
 @click.option("--merge", "merge_", is_flag = True, help = "Function to merge CRABS databases into a single file")
@@ -301,6 +314,9 @@ click.rich_click.OPTION_GROUPS = {
 @click.option("--output", "output_", help = "output directory or filename")
 @click.option("--exclude", "exclude_", help = "stop the download of 'acc2taxid' or 'taxdump'")
 @click.option("--taxon", "taxon_", help = "taxonomic group to download")
+@click.option("--gene", "gene_", help = "gene to download")
+@click.option("--gb-number", "gb_number_", help = "database version to download")
+@click.option("--gb-type", "gb_type_", type = str, help = "database type to download")
 @click.option("--marker", "marker_", help = "genetic marker to download")
 @click.option("--email", "email_", help = "email address to connect to NCBI server")
 @click.option("--query", "query_", help = "query identifying what to download from NCBI")
@@ -371,6 +387,7 @@ def crabs(**kwargs):
     download_taxonomy_ = kwargs.get("download_taxonomy_")
     download_bold_ = kwargs.get("download_bold_")
     download_embl_ = kwargs.get("download_embl_")
+    download_midori_ = kwargs.get("download_midori_")
     download_ncbi_ = kwargs.get("download_ncbi_")
     import_ = kwargs.get("import_")
     merge_ = kwargs.get("merge_")
@@ -391,6 +408,9 @@ def crabs(**kwargs):
     exclude_ = kwargs.get("exclude_")
     taxon_ = kwargs.get("taxon_")
     marker_ = kwargs.get("marker_")
+    gene_ = kwargs.get("gene_")
+    gb_number_ = kwargs.get("gb_number_")
+    gb_type_ = kwargs.get("gb_type_")
     email_ = kwargs.get("email_")
     query_ = kwargs.get("query_")
     database_ = kwargs.get("database_")
@@ -499,6 +519,35 @@ def crabs(**kwargs):
             else:
                 gunzip_with_progress(console, columns, output_directory, file, filename, append = True)
             os.remove(f'{output_directory}{file}')
+
+####################
+# DOWNLOAD MIDORI2 #
+####################
+    if download_midori_:
+        # print function to console
+        console.print(f"[cyan]|            Function[/] | Download MIDORI2 database")
+        # check if all parameters have been provided and correctly formatted
+        check_params(console, {'"--output"': output_, '"--gene"': gene_, '"--gb-number"': gb_number_, '"--gb-type': gb_type_})
+        check_midori_values(console, gene_, gb_type_, gb_number_)
+        # set url, output_directory, and filename
+        zip_type, url = midori_url(gb_number_, gb_type_, gene_)
+        output_directory = f'{os.path.dirname(output_)}/'
+        if output_directory == '/':
+            output_directory = ''
+        zipfilename = url.split('/')[-1]
+        outputfilename = output_.split('/')[-1]
+        # download the zip file
+        download_file(console, columns, url, output_directory, zipfilename)
+        # unzip the downloaded file
+        if zip_type == 'unzip':
+            unzip_with_progress(console, columns, output_directory, zipfilename, outputfilename)
+        elif zip_type == 'gunzip':
+            gunzip_with_progress(console, columns, output_directory, zipfilename, outputfilename, append = False)
+        # remove intermediary files
+        os.remove(f'{output_directory}{zipfilename}')
+        
+
+
             
 #####################
 # DOWNLOAD MITOFISH #
