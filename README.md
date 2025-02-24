@@ -123,7 +123,7 @@ The help information splits the eighteen functions into different groups, with e
 
 ## 5. CRABS workflow
 
-CRABS contains seven modules, which incorporate nineteen functions:
+CRABS contains seven modules, which incorporate twenty functions:
 
 **Module 1:** download data from online repositories
 
@@ -133,37 +133,38 @@ CRABS contains seven modules, which incorporate nineteen functions:
 4. `--download-mitofish`: download sequence data from the [MitoFish database](https://mitofish.aori.u-tokyo.ac.jp/);
 5. `--download-ncbi`: download sequence data from the [National Center for Biotechnology Information (NCBI)](https://www.ncbi.nlm.nih.gov/).
 6. `--download-midori`: download sequence data from the [MIDORI and MIDORI2 databases](https://www.reference-midori.info/download.php).
+7. `--download-silva`: download sequence data from the [SILVA database](https://ftp.arb-silva.de/).
 
 **Module 2:** import downloaded data into CRABS format
 
-7. `--import`: import downloaded sequences or custom barcodes into CRABS format;
-8. `--merge`: merge different CRABS-formatted files into a single file.
+8. `--import`: import downloaded sequences or custom barcodes into CRABS format;
+9. `--merge`: merge different CRABS-formatted files into a single file.
 
 **Module 3:** extract amplicon regions through *in silico* PCR analysis
 
-9. `--in-silico-pcr`: extract amplicons from downloaded data by locating and removing primer-binding regions.
+10. `--in-silico-pcr`: extract amplicons from downloaded data by locating and removing primer-binding regions.
 
 **Module 4:** retrieve amplicons without primer-binding regions
 
-10. `--pairwise-global-alignment`: retrieve amplicons without primer-binding regions by aligning downloaded sequences to *in silico* extracted barcodes.
+11. `--pairwise-global-alignment`: retrieve amplicons without primer-binding regions by aligning downloaded sequences to *in silico* extracted barcodes.
 
 **Module 5:** curate and subset the local database via multiple filtering parameters
 
-11. `--dereplicate`: discard duplicate sequences;
-12. `--filter`: discard sequences via multiple filtering parameters;
-13. `--subset`: subset the local database to retain or exclude specified taxonomic groups.
+12. `--dereplicate`: discard duplicate sequences;
+13. `--filter`: discard sequences via multiple filtering parameters;
+14. `--subset`: subset the local database to retain or exclude specified taxonomic groups.
 
 **Module 6:** export the local database
 
-14. `--export`: export the CRABS-formatted database to various formats according to the requirements of the taxonomic classifier to be used.
+15. `--export`: export the CRABS-formatted database to various formats according to the requirements of the taxonomic classifier to be used.
 
 **Module 7:** post-processing functions to explore and provide a summary overview of the local reference database
 
-15. `--diversity-figure`: creates a horizontal bar chart displaying the number of species and sequences group per specified level included in the reference database;
-16. `--amplicon-length-figure`: creates a line chart depicting amplicon length distributions separated by taxonomic group;
-17. `--phylogenetic-tree`: creates a phylogenetic tree with barcodes from the reference database for a target list of species;
-18. `--amplification-efficiency-figure`: creates a bar graph displaying mismatches in the primer-binding regions;
-19. `--completeness-table`: creates a spreadsheet containing barcode availability for taxonomic groups.
+16. `--diversity-figure`: creates a horizontal bar chart displaying the number of species and sequences group per specified level included in the reference database;
+17. `--amplicon-length-figure`: creates a line chart depicting amplicon length distributions separated by taxonomic group;
+18. `--phylogenetic-tree`: creates a phylogenetic tree with barcodes from the reference database for a target list of species;
+19. `--amplification-efficiency-figure`: creates a bar graph displaying mismatches in the primer-binding regions;
+20. `--completeness-table`: creates a spreadsheet containing barcode availability for taxonomic groups.
 
 ### 5.1 Module 1: download data from online repositories
 
@@ -263,6 +264,18 @@ crabs --download-ncbi --query '("Chondrichthyes"[Organism] OR Chondrichthyes[All
 ```
 
 ![crabs download ncbi output](figures_readme/crabs_download_ncbi_output.png)
+
+#### 5.1.7 `--download-silva`
+
+The fasta version of the [SILVA database](https://ftp.arb-silva.de/) is downloaded through the dedicated FTP server. SILVA allows the downloading of different versions of the database, which users can specify with the `--db-version` parameter. As of writing, the latest version is 138.2. Besides versions, the SILVA database is also split up in two different gene regions, including one database containing the 16S/18S ribosomal RNA sequences (`--gene SSU`) and one database containing the 23S/28S ribosomal RNA sequences (`--gene LSU`). Finally, databases can be downloaded in full (`--db-type full`) or subsetted based on a 99% criterion applied to remove redundant sequences (`--db-type subset`). More information about the databases can be found on [SILVA's website](https://www.arb-silva.de/download/arb-files/).
+
+When providing incorrect values to any of the parameters, CRABS will provide proper HTTP error reporting for debugging (see screenshot below).
+
+```{code-block} bash
+crabs --download-silva --output silva_138.2_LSU_subset.fasta --gene LSU --db-type subset --db-version 138.2
+```
+
+![CRABS silva](figures_readme/crabs_silva.png)
 
 ### 5.2 Module 2: import downloaded data into CRABS format
 
@@ -458,6 +471,7 @@ crabs --completeness-table --input crabs_testing/subset.txt --output crabs_testi
 
 ## 6. Version updates
 
+* `crabs --version v 1.3.0`: support for downloading the SILVA database (`--download-silva`)
 * `crabs --version v 1.2.0`: support for importing the MIDORI2 database (`--import-format "midori"`)
 * `crabs --version v 1.1.0`: support for downloading the MIDORI2 database (`--download-midori`)
 * `crabs --version v 1.0.6`: bug fix --> improved parsing of BOLD headers during `--import`.

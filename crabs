@@ -81,7 +81,6 @@ click.rich_click.HEADER_TEXT = (f"[yellow]/[/][cyan]/[/][yellow]/[/] [bold][link
 click.rich_click.FOOTER_TEXT = "See [link=https://github.com/gjeunen/reference_database_creator]https://github.com/gjeunen/reference_database_creator[/] for more details."
 click.rich_click.ERRORS_SUGGESTION = f"This is CRABS [cyan]v{__version__}[/]\nFor more help, run '[yellow]crabs --help[/]' or visit [link=https://github.com/gjeunen/reference_database_creator]https://github.com/gjeunen/reference_database_creator[/]"
 click.rich_click.STYLE_ERRORS_SUGGESTION = ""
-click.rich_click.GROUP_ARGUMENTS_OPTIONS = True
 
 # grouping of options
 click.rich_click.OPTION_GROUPS = {
@@ -137,6 +136,16 @@ click.rich_click.OPTION_GROUPS = {
                 "--database",
                 "--batchsize",
                 "--species",
+                "--output",
+            ],
+        },
+        {
+            "name": "Download SILVA Database",
+            "options": [
+                "--download-silva",
+                "--gene",
+                "--db-type",
+                "--db-version",
                 "--output",
             ],
         },
@@ -297,6 +306,7 @@ click.rich_click.OPTION_GROUPS = {
 @click.option("--download-embl", "download_embl_", is_flag = True, help = "Function to download EMBL database")
 @click.option("--download-midori", "download_midori_", is_flag = True, help = "Function to download MIDORI2 database")
 @click.option("--download-ncbi", "download_ncbi_", is_flag = True, help = "Function to download NCBI database")
+@click.option("--download-silva", "download_silva_", is_flag = True, help = "Function to download SILVA database")
 @click.option("--import", "import_", is_flag = True, help = "Function to import sequences into CRABS format")
 @click.option("--merge", "merge_", is_flag = True, help = "Function to merge CRABS databases into a single file")
 @click.option("--in-silico-pcr", "in_silico_pcr_", is_flag = True, help = "Function to extract amplicons through in silico PCR")
@@ -324,6 +334,8 @@ click.rich_click.OPTION_GROUPS = {
 @click.option("--database", "database_", help = "the database from which NCBI sequences are downloaded")
 @click.option("--batchsize", "batchsize_", default = 5000, type = int, help = "sequences to download from NCBI per chunk (default = 5,000)")
 @click.option("--species", "species_", help = "species of interest list")
+@click.option("--db-type", "db_type_", help = "database version to download")
+@click.option("--db-version", "db_version_", help = "database version to download")
 @click.option("--import-format", "import_format_", help = "format of the sequences to import")
 @click.option("--names", "names_", help = "NCBI taxonomy 'names.dmp' file")
 @click.option("--nodes", "nodes_", help = "NCBI taxonomy 'nodes.dmp' file")
@@ -390,6 +402,7 @@ def crabs(**kwargs):
     download_embl_ = kwargs.get("download_embl_")
     download_midori_ = kwargs.get("download_midori_")
     download_ncbi_ = kwargs.get("download_ncbi_")
+    download_silva_ = kwargs.get("download_silva_")
     import_ = kwargs.get("import_")
     merge_ = kwargs.get("merge_")
     in_silico_pcr_ = kwargs.get("in_silico_pcr_")
@@ -417,6 +430,8 @@ def crabs(**kwargs):
     database_ = kwargs.get("database_")
     batchsize_ = kwargs.get("batchsize_")
     species_ = kwargs.get("species_")
+    db_type_ = kwargs.get("db_type_")
+    db_version_ = kwargs.get("db_version_")
     import_format_ = kwargs.get("import_format_")
     names_ = kwargs.get("names_")
     nodes_ = kwargs.get("nodes_")
@@ -590,6 +605,34 @@ def crabs(**kwargs):
             console.print(f"[cyan]|             Results[/] | Number of sequences downloaded: {total_downloaded_seqs}/{total_read_count} ({round(total_downloaded_seqs / total_read_count * 100, 2)}%)")
         except ZeroDivisionError:
             console.print(f"[cyan]|             Results[/] | Number of sequences downloaded: 0")
+
+##################
+# DOWNLOAD SILVA #
+##################
+    if download_silva_:
+        # print function to console
+        console.print(f"[cyan]|            Function[/] | Download SILVA database")
+        # check if all parameters have been provided
+        check_params(console, {'"--output"': output_, '"--gene"': gene_, '"--db-type"': db_type_, '"--db-version"': db_version_})
+        # set url, output_directory, and filename
+        if db_type_.upper() == 'FULL':
+            url = f'https://ftp.arb-silva.de/release_{db_version_}/Exports/SILVA_{db_version_}_{gene_.upper()}Ref_tax_silva.fasta.gz'
+        elif db_type_.upper() == 'SUBSET':
+            url = f'https://ftp.arb-silva.de/release_{db_version_}/Exports/SILVA_{db_version_}_{gene_.upper()}Ref_NR99_tax_silva.fasta.gz'
+        else:
+            console.print(f"[cyan]|               ERROR[/] | [bold yellow]incorrect value provided for '--db-type', aborting analysis...[/]\n")
+            exit()
+        output_directory = f'{os.path.dirname(output_)}/'
+        if output_directory == '/':
+            output_directory = ''
+        zipfilename = url.split('/')[-1]
+        outputfilename = output_.split('/')[-1]
+        # download the zip file
+        download_file(console, columns, url, output_directory, zipfilename)
+        # unzip the downloaded file
+        gunzip_with_progress(console, columns, output_directory, zipfilename, outputfilename, append = False)
+        # remove intermediary files
+        os.remove(f'{output_directory}{zipfilename}')
 
 ##########
 # IMPORT #

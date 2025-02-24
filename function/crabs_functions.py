@@ -98,6 +98,9 @@ def download_file(console, columns, url, output_directory, filename):
     Download a file from a given URL and save it to a local file.
     '''
     response = requests.get(url, stream=True)
+    if response.status_code != 200:
+        console.print(f"[cyan]|               ERROR[/] | [bold yellow]HTTP error code {response.status_code}: {response.reason}, aborting analysis...[/]\n")
+        exit()
     total_size = int(response.headers.get('content-length', 0))
     if len(url.split('/')[-1]) >= 5:
         terminal_filename = 'Downloading ' + url.split('/')[-1][0:5] + '...'
