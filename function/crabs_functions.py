@@ -567,6 +567,37 @@ def silva_to_memory(task, progress_bar, input_):
     seq_input_dict[seq_name]['sequence'] = sequence
     return seq_input_dict, initial_seq_number
 
+def unite_to_memory(task, progress_bar, input_):
+    '''
+    reads UNITE database to memory and returns a dict
+    '''
+    initial_seq_number = 0
+    seq_input_dict = collections.defaultdict(dict)
+    count = 0
+    seq_name = ''
+    species_name = ''
+    sequence = ''
+    with open(input_, 'r') as infile:
+        for line in infile:
+            progress_bar.update(task, advance = len(line.encode('utf-8')))
+            line = line.rstrip('\n')
+            count += 1
+            if line.startswith('>'):
+                initial_seq_number += 1
+                if count > 1:
+                    seq_input_dict[seq_name]['sequence'] = sequence
+                    seq_input_dict[seq_name]['taxid'] = species_name
+                    seq_name = ''
+                    species_name = ''
+                    sequence = ''
+                seq_name = line.split('|')[1]
+                species_name = line.split('|')[0].lstrip('>').replace('_', ' ')
+            else:
+                sequence += line
+    seq_input_dict[seq_name]['taxid'] = species_name
+    seq_input_dict[seq_name]['sequence'] = sequence
+    return seq_input_dict, initial_seq_number
+
 def select_function(user_info):
     '''
     select a function based on user-provided input by dict mapping
@@ -578,6 +609,7 @@ def select_function(user_info):
         'MITOFISH': mitofish_to_memory,
         'NCBI': ncbi_to_memory,
         'SILVA': silva_to_memory,
+        'UNITE': unite_to_memory,
         'ACC2TAXID': gunzip_with_progress,
         'TAXDUMP': tar_with_progress,
         'STRICT': strict_dereplication,

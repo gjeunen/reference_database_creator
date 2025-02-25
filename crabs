@@ -9,6 +9,7 @@ from function import __version__
 from function.crabs_functions import (check_params,
                                       check_midori_values, 
                                       midori_url,
+                                      tar_with_progress,
                                       parse_exclude, 
                                       set_output_dir, 
                                       download_file, 

@@ -277,11 +277,43 @@ crabs --download-silva --output silva_138.2_LSU_subset.fasta --gene LSU --db-typ
 
 ![CRABS silva](figures_readme/crabs_silva.png)
 
+#### 5.1.8 Downloading the UNITE database
+
+The current version of CRABS does not support the direct download of the [UNITE database](https://unite.ut.ee/repository.php), as it is stored via a DOI link requiring user authentication. Until we resolve this issue, we recommend downloading the UNITE database directly from the website using this [link](https://unite.ut.ee/repository.php). Below is a step-by-step instruction to download different versions of the UNITE database. While CRABS cannot currently download the UNITE database, CRABS can import the UNITE database using the code below.
+
+```{code-block} bash
+crabs --import --import-format unite --input sh_general_release_dynamic_04.04.2024.fasta --acc2tax nucl_gb.accession2taxid --names names.dmp --nodes nodes.dmp --output unite_general_04_04_2024.txt
+```
+
+We recommend downloading the "General FASTA release" or the "Full UNITE+INSD dataset" versions of the UNITE database using [this link](https://unite.ut.ee/repository.php).
+
+![UNITE first](figures_readme/unite_first.png)
+
+Click on the dropdown menu and select the database version you would like to download.
+
+![UNITE second](figures_readme/unite_second.png)
+
+Clicking on the DOI link will open a new browser window. The database will be downloaded by clicking on the link at the bottom of this page ("sh_general_realease_04.04.2024.tgz" in the screenshot below) and after filling out the information of the pop up window.
+
+![UNITE third](figures_readme/unite_third.png)
+
+Before importing the UNITE database into CRABS, you need to unzip the downloaded file, which can be accomplished using the code below:
+
+```{code-block} bash
+tar -xvzf sh_general_release_04.04.2024.tgz
+```
+
+The UNITE database can then be imported into CRABS using the following code:
+
+```{code-block} bash
+crabs --import --import-format unite --input sh_general_release_dynamic_04.04.2024.fasta --acc2tax nucl_gb.accession2taxid --names names.dmp --nodes nodes.dmp --output unite_general_04_04_2024.txt
+```
+
 ### 5.2 Module 2: import downloaded data into CRABS format
 
 #### 5.2.1 `--import`
 
-Once the data from online repositories are downloaded, files will need to be imported into CRABS using the `--import` function. CRABS format constitutes a single tab-delimited line per sequence containing all information, including (i) sequence ID, (ii) taxonomic name parsed from the initial download, (iii) NCBI taxon ID number, (iv) taxonomic lineage according to NCBI taxonomy, and (v) the sequence. CRABS will try to obtain the NCBI accession number for each sequence as a sequence ID. If the sequence does not contain an accession number, i.e., it is not deposited on NCBI, CRABS will generate unique sequence IDs using the following format: `crabs_*[num]*_taxonomic_name`. The format of the input document is specified using the `--import-format` parameter and specifies the name of the repository from which the data was downloaded, i.e., **BOLD**, **EMBL**, **MIDORI**, **MITOFISH**, **NCBI**, or **SILVA**. The taxonomic lineage CRABS creates is based on the NCBI taxonomy and CRABS requires the three files downloaded using the `--download-taxonomy` function, i.e., `--names`, `--nodes`, and `--acc2tax`. From version *v 1.0.0*, CRABS is capable of resolving synonym and unaccepted names to incorporate a larger number of sequences and diversity in the local reference database. The taxonomic ranks to be included in the taxonomic lineage can be specified using the `--ranks` parameters. While any taxonomic rank can be included, we recommend using the following input to include all necessary information for most taxonomic classifiers `--ranks 'superkingdom;phylum;class;order;family;genus;species'`. The output file can be specified using the `--output` parameter and is a simple .txt file. In the Terminal Window, CRABS prints the results of the number of sequences imported, as well as any sequences for which no taxonomic lineage could be generated.
+Once the data from online repositories are downloaded, files will need to be imported into CRABS using the `--import` function. CRABS format constitutes a single tab-delimited line per sequence containing all information, including (i) sequence ID, (ii) taxonomic name parsed from the initial download, (iii) NCBI taxon ID number, (iv) taxonomic lineage according to NCBI taxonomy, and (v) the sequence. CRABS will try to obtain the NCBI accession number for each sequence as a sequence ID. If the sequence does not contain an accession number, i.e., it is not deposited on NCBI, CRABS will generate unique sequence IDs using the following format: `crabs_*[num]*_taxonomic_name`. The format of the input document is specified using the `--import-format` parameter and specifies the name of the repository from which the data was downloaded, i.e., **BOLD**, **EMBL**, **MIDORI**, **MITOFISH**, **NCBI**, **SILVA**, or **UNITE**. The taxonomic lineage CRABS creates is based on the NCBI taxonomy and CRABS requires the three files downloaded using the `--download-taxonomy` function, i.e., `--names`, `--nodes`, and `--acc2tax`. From version *v 1.0.0*, CRABS is capable of resolving synonym and unaccepted names to incorporate a larger number of sequences and diversity in the local reference database. The taxonomic ranks to be included in the taxonomic lineage can be specified using the `--ranks` parameters. While any taxonomic rank can be included, we recommend using the following input to include all necessary information for most taxonomic classifiers `--ranks 'superkingdom;phylum;class;order;family;genus;species'`. The output file can be specified using the `--output` parameter and is a simple .txt file. In the Terminal Window, CRABS prints the results of the number of sequences imported, as well as any sequences for which no taxonomic lineage could be generated.
 
 ```{code-block} bash
 crabs --import --import-format bold --input crabs_testing/bold_Elasmobranchii.fasta --names crabs_testing/names.dmp --nodes crabs_testing/nodes.dmp --acc2tax crabs_testing/nucl_gb.accession2taxid --output crabs_testing/crabs_bold.txt --ranks 'superkingdom;phylum;class;order;family;genus;species'
@@ -471,6 +503,7 @@ crabs --completeness-table --input crabs_testing/subset.txt --output crabs_testi
 
 ## 6. Version updates
 
+* `crabs --version v 1.5.0`: support for importing the UNITE database (`--import-format "unite"`)
 * `crabs --version v 1.4.0`: support for importing the SILVA database (`--import-format "silva"`)
 * `crabs --version v 1.3.0`: support for downloading the SILVA database (`--download-silva`)
 * `crabs --version v 1.2.0`: support for importing the MIDORI2 database (`--import-format "midori"`)
