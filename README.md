@@ -525,6 +525,7 @@ crabs --completeness-table --input crabs_testing/subset.txt --output crabs_testi
 
 ## 6. Version updates
 
+* `crabs --version v 1.7.2`: bug fix --> ignore non utf-8 characters when importing files (`--import`) to avoid hard crash.
 * `crabs --version v 1.7.1`: bug fix --> improved error handling during  `--in-silico-pcr` when cutadapt crashes.
 * `crabs --version v 1.7.0`: support for importing the GreenGenes database (`--import-format "greengenes"`).
 * `crabs --version v 1.6.0`: support for downloading the GreenGenes database (`--download-greengenes`).

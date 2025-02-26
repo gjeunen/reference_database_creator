@@ -381,7 +381,7 @@ def bold_to_memory(task, progress_bar, input_):
     seq_name = ''
     species_name = ''
     sequence = ''
-    with open(input_, 'r') as infile:
+    with open(input_, 'r', encoding = 'utf-8', errors = 'ignore') as infile:
         for line in infile:
             progress_bar.update(task, advance = len(line.encode('utf-8')))
             line = line.rstrip('\n')
@@ -419,7 +419,7 @@ def embl_to_memory(task, progress_bar, input_):
     seq_name = ''
     species_name = ''
     sequence = ''
-    with open(input_, 'r') as infile:
+    with open(input_, 'r', encoding = 'utf-8', errors = 'ignore') as infile:
         for line in infile:
             progress_bar.update(task, advance = len(line.encode('utf-8')))
             line = line.rstrip('\n')
@@ -452,7 +452,7 @@ def midori_to_memory(task, progress_bar, input_):
     seq_name = ''
     species_name = ''
     sequence = ''
-    with open(input_, 'r') as infile:
+    with open(input_, 'r', encoding = 'utf-8', errors = 'ignore') as infile:
         for line in infile:
             progress_bar.update(task, advance = len(line.encode('utf-8')))
             line = line.rstrip('\n')
@@ -483,7 +483,7 @@ def mitofish_to_memory(task, progress_bar, input_):
     seq_name = ''
     species_name = ''
     sequence = ''
-    with open(input_, 'r') as infile:
+    with open(input_, 'r', encoding = 'utf-8', errors = 'ignore') as infile:
         for line in infile:
             progress_bar.update(task, advance = len(line.encode('utf-8')))
             line = line.rstrip('\n')
@@ -514,7 +514,7 @@ def ncbi_to_memory(task, progress_bar, input_):
     seq_name = ''
     species_name = ''
     sequence = ''
-    with open(input_, 'r') as infile:
+    with open(input_, 'r', encoding = 'utf-8', errors = 'ignore') as infile:
         for line in infile:
             progress_bar.update(task, advance = len(line.encode('utf-8')))
             line = line.rstrip('\n')
@@ -545,7 +545,7 @@ def silva_to_memory(task, progress_bar, input_):
     seq_name = ''
     species_name = ''
     sequence = ''
-    with open(input_, 'r') as infile:
+    with open(input_, 'r', encoding = 'utf-8', errors = 'ignore') as infile:
         for line in infile:
             progress_bar.update(task, advance = len(line.encode('utf-8')))
             line = line.rstrip('\n')
@@ -577,7 +577,7 @@ def unite_to_memory(task, progress_bar, input_):
     seq_name = ''
     species_name = ''
     sequence = ''
-    with open(input_, 'r') as infile:
+    with open(input_, 'r', encoding = 'utf-8', errors = 'ignore') as infile:
         for line in infile:
             progress_bar.update(task, advance = len(line.encode('utf-8')))
             line = line.rstrip('\n')
@@ -608,7 +608,7 @@ def greengenes_to_memory(task, progress_bar, input_):
     seq_name = ''
     species_name = ''
     sequence = ''
-    with open(input_, 'r') as infile:
+    with open(input_, 'r', encoding = 'utf-8', errors = 'ignore') as infile:
         for line in infile:
             progress_bar.update(task, advance = len(line.encode('utf-8')))
             line = line.rstrip('\n')
