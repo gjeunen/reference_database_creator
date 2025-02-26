@@ -1259,24 +1259,24 @@ def cutadapt(console, columns, adapter, input_, fasta_dict, mismatch_, overlap, 
     with rich.progress.Progress(*columns) as progress_bar:
         task = progress_bar.add_task(console = console, description = "[cyan]|       In silico PCR[/] |", total=len(fasta_dict) * 2)
         process = sp.Popen(command, stdout = sp.PIPE, stderr = sp.PIPE, text = True)
-        while True:
-            output = process.stdout.readline()
-            if output == '' and process.poll() is not None:
-                break
-            if output:
-                progress_bar.update(task, advance = 1)
-                count += 1
-                if count % 2 != 0:
-                    header = output.strip()
-                    if header.endswith(' rc'):
-                        header = header.removesuffix(' rc')
+        stdout, stderr = process.communicate()
+        if process.returncode != 0:
+            stderr = stderr.rstrip('\n')
+            console.print(f"[cyan]\n|               ERROR[/] | [bold yellow]Cutadapt failed with {stderr}, aborting analysis...[/]\n")
+            exit()
+        for output in stdout.splitlines():
+            progress_bar.update(task, advance = 1)
+            count += 1
+            if count % 2 != 0:
+                header = output.strip()
+                if header.endswith(' rc'):
+                    header = header.removesuffix(' rc')
+            else:
+                seq = output.strip() + '\n'
+                if seq != fasta_dict[header]:
+                    trimmed_seqs.append(f'{header.lstrip(">")}\t{seq}')
                 else:
-                    seq = output.strip() + '\n'
-                    if seq != fasta_dict[header]:
-                        trimmed_seqs.append(f'{header.lstrip(">")}\t{seq}')
-                    else:
-                        untrimmed_seqs.append(f'{header.lstrip(">")}\t{seq}')
-        process.wait()
+                    untrimmed_seqs.append(f'{header.lstrip(">")}\t{seq}')
     return trimmed_seqs, untrimmed_seqs
 
 def fasta_to_list(console, columns, temp_out_path):

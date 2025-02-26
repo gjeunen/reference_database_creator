@@ -352,6 +352,17 @@ crabs --in-silico-pcr --input crabs_testing/merged.txt --output crabs_testing/in
 
 ![crabs in silico](figures_readme/crabs_insilico.png)
 
+**Please note:** cutadapt will crash when it opens more files than the system limit allows for. These files are opened during processing. This error can occur when setting the thread count too high or when processing large sequences, such as full genomes. CRABS v 1.7.1 will now properly report this error, which will be displayed as the screenshot below.
+
+![crabs cutadapt error](figures_readme/crabs_cutadapt_error.png)
+
+When encountering this error, we recommend you try to either reduce the number of threads using the `--threads` parameter or increase the limit of the number of open files within your system. For Linux and MacOS users, the limit of open files can be viewed and increased using the code below.
+
+```{code-block} bash
+ulimit -n
+ulimit -n XXX # where XXX is an INT higher than the current limit
+```
+
 ### 5.4 Module 4: retrieve amplicons without primer-binding regions
 
 It is common practice to remove primer-binding regions from reference sequences when deposited in an online database. Therefore, when the reference sequence was generated using the same forward and/or reverse primer as searched for in the `--in-silico-pcr` function, the `--in-silico-pcr` function will have failed to recover the amplicon region of the reference sequence. To account for this possibility, CRABS has the option to run a Pairwise Global Alignment, implemented using [VSEARCH *v 2.16.0*](https://formulae.brew.sh/formula/vsearch), to extract amplicon regions for which the reference sequence does not contain the full forward and reverse primer-binding regions. To accomplish this, the `--pairwise-global-alignment` function takes in the originally downloaded database file using the `--input` parameter. The database to be searched against is the output file from the `--in-silico-pcr` and can be specified using the `--amplicons` parameter. The output file can be specified using the `--output` parameter. The primer sequences, only used to calculate basepair length, can be set with the `--forward` and `--reverse` parameters. As the `--pairwise-global-alignment` function can take a long time to run for large databases, sequence length can be restricted to speed up the process using the `--size-select` parameter. Minimum percentage identity and query coverage can be specified using the `--percent-identity` and `--coverage` parameters, respectively. `--percent-identity` should be provided as a percentage value between 0 and 1 (e.g., 95% = 0.95), while `--coverage`  should be provided as a percentage value between 0 and 100 (e.g., 95% = 95). By default, the `--pairwise-global-alignment` function is restricted to retain sequences where primer sequences are not fully present in the reference sequence (alignment starting or ending within the length of the forward or reverse primer). When the `--all-start-positions` parameter is provided, positive hits will be included when the alignment is found outside the range of the primer-binding regions (missed by `--in-silico-pcr` function due to too many mismatches in the primer-binding region). We do not recommend using the `--all-start-positions`, as it is very unlikely a barcode will be amplified using the specified primer set of the `--in-silico-pcr` function when more than 4 mismatches are present in the primer-binding regions.
@@ -514,13 +525,14 @@ crabs --completeness-table --input crabs_testing/subset.txt --output crabs_testi
 
 ## 6. Version updates
 
-* `crabs --version v 1.7.0`: support for importing the GreenGenes database (`--import-format "greengenes"`)
-* `crabs --version v 1.6.0`: support for downloading the GreenGenes database (`--download-greengenes`)
-* `crabs --version v 1.5.0`: support for importing the UNITE database (`--import-format "unite"`)
-* `crabs --version v 1.4.0`: support for importing the SILVA database (`--import-format "silva"`)
-* `crabs --version v 1.3.0`: support for downloading the SILVA database (`--download-silva`)
-* `crabs --version v 1.2.0`: support for importing the MIDORI2 database (`--import-format "midori"`)
-* `crabs --version v 1.1.0`: support for downloading the MIDORI2 database (`--download-midori`)
+* `crabs --version v 1.7.1`: bug fix --> improved error handling during  `--in-silico-pcr` when cutadapt crashes.
+* `crabs --version v 1.7.0`: support for importing the GreenGenes database (`--import-format "greengenes"`).
+* `crabs --version v 1.6.0`: support for downloading the GreenGenes database (`--download-greengenes`).
+* `crabs --version v 1.5.0`: support for importing the UNITE database (`--import-format "unite"`).
+* `crabs --version v 1.4.0`: support for importing the SILVA database (`--import-format "silva"`).
+* `crabs --version v 1.3.0`: support for downloading the SILVA database (`--download-silva`).
+* `crabs --version v 1.2.0`: support for importing the MIDORI2 database (`--import-format "midori"`).
+* `crabs --version v 1.1.0`: support for downloading the MIDORI2 database (`--download-midori`).
 * `crabs --version v 1.0.6`: bug fix --> improved parsing of BOLD headers during `--import`.
 * `crabs --version v 1.0.5`: bug fix --> added a length restriction to seq ID when building BLAST databases, as needed for the BLAST+ software.
 * `crabs --version v 1.0.4`: added info --> provided correct information on value input for `--pairwise-global-alignment --coverage --percent-identity`.
