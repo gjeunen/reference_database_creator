@@ -91,6 +91,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--exclude",
                 "--output",
             ],
+            "deduplicate": False
         },
         {
             "name": "Download BOLD Database",
@@ -100,6 +101,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--marker",
                 "--output",
             ],
+            "deduplicate": False
         },
         {
             "name": "Download EMBL Database",
@@ -108,6 +110,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--taxon",
                 "--output",
             ],
+            "deduplicate": False
         },
         {
             "name": "Download GreenGenes Database",
@@ -115,6 +118,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--download-greengenes",
                 "--output",
             ],
+            "deduplicate": False
         },
         {
             "name": "Download MIDORI2 Database",
@@ -125,6 +129,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--gb-type",
                 "--output",
             ],
+            "deduplicate": False
         },
         {
             "name": "Download MitoFish Database",
@@ -132,6 +137,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--download-mitofish",
                 "--output",
             ],
+            "deduplicate": False
         },
         {
             "name": "Download NCBI Database",
@@ -144,6 +150,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--species",
                 "--output",
             ],
+            "deduplicate": False
         },
         {
             "name": "Download SILVA Database",
@@ -154,6 +161,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--db-version",
                 "--output",
             ],
+            "deduplicate": False
         },
         {
             "name": "Import sequences into CRABS format",
@@ -167,6 +175,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--ranks",
             ],
+            "deduplicate": False
         },
         {
             "name": "Merge CRABS databases into one file",
@@ -176,6 +185,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--uniq",
             ],
+            "deduplicate": False
         },
         {
             "name": "Extract amplicons through in silico PCR",
@@ -189,6 +199,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--threads",
                 "--untrimmed",
             ],
+            "deduplicate": False
         },
         {
             "name": "Retrieve amplicons without primer-binding regions",
@@ -205,6 +216,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--coverage",
                 "--all-start-positions",
             ],
+            "deduplicate": False
         },
         {
             "name": "Dereplicate CRABS database",
@@ -214,6 +226,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--dereplication-method",
             ],
+            "deduplicate": False
         },
         {
             "name": "Filter CRABS database",
@@ -228,6 +241,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--no-species-id",
                 "--rank-na",
             ],
+            "deduplicate": False
         },
         {
             "name": "Subset CRABS database on taxonomic ID",
@@ -238,6 +252,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--include",
                 "--exclude",
             ],
+            "deduplicate": False
         },
         {
             "name": "Figure: diversity contained within database",
@@ -247,6 +262,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--tax-level",
             ],
+            "deduplicate": False
         },
         {
             "name": "Figure: amplicon length distribution",
@@ -256,6 +272,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--tax-level",
             ],
+            "deduplicate": False
         },
         {
             "name": "Figure: phylogenetic tree",
@@ -266,6 +283,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--tax-level",
                 "--species",
             ],
+            "deduplicate": False
         },
         {
             "name": "Figure: amplification efficiency",
@@ -278,6 +296,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--tax-group",
             ],
+            "deduplicate": False
         },
         {
             "name": "Table: database completeness for target taxonomic group",
@@ -289,6 +308,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--nodes",
                 "--species",
             ],
+            "deduplicate": False
         },
         {
             "name": "Export CRABS database to taxonomic classifier format",
@@ -298,6 +318,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--export-format",
             ],
+            "deduplicate": False
         },
     ],
 }
