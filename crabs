@@ -8,6 +8,7 @@ import rich_click as click
 from function import __version__
 from function.crabs_functions import (check_params,
                                       check_midori_values, 
+                                      embl_url,
                                       midori_url,
                                       parse_exclude, 
                                       set_output_dir, 
@@ -547,22 +548,32 @@ def crabs(**kwargs):
         console.print(f"[cyan]|            Function[/] | Download EMBL database")
         # check if all parameters have been provided
         check_params(console, {'"--output"': output_, '"--taxon"': taxon_})
-        # set url, output_directory, and filename
-        url = 'ftp://ftp.ebi.ac.uk/pub/databases/ena/sequence/con-std_latest/std/STD_' + taxon_.upper() + '.fasta.gz'
+        # find all matching files to taxon_ and store as urls
+        urls = embl_url(console, taxon_)
+        # print number of files to download to console
+        if len(urls) > 1:
+            console.print(f"[cyan]|             Results[/] | Downloading {len(urls)} files from EMBL")
+        else:
+            console.print(f"[cyan]|             Results[/] | Downloading {len(urls)} file from EMBL")
+        # set output_directory, and filename
         output_directory = f'{os.path.dirname(output_)}/'
         if output_directory == '/':
             output_directory = ''
-        filename = output_.split('/')[-1]
-        # download the files from the ftp server
-        matching_files = download_ftp_file(console, columns, url, output_directory)
+        outputfilename = output_.split('/')[-1]
+        # download the files
+        matching_files = []
+        for url in urls:
+            zipfilename = url.split('/')[-1]
+            matching_files.append(zipfilename)
+            download_file(console, columns, url, output_directory, zipfilename)
         # unzip files and remove zipped intermediary files
         file_count = 0
         for file in matching_files:
             file_count += 1
             if file_count == 1:
-                gunzip_with_progress(console, columns, output_directory, file, filename, append = False)
+                gunzip_with_progress(console, columns, output_directory, file, outputfilename, append = False)
             else:
-                gunzip_with_progress(console, columns, output_directory, file, filename, append = True)
+                gunzip_with_progress(console, columns, output_directory, file, outputfilename, append = True)
             os.remove(f'{output_directory}{file}')
 
 #######################

@@ -204,29 +204,73 @@ crabs --download-bold --taxon 'Elasmobranchii|Mammalia' --output crabs_testing/b
 
 #### 5.1.3 `--download-embl`
 
-Sequences from EMBL are downloaded through the [ENA FTP site](ftp://ftp.ebi.ac.uk/pub/databases/embl/release/std/). EMBL files will first be downloaded in a '.fasta.gz' format and be automatically unzipped once the download is complete. This database does not provide as much flexibility with regards to selective downloading compared to BOLD or NCBI. Rather, EMBL data is structured into 15 tax divisions, which can be downloaded separately. The tax division to download can be specified using the `--taxon` parameter. Since each tax division is split into several files, a `*` is provided after the name to download all files. Users can also download a specific file by writing the file name in full. A list of all 15 tax division options is provided below. The output directory and file name can be specified using the `--output` parameter.
+Sequences from EMBL are downloaded through the [HTTPS website](https://ftp.ebi.ac.uk/pub/databases/ena/sequence/con-std_latest/std/) rather than the FTP server from CRABS v 1.7.4 onwards. This change was implemented for additional security, speed, and flexibility.
+
+EMBL files will first be downloaded in a '.fasta.gz' format and be automatically unzipped once the download is complete. The output directory and file name can be specified using the `--output` parameter.
+
+This database does not provide as much flexibility with regards to selective downloading compared to BOLD or NCBI. Rather, EMBL data is structured into 15 tax divisions, which can be downloaded separately or together.
+
+A list of all 15 tax division options is provided below.
 
 **List of tax divisions:**
 
-1. env*: environmental
-2. fun*: fungi
-3. hum*: human
-4. inv*: invertebrate
-5. mam*: mammal
-6. mus*: mouse
-7. phg*: phage
-8. pln*: plant
-9. pro*: prokaryote
-10. rod*: rodent
-11. syn*: synthetic
-12. tgn*: pathogen
-13. unc*: unclassified
-14. vrl*: viral
-15. vrt*: vertebrate
+1. ENV: environmental
+2. FUN: fungi
+3. HUM: human
+4. INV: invertebrate
+5. MAM: mammal
+6. MUS: mouse
+7. PHG: phage
+8. PLN: plant
+9. PRO: prokaryote
+10. ROD: rodent
+11. SYN: synthetic
+12. TGN: pathogen
+13. UNC: unclassified
+14. VRL: viral
+15. VRT: vertebrate
+
+The tax division to download can be specified using the `--taxon` parameter. From CRABS v 1.7.4, python regex support, through the re package, is provided for the `--taxon` parameter. This allows more flexibility, by enabling the download of specific file(s), a range of files, or all files in the EMBL database Since regex can be tricky to write, we have provided some examples below.
+
+First off, a list of all EMBL samples can be found on [this link](https://ftp.ebi.ac.uk/pub/databases/ena/sequence/con-std_latest/std/). CRABS downloads the ".fasta.gz" files with file names that start with "STD_" (scroll down quite far in the list to find the samples). The `--taxon` parameter requires users to provide the tax division to download (as written in the file list, i.e, in capital), as well as the file number. Multiple files exist for each tax division, as the EMBL database files only contain 100,000 sequences each. Hence, when more sequences are deposited, a new file will be created. This is also the reason why files have different sizes, which will influence required download time, as it is dependent on the sequence length of the 100,000 references contained within the file.
+
+The easiest option for the `--taxon` parameter is to download a single file. This requires the user to provide the exact tax division and file number. For example, the code below can be used to download the **third mammal file**. Note that you only have to provide `--taxon 'MAM_3'` and not the prefix "STD_" and suffix ".fasta.gz", as these are automatically appended by CRABS.
 
 ```{code-block} bash
-crabs --download-embl --taxon 'mam*' --output crabs_testing/embl_mam.fasta
+crabs --download-embl --taxon 'MAM_3' --output embl_mam_3.fasta
 ```
+
+The second easiest option for the `--taxon` parameter is to download to full EMBL database. You can use the code below to accomplish this. Please note that the EMBL database is very large. Hence, downloading the full database is not recommended, as it requires a long time and a vast amount of available disk space.
+
+```{code-block} bash
+crabs --download-embl --taxon '.*' --output embl_all.fasta
+```
+
+Next, we can use regex patterns to download a specific list of files. The example below can be used to download the fourth, sixth, and nineth file of the mammal tax division.
+
+```{code-block} bash
+crabs --download-embl --taxon 'MAM_(4|6|9)' --output embl_mam_4_6_9.fasta
+```
+
+Besides a specific list, we can use regex to download a range of files. The example below can be used to download the 77th until the 80th file of the viral tax devision.
+
+```{code-block} bash
+crabs --download-embl --taxon 'VRL_(7[7-9]|80)' --output embl_VRL_77_80.fasta 
+```
+
+If you'd want to download all files of a tax division, you can use the following regex pattern.
+
+```{code-block} bash
+crabs --download-embl --taxon 'MAM_\d+\' --output embl_MAM_all.fasta 
+```
+
+A final example we will provide is a way to download all files of multiple tax divisions, such as the mammal and vertebrate ones.
+
+```{code-block} bash
+crabs --download-embl --taxon '(MAM|VRT)_\d+\' --output embl_MAM_VRT_all.fasta
+```
+
+We hope that these examples will enable you to download the portion of the EMBL database you need with ease using CRABS.
 
 #### 5.1.4 `--download-greengenes`
 
@@ -525,6 +569,7 @@ crabs --completeness-table --input crabs_testing/subset.txt --output crabs_testi
 
 ## 6. Version updates
 
+* `crabs --version v 1.7.4`: enhancement --> regex support for `--download-embl`, as well as move from FTP to HTTPS for download.
 * `crabs --version v 1.7.3`: bug fix --> correct display of help documentation in the CLI due to version update for rich-click.
 * `crabs --version v 1.7.2`: bug fix --> ignore non utf-8 characters when importing files (`--import`) to avoid hard crash.
 * `crabs --version v 1.7.1`: bug fix --> improved error handling during  `--in-silico-pcr` when cutadapt crashes.

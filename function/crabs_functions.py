@@ -31,6 +31,32 @@ def is_valid_format(string):
     pattern = r'^\d{3}_\d{4}-\d{2}-\d{2}$'
     return bool(re.match(pattern, string))
 
+def ensure_non_capturing(taxon_):
+    '''
+    modify regex capturing groups to non-capturing groups for full matches
+    '''
+    return re.sub(r'\((?!\?)', '(?:', taxon_)
+
+def embl_url(console, taxon_):
+    '''
+    list all urls to download EMBL files
+    '''
+    general_url = "https://ftp.ebi.ac.uk/pub/databases/ena/sequence/con-std_latest/std/"
+    response = requests.get(general_url)
+    if response.status_code == 200:
+        fixed_taxon_ = ensure_non_capturing(taxon_)
+        files = re.findall(fr'STD_{fixed_taxon_}.fasta.gz', response.text)
+        cleaned_files = [item.split('"')[0] for item in files]
+        set_files = sorted(set(cleaned_files))
+    else:
+        console.print(f"[cyan]|               ERROR[/] | [bold yellow]{response.text.split('<title>')[1].split('</title>')[0]}, aborting analysis...[/]\n")
+        exit()
+    urls = []
+    for file in set_files:
+        url = f'{general_url}{file}'
+        urls.append(url)
+    return urls
+
 def check_midori_values(console, gene_, gb_type_, gb_number_):
     '''
     Check if Midori values are correctly formatted
