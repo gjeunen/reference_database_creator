@@ -16,7 +16,6 @@ from function.crabs_functions import (check_params,
                                       remove_tar_intermediary, 
                                       unzip_with_progress, 
                                       download_chunked_file, 
-                                      download_ftp_file, 
                                       gunzip_with_progress, 
                                       download_ncbi_seqs, 
                                       retrieve_species, 
@@ -92,7 +91,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--exclude",
                 "--output",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Download BOLD Database",
@@ -102,7 +101,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--marker",
                 "--output",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Download EMBL Database",
@@ -111,7 +110,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--taxon",
                 "--output",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Download GreenGenes Database",
@@ -119,7 +118,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--download-greengenes",
                 "--output",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Download MIDORI2 Database",
@@ -130,7 +129,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--gb-type",
                 "--output",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Download MitoFish Database",
@@ -138,7 +137,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--download-mitofish",
                 "--output",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Download NCBI Database",
@@ -151,7 +150,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--species",
                 "--output",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Download SILVA Database",
@@ -162,7 +161,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--db-version",
                 "--output",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Import sequences into CRABS format",
@@ -176,7 +175,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--ranks",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Merge CRABS databases into one file",
@@ -186,7 +185,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--uniq",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Extract amplicons through in silico PCR",
@@ -200,7 +199,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--threads",
                 "--untrimmed",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Retrieve amplicons without primer-binding regions",
@@ -217,7 +216,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--coverage",
                 "--all-start-positions",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Dereplicate CRABS database",
@@ -227,7 +226,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--dereplication-method",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Filter CRABS database",
@@ -242,7 +241,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--no-species-id",
                 "--rank-na",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Subset CRABS database on taxonomic ID",
@@ -253,7 +252,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--include",
                 "--exclude",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Figure: diversity contained within database",
@@ -263,7 +262,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--tax-level",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Figure: amplicon length distribution",
@@ -273,7 +272,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--tax-level",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Figure: phylogenetic tree",
@@ -284,7 +283,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--tax-level",
                 "--species",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Figure: amplification efficiency",
@@ -297,7 +296,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--tax-group",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Table: database completeness for target taxonomic group",
@@ -309,7 +308,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--nodes",
                 "--species",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
         {
             "name": "Export CRABS database to taxonomic classifier format",
@@ -319,7 +318,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--export-format",
             ],
-            "deduplicate": False
+            #"deduplicate": False
         },
     ],
 }
