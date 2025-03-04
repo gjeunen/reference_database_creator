@@ -548,8 +548,9 @@ def ncbi_to_memory(task, progress_bar, input_):
             if line.startswith('>'):
                 initial_seq_number += 1
                 if count > 1:
-                    seq_input_dict[seq_name]['sequence'] = sequence
-                    seq_input_dict[seq_name]['taxid'] = species_name
+                    if '|' not in seq_name:
+                        seq_input_dict[seq_name]['sequence'] = sequence
+                        seq_input_dict[seq_name]['taxid'] = species_name
                     seq_name = ''
                     species_name = ''
                     sequence = ''
