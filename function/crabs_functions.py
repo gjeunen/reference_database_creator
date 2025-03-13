@@ -378,24 +378,89 @@ def download_ncbi_seqs(console, columns, total_read_count, batchsize_, database_
     with rich.progress.Progress(*columns) as progress_bar:
         task = progress_bar.add_task(console = console, description = f"[cyan]|         Downloading[/] |", total=int(total_read_count))
         total_seqs = 0
+        buffer_size = 1048576
         for web_env in ncbi_info_dict:
             if ncbi_info_dict[web_env]['read count'] != 0:
-                for i in range(0, int(ncbi_info_dict[web_env]['read count']), batchsize_):
+                i = 0
+                while i < int(ncbi_info_dict[web_env]['read count']):
                     url = f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db={database_}&email={email_}&query_key={ncbi_info_dict[web_env]["query_key"]}&WebEnv={web_env}&rettype=fasta&retstart={i}&retmax={batchsize_}'
-                    response = requests.get(url, stream = True)
-                    if total_seqs == 0:
-                        with open(f'{output_}', 'wb') as file:
-                            for chunk in response.iter_content(chunk_size=1024):
-                                file.write(chunk)
-                                total_seqs += str(chunk).count(">")
+                    retries = 0
+                    while retries < 3:
+                        try:
+                            added_seqs = 0
+                            response = requests.get(url, stream = True)
+                            mode = 'wb' if total_seqs == 0 else 'ab'
+                            chunk_list = []
+                            for chunk in response.iter_content(chunk_size = buffer_size):
+                                chunk_list.append(chunk)
+                                num_seqs = chunk.count(b'>')
+                                added_seqs += num_seqs
+                                total_seqs += num_seqs
                                 progress_bar.update(task, completed = total_seqs)
-                    else:
-                        with open(f'{output_}', 'ab') as file:
-                            for chunk in response.iter_content(chunk_size=1024):
-                                file.write(chunk)
-                                total_seqs += str(chunk).count(">")
+                            with open(f'{output_}', mode) as file:
+                                file.write(b''.join(chunk_list))
+                            break
+                        except:
+                            retries += 1
+                            if added_seqs != 0:
+                                total_seqs -= added_seqs
                                 progress_bar.update(task, completed = total_seqs)
+                            time.sleep(2 ** retries)
+                    i += batchsize_
     return total_seqs
+
+# for debugging only
+# def timestamp():
+#     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+# def download_ncbi_seqs(console, columns, total_read_count, batchsize_, database_, email_, ncbi_info_dict, output_):
+#     '''
+#     downloads NCBI sequences and writes it to output file
+#     '''
+#     with rich.progress.Progress(*columns) as progress_bar:
+#         task = progress_bar.add_task(console = console, description = f"[cyan]|         Downloading[/] |", total=int(total_read_count))
+#         total_seqs = 0
+#         buffer_size = 1048576
+#         for web_env in ncbi_info_dict:
+#             if ncbi_info_dict[web_env]['read count'] != 0:
+#                 i = 0
+#                 while i < int(ncbi_info_dict[web_env]['read count']):
+#                     print(f"[{timestamp()}] Starting batch: {i}-{i + batchsize_}")
+#                     url = f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db={database_}&email={email_}&query_key={ncbi_info_dict[web_env]["query_key"]}&WebEnv={web_env}&rettype=fasta&retstart={i}&retmax={batchsize_}'
+#                     retries = 0
+#                     while retries < 3:
+#                         try:
+#                             added_seqs = 0
+#                             print(f"[{timestamp()}] connecting to NCBI servers")
+#                             response = requests.get(url, stream = True)
+#                             print(f'[{timestamp()}] received response from NCBI servers')
+#                             mode = 'wb' if total_seqs == 0 else 'ab'
+#                             chunk_list = []
+#                             print(f'[{timestamp()}] start buffering data')
+#                             for chunk in response.iter_content(chunk_size = buffer_size):
+#                                 chunk_list.append(chunk)
+#                                 num_seqs = chunk.count(b'>')
+#                                 added_seqs += num_seqs
+#                                 total_seqs += num_seqs
+#                                 progress_bar.update(task, completed = total_seqs)
+#                             print(f'[{timestamp()}] finish buffering data')
+#                             print(f'[{timestamp()}] start writing data to file')
+#                             with open(f'{output_}', mode) as file:
+#                                 file.write(b''.join(chunk_list))
+#                             print(f'[{timestamp()}] Finished writing data')
+#                             print(f"[{timestamp()}] ✅ Batch {i}-{i + batchsize_} added {added_seqs} sequences.")
+#                             break
+#                         except:
+#                             retries += 1
+#                             if added_seqs != 0:
+#                                 total_seqs -= added_seqs
+#                                 progress_bar.update(task, completed = total_seqs)
+#                             print(f"[{timestamp()}] ⚠️ Error in batch {i}-{i + batchsize_}, retry {retries}...")
+#                             time.sleep(2 ** retries)
+#                     if retries == 3:
+#                         print(f"[{timestamp()}] ❌ Batch {i}-{i + batchsize_} failed after 3 retries. Skipping...")
+#                         print(f"[{timestamp()}] Batch {i}-{i + batchsize_} failed after 3 retries. Skipping...")
+#                     i += batchsize_
+#     return total_seqs
         
 def bold_to_memory(task, progress_bar, input_):
     '''

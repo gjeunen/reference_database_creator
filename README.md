@@ -569,6 +569,7 @@ crabs --completeness-table --input crabs_testing/subset.txt --output crabs_testi
 
 ## 6. Version updates
 
+* `crabs --version v 1.7.6`: enhancement --> improved error handling for `--download-ncbi`
 * `crabs --version v 1.7.5`: bug fix --> correct processing of incorrectly formatted NCBI sequences during `--import`.
 * `crabs --version v 1.7.4`: enhancement --> regex support for `--download-embl`, as well as move from FTP to HTTPS for download.
 * `crabs --version v 1.7.3`: bug fix --> correct display of help documentation in the CLI due to version update for rich-click.
