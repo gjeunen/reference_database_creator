@@ -1,0 +1,4 @@
+requests==2.32.3
+rich==13.3.5
+rich-click==1.7.2
+matplotlib==3.8.0
