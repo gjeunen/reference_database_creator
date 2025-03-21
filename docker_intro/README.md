@@ -8,11 +8,11 @@ Note: the below examples will work for Mac or Linux. We will add examples for Wi
 
 ## Help command
 
-After installing any software, most of us will try it out with a help command. Here is an example using crabs on Docker. (All following commands assume that you have already pulled the docker image using `docker pull quay.io/swordfish/crabs:0.1.7`.)
+After installing any software, most of us will try it out with a help command. Here is an example using crabs on Docker. (All following commands assume that you have already pulled the docker image using `docker pull quay.io/swordfish/crabs:1.7.7.0`.)
 
 ```
 docker run --rm -it \
-  quay.io/swordfish/crabs:0.1.7 \
+  quay.io/swordfish/crabs:1.7.7.0 \
   crabs -h
 ```
 
@@ -46,15 +46,14 @@ Then run the docker command:
 docker run --rm -it \
   -v $(pwd):/data \
   --workdir="/data" \
-  quay.io/swordfish/crabs:0.1.7 \
-  crabs db_download \
-  --source ncbi \
+  quay.io/swordfish/crabs:1.7.7.0 \
+  crabs --download-ncbi \
   --database nucleotide \
   --query '"Amanita"[Organism] AND Internal Transcribed Spacer[All Fields] AND ("1"[SLEN] : "1000"[SLEN])' \
   --output amanita.fasta \
-  --keep_original yes \
   --email fulano.tal@gmail.com \
   --batchsize 5000
+
 ```
 
 If this worked, then you should see a file called 'amanita.fasta' and the original file 'CRABS_ncbi_download.fasta' in your directory.
@@ -67,47 +66,6 @@ The next line sets the working directory for inside the container. If you do not
 
 The lines following the image command are just the standard Crabs commands, and these are detailed on the main page.
 
-## Processing more data
-
-Continuing from our *Amanita* download, we can use more or less the same command structure as above.
-
-**insilico PCR**
-
-Here is an example command to just get the ITS1 region from our downloaded sequences:
-
-```
-docker run --rm -it \
-  -v $(pwd):/data \
-  --workdir="/data" \
-  quay.io/swordfish/crabs:0.1.7 \
-  crabs insilico_pcr \
-  --input amanita.fasta \
-  --output amanita_its1.fasta \
-  --fwd CTTGGTCATTTAGAGGAAGTAA \
-  --rev GCTGCGTTCTTCATCGATGC \
-  --error 4.5
-```
-
-**Adding pairwise global alignment step:**
-
-```
-docker run --rm -it \
-  -v $(pwd):/data \
-  --workdir="/data" \
-  quay.io/swordfish/crabs:0.1.7 \
-  crabs pga \
-  --input amanita.fasta \
-  --output amanita_its1pga.fasta \
-  --database amanita_its1.fasta \
-  --fwd CTTGGTCATTTAGAGGAAGTAA \
-  --rev GCTGCGTTCTTCATCGATGC \
-  --speed fast \
-  --percid 0.95 \
-  --coverage 0.95 \
-  --filter_method strict
-```
-
-Note: if you are using a newer mac with a M1 chip, then you might see a warning when running these commands. The commands should still work, but you can eliminate this warning by adding the parameter `--platform linux/amd64` to the command above, before the image name.
 
 ## Taxonomy files 
 
@@ -123,15 +81,17 @@ cd /Users/fulanotal/taxonomy_files
 Then, from this directory, we download the taxonomy files: 
 
 ```
+
 docker run --rm -it \
   -v $(pwd):/data \
   --workdir="/data" \
-  quay.io/swordfish/crabs:0.1.7 \
-  crabs db_download \
-  --source taxonomy
+  quay.io/swordfish/crabs:1.7.7.0 \
+  crabs --download-taxonomy \
+    --output ./
+
 ```
 
-This should result in the three files downloaded to this folder: *names.dmp*, *nodes.dmp*, and *nucl_gb.accession2taxid*. 
+This should result in the three files downloaded to this folder: *names.dmp*, *nodes.dmp*, and *nucl_gb.accession2taxid*. (Note: the `./` in the `--output` parameter indicates to output to the current folder.)
 
 Now, the tricky bit. We want to return to our analysis file but use these reference files sitting in another part of our computer. To do this, we can add another `-v` command, but we cannot move to the same directory as the home. Here is how we work this out:
 
@@ -147,48 +107,78 @@ Now, to keep things clear, we will create a variable with the path to the refere
 TAX='/Users/fulanotal/taxonomy_files'
 ```
 
-We can now find the taxonomy of all our sequences and output a table for use downstream:
+We can now find the taxonomy of all our sequences and import the fasta file downloaded in the previous command to create a crabs database for use downstream:
+
 
 ```
 docker run --rm -it \
   -v $(pwd):/data \
   -v ${TAX}:/src \
   --workdir="/data" \
-  --cpus 4 \
-  quay.io/swordfish/crabs:0.1.7 \
-  crabs assign_tax \
-    --input amanita_its1pga.fasta \
-    --output amanita_its1.tsv \
+  quay.io/swordfish/crabs:1.7.7.0 \
+  crabs --import \
+    --import-format NCBI \
+    --input amanita.fasta \
+    --output amanita_crabs.txt \
+    --names /src/names.dmp \
+    --nodes /src/nodes.dmp \
     --acc2tax /src/nucl_gb.accession2taxid \
-    --taxid /src/nodes.dmp \
-    --name /src/names.dmp
+    --ranks 'kingdom;phylum;class;order;family;genus;species'
+
 ```
+
 
 You will notice that the additional `-v` command copies ('mounts' in docker lingo) the taxonomy files to the `/src` folder inside the docker container. In order for Crabs to find these files, we had to put `/src/` in front of the taxonomy files within this command. You DO NOT put the path to the files on your computer (e.g., ${TAX}/nodes.dmp), because the process is running inside the docker container. 
 
-Also notice we have added the parameter `--cpus 4` to this command. This will tell Docker how many processors to use for the container, which may be needed for computationally intensive processes.
-
-From these examples you should be able to run most of the Crabs commands to create your reference database. We will continue to add examples, explanations, and tips to this page over the coming weeks. Stay tuned, and stay in touch. 
 
 
-## Visualizations using the Docker image 
+## Processing more data
 
-Due to complicated issues with visuals in Docker images, the `crab visualization` command will work differently when using a docker container compared to the regular command line. We are working on a solution that provides maximum flexibility for all users, but for now this command will not open the image in a separate window, but will save a .png file generically named *crabs_visual.png*. A typical visualization command would look like this: 
+Continuing from our *Amanita* download and import, we can use more or less the same command structure as above.
+
+
+**insilico PCR**
+
+Here is an example command to just get the ITS1 region from our downloaded sequences:
 
 ```
+
 docker run --rm -it \
   -v $(pwd):/data \
   --workdir="/data" \
-  quay.io/swordfish/crabs:0.1.7 \
-  crabs visualization \
-  --method diversity \
-  --input amanita_its1.tsv \
-  --level genus
-```
-
-You could then change the output file using the `mv` command. For example:
+  quay.io/swordfish/crabs:1.7.7.0 \
+  crabs --in-silico-pcr \
+  --input amanita_crabs.txt \
+  --output amanita_crabs_its1.txt \
+  --forward CTTGGTCATTTAGAGGAAGTAA \
+  --reverse GCTGCGTTCTTCATCGATGC
 
 ```
-mv crabs_visual.png amanita_diversity_visual.png
+
+**Adding pairwise global alignment step:**
+
 ```
+
+docker run --rm -it \
+  -v $(pwd):/data \
+  --workdir="/data" \
+  quay.io/swordfish/crabs:1.7.7.0 \
+  crabs --pairwise-global-alignment \
+  --input amanita_crabs.txt \
+  --amplicons amanita_crabs_its1.txt \
+  --output amanita_its1_pga.txt \
+  --forward CTTGGTCATTTAGAGGAAGTAA \
+  --reverse GCTGCGTTCTTCATCGATGC \
+  --size-select 600 \
+  --threads 2 \
+  --percent-identity 0.9 \
+  --coverage 90 \
+  --all-start-positions 
+
+```
+
+Note: if you are using a newer mac with a M1 chip, then you might see a warning when running these commands. The commands should still work, but you can eliminate this warning by adding the parameter `--platform linux/amd64` to the command above, before the image name.
+
+
+From these examples you should be able to run most of the Crabs commands to create your reference database. We will continue to add examples, explanations, and tips to this page over the coming weeks. Stay tuned, and stay in touch. 
 
