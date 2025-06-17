@@ -1365,14 +1365,17 @@ def list_to_fasta(console, columns, seq_list):
             temp_input.flush()
     return temp_input_path, fasta_dict
 
-def cutadapt(console, columns, adapter, input_, fasta_dict, mismatch_, overlap, threads_):
+def cutadapt(console, columns, adapter, input_, fasta_dict, mismatch_, overlap, threads_, buffer_size_):
     '''
     takes in user-provided parameters and runs the external program cutadapt
     '''
     trimmed_seqs = []
     untrimmed_seqs = []
     count = 0
-    command = ['cutadapt', input_, '-g', adapter, '--no-indels', '-e', str(mismatch_), '--overlap', overlap, '--cores', str(threads_), '--revcomp', '--quiet']
+    if buffer_size_:
+        command = ['cutadapt', input_, '-g', adapter, '--no-indels', '-e', str(mismatch_), '--overlap', overlap, '--cores', str(threads_), '--revcomp', '--quiet', '--buffer-size', str(buffer_size_)]
+    else:
+        command = ['cutadapt', input_, '-g', adapter, '--no-indels', '-e', str(mismatch_), '--overlap', overlap, '--cores', str(threads_), '--revcomp', '--quiet']
     with rich.progress.Progress(*columns) as progress_bar:
         task = progress_bar.add_task(console = console, description = "[cyan]|       In silico PCR[/] |", total=len(fasta_dict) * 2)
         process = sp.Popen(command, stdout = sp.PIPE, stderr = sp.PIPE, text = True)
@@ -1396,14 +1399,17 @@ def cutadapt(console, columns, adapter, input_, fasta_dict, mismatch_, overlap, 
                     untrimmed_seqs.append(f'{header.lstrip(">")}\t{seq}')
     return trimmed_seqs, untrimmed_seqs
 
-def cutadapt_relaxed(console, columns, forward_, reverse_, temp_input_path2, fasta_dict2, mismatch_, overlap, threads_, trimmed_seqs, untrimmed_seqs):
+def cutadapt_relaxed(console, columns, forward_, reverse_, temp_input_path2, fasta_dict2, mismatch_, overlap, threads_, trimmed_seqs, untrimmed_seqs, buffer_size_):
     '''
     runs cutadapt for only the forward or reverse primer
     '''
     count = 0
     relaxed_count = 0
     headers_to_remove = set()
-    command = ['cutadapt', temp_input_path2, '-g', forward_, '-a', reverse_, '--no-indels', '-e', str(mismatch_), '--overlap', overlap, '--cores', str(threads_), '--revcomp', '--quiet']
+    if buffer_size_:
+        command = ['cutadapt', temp_input_path2, '-g', forward_, '-a', reverse_, '--no-indels', '-e', str(mismatch_), '--overlap', overlap, '--cores', str(threads_), '--revcomp', '--quiet', '--buffer-size', str(buffer_size_)]
+    else:
+        command = ['cutadapt', temp_input_path2, '-g', forward_, '-a', reverse_, '--no-indels', '-e', str(mismatch_), '--overlap', overlap, '--cores', str(threads_), '--revcomp', '--quiet']
     with rich.progress.Progress(*columns) as progress_bar:
         task = progress_bar.add_task(console = console, description = "[cyan]|      relaxed IS PCR[/] |", total=len(fasta_dict2) * 2)
         process = sp.Popen(command, stdout = sp.PIPE, stderr = sp.PIPE, text = True)

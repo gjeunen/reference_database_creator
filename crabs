@@ -201,6 +201,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--threads",
                 "--untrimmed",
                 "--relaxed",
+                "--buffer-size",
             ],
             "deduplicate": False
         },
@@ -390,6 +391,7 @@ click.rich_click.OPTION_GROUPS = {
 @click.option("--threads", "threads_", type = int, default = 0, help = "number of threads used to compute the in silico PCR (default: autodetection)")
 @click.option("--untrimmed", "untrimmed_", help = "file name for untrimmed sequences")
 @click.option("--relaxed", "relaxed_", is_flag = True, help = "recover amplicons where only the forward or reverse primer-binding region was found")
+@click.option("--buffer-size", "buffer_size_", type = int, help = "value 2x the longest sequence in the data, only necessary when observing an 'OverflowError'")
 @click.option("--amplicons", "amplicons_", help = "file name for the amplicons retrieved during in silico PCR")
 @click.option("--size-select", "size_select_", help = "exclude reads longer than N from the analysis")
 @click.option("--percent-identity", "percent_identity_", help = "minimum percent identity threshold for the alignment to pass (0.0 - 1.0)")
@@ -488,6 +490,7 @@ def crabs(**kwargs):
     threads_ = kwargs.get("threads_")
     untrimmed_ = kwargs.get("untrimmed_")
     relaxed_ = kwargs.get("relaxed_")
+    buffer_size_ = kwargs.get("buffer_size_")
     amplicons_ = kwargs.get("amplicons_")
     size_select_ = kwargs.get("size_select_")
     percent_identity_ = kwargs.get("percent_identity_")
@@ -780,11 +783,11 @@ def crabs(**kwargs):
         # transform input_ to fasta format in a temp file
         temp_input_path, fasta_dict = crabs_to_fasta(console, columns, input_)
         # run cutadapt
-        trimmed_seqs, untrimmed_seqs = cutadapt(console, columns, adapter, temp_input_path, fasta_dict, mismatch_, overlap, threads_)
+        trimmed_seqs, untrimmed_seqs = cutadapt(console, columns, adapter, temp_input_path, fasta_dict, mismatch_, overlap, threads_, buffer_size_)
         # run cutadapt again if the relaxed_ parameter was provided
         if relaxed_:
             temp_input_path2, fasta_dict2 = list_to_fasta(console, columns, untrimmed_seqs)
-            trimmed_seqs, untrimmed_seqs, relaxed_count = cutadapt_relaxed(console, columns, forward_, reverse_, temp_input_path2, fasta_dict2, mismatch_, overlap, threads_, trimmed_seqs, untrimmed_seqs)
+            trimmed_seqs, untrimmed_seqs, relaxed_count = cutadapt_relaxed(console, columns, forward_, reverse_, temp_input_path2, fasta_dict2, mismatch_, overlap, threads_, trimmed_seqs, untrimmed_seqs, buffer_size_)
         # write data to output
         write_list_to_output(console, columns, trimmed_seqs, output_)
         if untrimmed_:

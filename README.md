@@ -450,6 +450,28 @@ crabs --in-silico-pcr --input bold.txt --output bold_relaxed.txt --forward GGWAC
 
 At this point, we recommend only providing the `--relaxed` parameter when one of the two primers is known to be used for barcoding until further simulations are conducted.
 
+#### 5.3.2 parameter `--buffer-size`
+
+As of CRABS v 1.9.0, the parameter `--buffer-size` can be provided to the `--in-silico-pcr` function. This parameter is only required when an "**OverflowError: FASTA/FASTQ record does not fit into buffer, aborting analysis...**" is observed. This error will likely only occur when CRABS tries to process very long sequences, such as genomes. The value for `--buffer-size` should be 2 times the length of the longest sequence in the `--input` file. More information on the specific error can be found in this [GitHub post](https://github.com/marcelm/cutadapt/issues/783).
+
+To find the longest sequence in a CRABS-formatted document, you can use the following line of code (please change '**your_file.txt**' to your actual file name).
+
+```{code-block} bash
+awk -F'\t' '{ print length($NF) }' your_file.txt | sort -nr | head -n 1
+```
+
+To calculate the number for the `--buffer-size` parameter, you can use the following line of code (please change '**your_file.txt**' to your actual file name), i.e., simply multiplying length by 2.
+
+```{code-block} bash
+awk -F'\t' '{ print length($NF) }' your_file.txt | sort -nr | head -n 1 | awk '{ print $1*2 }'
+```
+
+Example for `--buffer-size`:
+
+```{code-block} bash
+crabs --in-silico-pcr --input bold.txt --output bold_relaxed.txt --forward GGWACWGGWTGAACWGTWTAYCCYCC --reverse TAIACYTCIGGRTGICCRAARAAYCA --relaxed --buffer-size 40000000
+```
+
 ### 5.4 Module 4: retrieve amplicons without primer-binding regions
 
 It is common practice to remove primer-binding regions from reference sequences when deposited in an online database. Therefore, when the reference sequence was generated using the same forward and/or reverse primer as searched for in the `--in-silico-pcr` function, the `--in-silico-pcr` function will have failed to recover the amplicon region of the reference sequence. To account for this possibility, CRABS has the option to run a Pairwise Global Alignment, implemented using [VSEARCH *v 2.16.0*](https://formulae.brew.sh/formula/vsearch), to extract amplicon regions for which the reference sequence does not contain the full forward and reverse primer-binding regions. To accomplish this, the `--pairwise-global-alignment` function takes in the originally downloaded database file using the `--input` parameter. The database to be searched against is the output file from the `--in-silico-pcr` and can be specified using the `--amplicons` parameter. The output file can be specified using the `--output` parameter. The primer sequences, only used to calculate basepair length, can be set with the `--forward` and `--reverse` parameters. As the `--pairwise-global-alignment` function can take a long time to run for large databases, sequence length can be restricted to speed up the process using the `--size-select` parameter. Minimum percentage identity and query coverage can be specified using the `--percent-identity` and `--coverage` parameters, respectively. `--percent-identity` should be provided as a percentage value between 0 and 1 (e.g., 95% = 0.95), while `--coverage`  should be provided as a percentage value between 0 and 100 (e.g., 95% = 95). By default, the `--pairwise-global-alignment` function is restricted to retain sequences where primer sequences are not fully present in the reference sequence (alignment starting or ending within the length of the forward or reverse primer). When the `--all-start-positions` parameter is provided, positive hits will be included when the alignment is found outside the range of the primer-binding regions (missed by `--in-silico-pcr` function due to too many mismatches in the primer-binding region). We do not recommend using the `--all-start-positions`, as it is very unlikely a barcode will be amplified using the specified primer set of the `--in-silico-pcr` function when more than 4 mismatches are present in the primer-binding regions.
@@ -612,6 +634,7 @@ crabs --completeness-table --input crabs_testing/subset.txt --output crabs_testi
 
 ## 6. Version updates
 
+* `crabs --version v 1.9.0`: support for increasing buffer size during *in silico* PCR analysis (`--in-silico-pcr --buffer-size`).
 * `crabs --version v 1.8.0`: support for extracting amplicons using a single primer-binding region (`--in-silico-pcr --relaxed`).
 * `crabs --version v 1.7.7`: bug fix --> fixed incorrect statement in the README documentation for the `--pairwise-global-alignment` function.
 * `crabs --version v 1.7.6`: enhancement --> improved error handling for `--download-ncbi`.
