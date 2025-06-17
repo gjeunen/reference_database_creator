@@ -407,6 +407,49 @@ ulimit -n
 ulimit -n XXX # where XXX is an INT higher than the current limit
 ```
 
+#### 5.3.1 parameter `--relaxed`
+
+As of CRABS v 1.8.0, parameter `--relaxed` can be specified. When used, CRABS will rerun the *in silico* PCR analysis after the first attempt, but now by only checking the presence of a single primer-binding region. If either the forward or reverse primer-binding region is found in this second attempt, the amplicon will be added to the `--output` file. This setting can be useful for amplicons where either the forward or reverse primer is commonly used as a barcoding primer.
+
+For example, a ~313 bp fragment of the COI gene is frequently amplified in metabarcoding studies ([Leray et al., 2013](https://frontiersinzoology.biomedcentral.com/articles/10.1186/1742-9994-10-34)). While the forward primer (mlCOIintF: 5'-GGWACWGGWTGAACWGTWTAYCCYCC-3') was newly designed in this study, the reverse primer is the standard universal reverse primer for COI barcoding (jgHCO2198: 5'-TAIACYTCIGGRTGICCRAARAAYCA-3'). Hence, when downloading COI sequencing data from online repositories, most barcodes will not contain the reverse primer-binding region. So, when we conduct the standard `--in-silico-pcr` analysis on 8,008,518 sequences downloaded from BOLD, we only managed to extract 262,165 (3.27%) amplicons.
+
+```{code-block} bash
+crabs --in-silico-pcr --input bold.txt --output bold_strict.txt --forward GGWACWGGWTGAACWGTWTAYCCYCC --reverse TAIACYTCIGGRTGICCRAARAAYCA
+```
+
+```{admonition}
+/// CRABS | v1.8.0
+
+|            Function | Extract amplicons through in silico PCR
+|         Import data | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00 0:00:15
+|  Transform to fasta | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00 0:00:11
+|       In silico PCR | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00 0:01:41
+|      Exporting data | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00 0:00:00
+|             Results | Extracted 262165 amplicons from 8008518 sequences (3.27%)
+```
+
+However, when we set the `--relaxed` parameter, which enables the extraction of the amplicons by just the forward primer in this instance, CRABS managed to extract 6,639,131 (82.9%) amplicons.
+
+```{code-block} bash
+crabs --in-silico-pcr --input bold.txt --output bold_relaxed.txt --forward GGWACWGGWTGAACWGTWTAYCCYCC --reverse TAIACYTCIGGRTGICCRAARAAYCA --relaxed
+```
+
+```{admonition}
+/// CRABS | v1.8.0
+
+|            Function | Extract amplicons through in silico PCR
+|         Import data | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00 0:00:15
+|  Transform to fasta | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00 0:00:07
+|       In silico PCR | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00 0:01:31
+| Transform untrimmed | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00 0:00:26
+|      relaxed IS PCR | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00 0:01:37
+|      Exporting data | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00 0:00:12
+|             Results | Extracted 6639131 amplicons from 8008518 sequences (82.9%)
+|             Results | 6376966 amplicons were extracted by only the forward or reverse primer (96.05%)
+```
+
+At this point, we recommend only providing the `--relaxed` parameter when one of the two primers is known to be used for barcoding until further simulations are conducted.
+
 ### 5.4 Module 4: retrieve amplicons without primer-binding regions
 
 It is common practice to remove primer-binding regions from reference sequences when deposited in an online database. Therefore, when the reference sequence was generated using the same forward and/or reverse primer as searched for in the `--in-silico-pcr` function, the `--in-silico-pcr` function will have failed to recover the amplicon region of the reference sequence. To account for this possibility, CRABS has the option to run a Pairwise Global Alignment, implemented using [VSEARCH *v 2.16.0*](https://formulae.brew.sh/formula/vsearch), to extract amplicon regions for which the reference sequence does not contain the full forward and reverse primer-binding regions. To accomplish this, the `--pairwise-global-alignment` function takes in the originally downloaded database file using the `--input` parameter. The database to be searched against is the output file from the `--in-silico-pcr` and can be specified using the `--amplicons` parameter. The output file can be specified using the `--output` parameter. The primer sequences, only used to calculate basepair length, can be set with the `--forward` and `--reverse` parameters. As the `--pairwise-global-alignment` function can take a long time to run for large databases, sequence length can be restricted to speed up the process using the `--size-select` parameter. Minimum percentage identity and query coverage can be specified using the `--percent-identity` and `--coverage` parameters, respectively. `--percent-identity` should be provided as a percentage value between 0 and 1 (e.g., 95% = 0.95), while `--coverage`  should be provided as a percentage value between 0 and 100 (e.g., 95% = 95). By default, the `--pairwise-global-alignment` function is restricted to retain sequences where primer sequences are not fully present in the reference sequence (alignment starting or ending within the length of the forward or reverse primer). When the `--all-start-positions` parameter is provided, positive hits will be included when the alignment is found outside the range of the primer-binding regions (missed by `--in-silico-pcr` function due to too many mismatches in the primer-binding region). We do not recommend using the `--all-start-positions`, as it is very unlikely a barcode will be amplified using the specified primer set of the `--in-silico-pcr` function when more than 4 mismatches are present in the primer-binding regions.
@@ -569,6 +612,7 @@ crabs --completeness-table --input crabs_testing/subset.txt --output crabs_testi
 
 ## 6. Version updates
 
+* `crabs --version v 1.8.0`: support for extracting amplicons using a single primer-binding region (`--in-silico-pcr --relaxed`).
 * `crabs --version v 1.7.7`: bug fix --> fixed incorrect statement in the README documentation for the `--pairwise-global-alignment` function.
 * `crabs --version v 1.7.6`: enhancement --> improved error handling for `--download-ncbi`.
 * `crabs --version v 1.7.5`: bug fix --> correct processing of incorrectly formatted NCBI sequences during `--import`.

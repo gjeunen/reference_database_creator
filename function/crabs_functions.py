@@ -1187,12 +1187,15 @@ def idt_text(console, columns, input_):
                     if line_parts[item] not in uid_dict:
                         name = line_parts[item].replace(' ', '_')
                         uid_dict[name]['UID'] = UID
-                        if name == 'Eukaryota':
+                        if name == 'Metazoa' or name == 'Viridiplantae' or name == 'Fungi':
                             uid_dict[name]['UID parent'] = 0
                         else:
                             uid_dict[name]['UID parent'] = uid_dict[line_parts[item-1].replace(' ', '_')]['UID']
                         uid_dict[name]['Tax level'] = item + 1
-                        uid_dict[name]['Rank name'] = tax_level_dict[item + 1]
+                        try:
+                            uid_dict[name]['Rank name'] = tax_level_dict[item + 1]
+                        except:
+                            print(line_parts)
                         UID += 1
     with rich.progress.Progress(*columns) as progress_bar:
         task = progress_bar.add_task(console = console, description = "[cyan]|         Format data[/] |", total=len(uid_dict))
@@ -1340,6 +1343,28 @@ def crabs_to_fasta(console, columns, input_):
             temp_input.flush()
     return temp_input_path, fasta_dict
 
+def list_to_fasta(console, columns, seq_list):
+    '''
+    takes a list and writes it to a temp file in fasta format
+    '''
+    fasta_list = []
+    fasta_dict = {}
+    with rich.progress.Progress(*columns) as progress_bar:
+        task = progress_bar.add_task(console = console, description = "[cyan]| Transform untrimmed[/] |", total=len(seq_list)*2)
+        for item in seq_list:
+            progress_bar.update(task, advance = 1)
+            lineparts = item.rsplit('\t', 1)
+            fasta_string = f'>{lineparts[0]}\n{lineparts[1]}\n'
+            fasta_list.append(fasta_string)
+            fasta_dict[f'>{lineparts[0]}'] = lineparts[1]
+        with tempfile.NamedTemporaryFile(delete = False, mode = 'w') as temp_input:
+            temp_input_path = temp_input.name
+            for item in fasta_list:
+                progress_bar.update(task, advance = 1)
+                temp_input.write(item)
+            temp_input.flush()
+    return temp_input_path, fasta_dict
+
 def cutadapt(console, columns, adapter, input_, fasta_dict, mismatch_, overlap, threads_):
     '''
     takes in user-provided parameters and runs the external program cutadapt
@@ -1365,11 +1390,43 @@ def cutadapt(console, columns, adapter, input_, fasta_dict, mismatch_, overlap, 
                     header = header.removesuffix(' rc')
             else:
                 seq = output.strip() + '\n'
-                if seq != fasta_dict[header]:
+                if seq.rstrip('\n') != fasta_dict[header].rstrip('\n'):
                     trimmed_seqs.append(f'{header.lstrip(">")}\t{seq}')
                 else:
                     untrimmed_seqs.append(f'{header.lstrip(">")}\t{seq}')
     return trimmed_seqs, untrimmed_seqs
+
+def cutadapt_relaxed(console, columns, forward_, reverse_, temp_input_path2, fasta_dict2, mismatch_, overlap, threads_, trimmed_seqs, untrimmed_seqs):
+    '''
+    runs cutadapt for only the forward or reverse primer
+    '''
+    count = 0
+    relaxed_count = 0
+    headers_to_remove = set()
+    command = ['cutadapt', temp_input_path2, '-g', forward_, '-a', reverse_, '--no-indels', '-e', str(mismatch_), '--overlap', overlap, '--cores', str(threads_), '--revcomp', '--quiet']
+    with rich.progress.Progress(*columns) as progress_bar:
+        task = progress_bar.add_task(console = console, description = "[cyan]|      relaxed IS PCR[/] |", total=len(fasta_dict2) * 2)
+        process = sp.Popen(command, stdout = sp.PIPE, stderr = sp.PIPE, text = True)
+        stdout, stderr = process.communicate()
+        if process.returncode != 0:
+            stderr = stderr.rstrip('\n')
+            console.print(f"[cyan]\n|               ERROR[/] | [bold yellow]Cutadapt failed with {stderr}, aborting analysis...[/]\n")
+            exit()
+        for output in stdout.splitlines():
+            progress_bar.update(task, advance = 1)
+            count += 1
+            if count % 2 != 0:
+                header = output.strip()
+                if header.endswith(' rc'):
+                    header = header.removesuffix(' rc')
+            else:
+                seq = output.strip() + '\n'
+                if seq.rstrip('\n') != fasta_dict2[header].rstrip('\n'):
+                    relaxed_count += 1
+                    trimmed_seqs.append(f'{header.lstrip(">")}\t{seq}')
+                    headers_to_remove.add(header.lstrip(">"))
+    #untrimmed_seqs = [item for item in untrimmed_seqs if not any(item.startswith(h) for h in headers_to_remove)]
+    return trimmed_seqs, untrimmed_seqs, relaxed_count
 
 def fasta_to_list(console, columns, temp_out_path):
     '''

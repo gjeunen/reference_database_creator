@@ -42,7 +42,9 @@ from function.crabs_functions import (check_params,
                                       unknown_base_conversion,
                                       rev_comp,
                                       cutadapt,
+                                      cutadapt_relaxed,
                                       crabs_to_fasta,
+                                      list_to_fasta,
                                       multiple_crabs_to_fasta,
                                       multiple_list_to_temp,
                                       usearch_global,
@@ -91,7 +93,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--exclude",
                 "--output",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Download BOLD Database",
@@ -101,7 +103,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--marker",
                 "--output",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Download EMBL Database",
@@ -110,7 +112,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--taxon",
                 "--output",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Download GreenGenes Database",
@@ -118,7 +120,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--download-greengenes",
                 "--output",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Download MIDORI2 Database",
@@ -129,7 +131,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--gb-type",
                 "--output",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Download MitoFish Database",
@@ -137,7 +139,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--download-mitofish",
                 "--output",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Download NCBI Database",
@@ -150,7 +152,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--species",
                 "--output",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Download SILVA Database",
@@ -161,7 +163,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--db-version",
                 "--output",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Import sequences into CRABS format",
@@ -175,7 +177,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--ranks",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Merge CRABS databases into one file",
@@ -185,7 +187,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--uniq",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Extract amplicons through in silico PCR",
@@ -198,8 +200,9 @@ click.rich_click.OPTION_GROUPS = {
                 "--mismatch",
                 "--threads",
                 "--untrimmed",
+                "--relaxed",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Retrieve amplicons without primer-binding regions",
@@ -216,7 +219,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--coverage",
                 "--all-start-positions",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Dereplicate CRABS database",
@@ -226,7 +229,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--dereplication-method",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Filter CRABS database",
@@ -241,7 +244,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--no-species-id",
                 "--rank-na",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Subset CRABS database on taxonomic ID",
@@ -252,7 +255,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--include",
                 "--exclude",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Figure: diversity contained within database",
@@ -262,7 +265,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--tax-level",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Figure: amplicon length distribution",
@@ -272,7 +275,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--tax-level",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Figure: phylogenetic tree",
@@ -283,7 +286,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--tax-level",
                 "--species",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Figure: amplification efficiency",
@@ -296,7 +299,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--tax-group",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Table: database completeness for target taxonomic group",
@@ -308,7 +311,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--nodes",
                 "--species",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
         {
             "name": "Export CRABS database to taxonomic classifier format",
@@ -318,7 +321,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--output",
                 "--export-format",
             ],
-            #"deduplicate": False
+            "deduplicate": False
         },
     ],
 }
@@ -369,7 +372,7 @@ click.rich_click.OPTION_GROUPS = {
 @click.option("--nodes", "nodes_", help = "NCBI taxonomy 'nodes.dmp' file")
 @click.option("--acc2tax", "acc2tax_", help = "NCBI taxonomy 'nucl_gb.accession2taxid' file")
 @click.option("--input", "input_", help = "input filename")
-@click.option("--ranks", "ranks_", default = 'superkingdom;phylum;class;order;family;genus;species', help = "taxonomic ranks to be included in the taxonomic lineage")
+@click.option("--ranks", "ranks_", default = 'kingdom;phylum;class;order;family;genus;species', help = "taxonomic ranks to be included in the taxonomic lineage")
 @click.option("--uniq", "uniq_", is_flag = True, help = "keep only unique accession numbers")
 @click.option("--dereplication-method", "dereplication_method_", default = 'unique_species', help = 'dereplication method: "strict", "single_species", and "unique_species" (default)')
 @click.option("--minimum-length", "minimum_length_", help = "minimum sequence length for amplicon to be retained in the database", type = int)
@@ -386,6 +389,7 @@ click.rich_click.OPTION_GROUPS = {
 @click.option("--mismatch", "mismatch_", type = float, default = 4.5, help = "number of mismatches allowed in the primer-binding site (default: 4)")
 @click.option("--threads", "threads_", type = int, default = 0, help = "number of threads used to compute the in silico PCR (default: autodetection)")
 @click.option("--untrimmed", "untrimmed_", help = "file name for untrimmed sequences")
+@click.option("--relaxed", "relaxed_", is_flag = True, help = "recover amplicons where only the forward or reverse primer-binding region was found")
 @click.option("--amplicons", "amplicons_", help = "file name for the amplicons retrieved during in silico PCR")
 @click.option("--size-select", "size_select_", help = "exclude reads longer than N from the analysis")
 @click.option("--percent-identity", "percent_identity_", help = "minimum percent identity threshold for the alignment to pass (0.0 - 1.0)")
@@ -483,6 +487,7 @@ def crabs(**kwargs):
     mismatch_ = kwargs.get("mismatch_")
     threads_ = kwargs.get("threads_")
     untrimmed_ = kwargs.get("untrimmed_")
+    relaxed_ = kwargs.get("relaxed_")
     amplicons_ = kwargs.get("amplicons_")
     size_select_ = kwargs.get("size_select_")
     percent_identity_ = kwargs.get("percent_identity_")
@@ -776,14 +781,22 @@ def crabs(**kwargs):
         temp_input_path, fasta_dict = crabs_to_fasta(console, columns, input_)
         # run cutadapt
         trimmed_seqs, untrimmed_seqs = cutadapt(console, columns, adapter, temp_input_path, fasta_dict, mismatch_, overlap, threads_)
+        # run cutadapt again if the relaxed_ parameter was provided
+        if relaxed_:
+            temp_input_path2, fasta_dict2 = list_to_fasta(console, columns, untrimmed_seqs)
+            trimmed_seqs, untrimmed_seqs, relaxed_count = cutadapt_relaxed(console, columns, forward_, reverse_, temp_input_path2, fasta_dict2, mismatch_, overlap, threads_, trimmed_seqs, untrimmed_seqs)
         # write data to output
         write_list_to_output(console, columns, trimmed_seqs, output_)
         if untrimmed_:
             write_list_to_output(console, columns, untrimmed_seqs, untrimmed_)
         # remove temporary files
         os.remove(temp_input_path)
+        if relaxed_:
+            os.remove(temp_input_path2)
         # write log to Terminal window
         console.print(f"[cyan]|             Results[/] | Extracted {len(trimmed_seqs)} amplicons from {len(fasta_dict)} sequences ({round(len(trimmed_seqs) / len(fasta_dict) * 100, 2)}%)")
+        if relaxed_:
+            console.print(f"[cyan]|             Results[/] | {relaxed_count} amplicons were extracted by only the forward or reverse primer ({round(relaxed_count / len(trimmed_seqs) * 100, 2)}%)")
 
 #############################
 # PAIRWISE GLOBAL ALIGNMENT #
