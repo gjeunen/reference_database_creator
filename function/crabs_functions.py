@@ -462,9 +462,9 @@ def download_ncbi_seqs(console, columns, total_read_count, batchsize_, database_
 #                     i += batchsize_
 #     return total_seqs
         
-def bold_to_memory(task, progress_bar, input_):
+def boldv3_to_memory(task, progress_bar, input_):
     '''
-    reads bold database to memory and returns a dict
+    reads bold v3 database to memory and returns a dict
     '''
     initial_seq_number = 0
     seq_input_dict = collections.defaultdict(dict)
@@ -499,6 +499,31 @@ def bold_to_memory(task, progress_bar, input_):
     seq_input_dict[seq_name]['taxid'] = species_name
     seq_input_dict[seq_name]['sequence'] = sequence
     return seq_input_dict, initial_seq_number
+
+def boldv5_to_memory(task, progress_bar, input_):
+    '''
+    reads bold v5 database to memory and returns a dict
+    '''
+    initial_seq_number = 0
+    seq_input_dict = collections.defaultdict(dict)
+    line_count = 0
+    seq_name = ''
+    species_name = ''
+    sequence = ''
+    with open(input_, 'r', encoding = 'utf-8', errors = 'ignore') as infile:
+        for line in infile:
+            line_count += 1
+            progress_bar.update(task, advance = len(line.encode('utf-8')))
+            if line_count != 1:
+                lineparts = line.split('\t')
+                initial_seq_number += 1
+                seq_name = lineparts[1]
+                species_name = lineparts[24]
+                sequence = lineparts[66].replace('-', 'N')
+                if seq_name not in seq_input_dict:
+                    seq_input_dict[seq_name]['sequence'] = sequence
+                    seq_input_dict[seq_name]['taxid'] = species_name
+    return seq_input_dict, initial_seq_number
        
 def embl_to_memory(task, progress_bar, input_):
     '''
@@ -518,7 +543,7 @@ def embl_to_memory(task, progress_bar, input_):
             if line.startswith('>'):
                 initial_seq_number += 1
                 if count > 1:
-                    if len(sequence) < 50000:
+                    if len(sequence) < 500000:
                         seq_input_dict[seq_name]['sequence'] = sequence
                         seq_input_dict[seq_name]['taxid'] = species_name
                     seq_name = ''
@@ -528,7 +553,7 @@ def embl_to_memory(task, progress_bar, input_):
                 species_name = ' '.join(line.split('|')[2].split(' ')[1:3])
             else:
                 sequence += line
-    if len(sequence) < 50000:
+    if len(sequence) < 500000:
         seq_input_dict[seq_name]['taxid'] = species_name
         seq_input_dict[seq_name]['sequence'] = sequence
     return seq_input_dict, initial_seq_number
@@ -682,8 +707,10 @@ def unite_to_memory(task, progress_bar, input_):
                     seq_name = ''
                     species_name = ''
                     sequence = ''
-                seq_name = line.split('|')[1]
-                species_name = line.split('|')[0].lstrip('>').replace('_', ' ')
+                # seq_name = line.split('|')[1]
+                # species_name = line.split('|')[0].lstrip('>').replace('_', ' ')
+                seq_name = line.split('|')[0]
+                species_name = line.split('|')[1].split('__')[-1].replace('_', ' ')
             else:
                 sequence += line
     seq_input_dict[seq_name]['taxid'] = species_name
@@ -726,7 +753,8 @@ def select_function(user_info):
     select a function based on user-provided input by dict mapping
     '''
     function_map = {
-        'BOLD': bold_to_memory,
+        'BOLDV3': boldv3_to_memory,
+        'BOLDV5': boldv5_to_memory,
         'EMBL': embl_to_memory,
         'GREENGENES': greengenes_to_memory,
         'MIDORI': midori_to_memory,

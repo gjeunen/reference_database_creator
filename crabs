@@ -3,7 +3,7 @@
 ##################
 # IMPORT MODULES #
 ##################
-import os, rich, rich.progress, collections
+import os, rich, rich.progress, collections, requests
 import rich_click as click
 from function import __version__
 from function.crabs_functions import (check_params,
@@ -102,6 +102,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--taxon",
                 "--marker",
                 "--output",
+                "--version-v3",
             ],
             "deduplicate": False
         },
@@ -361,6 +362,7 @@ click.rich_click.OPTION_GROUPS = {
 @click.option("--gb-number", "gb_number_", help = "database version to download")
 @click.option("--gb-type", "gb_type_", type = str, help = "database type to download")
 @click.option("--marker", "marker_", help = "genetic marker to download")
+@click.option("--version-v3", "version_v3_", is_flag = True, help = "download data from BOLD v3 (legacy)")
 @click.option("--email", "email_", help = "email address to connect to NCBI server")
 @click.option("--query", "query_", help = "query identifying what to download from NCBI")
 @click.option("--database", "database_", help = "the database from which NCBI sequences are downloaded")
@@ -457,6 +459,7 @@ def crabs(**kwargs):
     exclude_ = kwargs.get("exclude_")
     taxon_ = kwargs.get("taxon_")
     marker_ = kwargs.get("marker_")
+    version_v3_ = kwargs.get("version_v3_")
     gene_ = kwargs.get("gene_")
     gb_number_ = kwargs.get("gb_number_")
     gb_type_ = kwargs.get("gb_type_")
@@ -533,19 +536,56 @@ def crabs(**kwargs):
 #################
     if download_bold_:
         # print function to console
-        console.print(f"[cyan]|            Function[/] | Download BOLD database")
+        console.print("[cyan]|            Function[/] | Download BOLD database")
         # check if all parameters have been provided
         check_params(console, {'"--output"': output_, '"--taxon"': taxon_})
-        # set url, output directory, and filename
-        url = 'http://v3.boldsystems.org/index.php/API_Public/sequence?taxon=' + taxon_
-        if marker_:
-            url = url + '&marker=' + marker_
-        output_directory = f'{os.path.dirname(output_)}/'
-        if output_directory == '/':
-            output_directory = ''
-        filename = output_.split('/')[-1]
-        # download the file
-        download_chunked_file(console, columns, url, output_directory, filename)
+        # determine if download from v3 specified
+        if version_v3_:
+            # set url, output directory, and filename
+            url = 'http://v3.boldsystems.org/index.php/API_Public/sequence?taxon=' + taxon_
+            if marker_:
+                url = url + '&marker=' + marker_
+            output_directory = f'{os.path.dirname(output_)}/'
+            if output_directory == '/':
+                output_directory = ''
+            filename = output_.split('/')[-1]
+            # download the file
+            download_chunked_file(console, columns, url, output_directory, filename)
+        else:
+            # step 1: preprocess query
+            preprocess_url = f"https://portal.boldsystems.org/api/query/preprocessor?query=tax:{taxon_}"
+            response = requests.get(preprocess_url)
+            if response.status_code != 200:
+                console.print(f"[cyan]|               ERROR[/] | Preprocessor request failed ({response.status_code})")
+                exit()
+            preprocess_data = response.json()
+            # step 2: extract matched terms
+            try:
+                matched_tax = preprocess_data["successful_terms"][0]["matched"]
+            except (KeyError, IndexError):
+                console.print(f"[cyan]|               ERROR[/] | Taxon '{taxon_}' not found in BOLD v5.")
+                exit()
+            if not matched_tax.startswith("tax:"):
+                console.print(f"[cyan]|               ERROR[/] | Taxon '{taxon_}' not found in BOLD v5.")
+                exit()
+            # step 3: retrieve query id
+            query_url = f"https://portal.boldsystems.org/api/query?query={matched_tax}&extent=full"
+            query_response = requests.get(query_url)
+            if query_response.status_code != 200:
+                console.print(f"[cyan]|               ERROR[/] | Query request failed ({query_response.status_code})")
+                exit()
+            query_json = query_response.json()
+            query_id = query_json.get("query_id", None)
+            if not query_id:
+                console.print("[cyan]|               ERROR[/] | No query_id returned from BOLD v5.")
+                exit()
+            # step 4: download results
+            download_url = f"https://portal.boldsystems.org/api/documents/{query_id}/download?format=tsv"
+            output_directory = f'{os.path.dirname(output_)}/'
+            if output_directory == '/':
+                output_directory = ''
+            filename = output_.split('/')[-1]
+            download_chunked_file(console, columns, download_url, output_directory, filename)
 
 #################
 # DOWNLOAD EMBL #
@@ -730,7 +770,11 @@ def crabs(**kwargs):
         with rich.progress.Progress(*columns) as progress_bar:
             task = progress_bar.add_task(console = console, description = "[cyan]| Read data to memory[/] |", total=input_file_size)
             input_to_memory = select_function(import_format_)
-            seq_input_dict, initial_seq_number = input_to_memory(task, progress_bar, input_)
+            try:
+                seq_input_dict, initial_seq_number = input_to_memory(task, progress_bar, input_)
+            except TypeError:
+                console.print(f"\n[cyan]|               ERROR[/] | [bold yellow]'--import-format {import_format_}' not recognised, aborting analysis...[/]\n")
+                exit()
             names_key_tax_number_value_dict, tax_number_key_names_value_dict, synonym_key_dict = names_to_memory(task, progress_bar, names_)
             tax_number_key_rank_and_tax_number_up_values_dict = nodes_to_memory(task, progress_bar, nodes_)
             acc_key_tax_number_value_dict = accession_to_memory(task, progress_bar, acc2tax_, seq_input_dict)
