@@ -737,6 +737,31 @@ def greengenes_to_memory(task, progress_bar, input_):
     seq_input_dict[seq_name]['sequence'] = sequence
     return seq_input_dict, initial_seq_number
 
+def greengenes2_to_memory(task, progress_bar, input_):
+    '''
+    reads GreenGenes2 database to memory and returns a dict
+    '''
+    initial_seq_number = 0
+    seq_input_dict = collections.defaultdict(dict)
+    with open(input_, 'r', encoding = 'utf-8', errors = 'ignore') as infile:
+        while True:
+            header = infile.readline().rstrip('\n').lstrip('>')
+            if not header:
+                break
+            sequence = infile.readline().rstrip('\n')
+            initial_seq_number += 1
+
+            if '-' in header:
+                seq_input_dict[header]['sequence'] = sequence
+                seq_input_dict[header]['taxid'] = header
+            elif '.' in header:
+                seq_input_dict[header.split('.')[0]]['sequence'] = sequence
+                seq_input_dict[header.split('.')[0]]['taxid'] = header.split('.')[0]
+            else:
+                seq_input_dict[header]['sequence'] = sequence
+                seq_input_dict[header]['taxid'] = header
+    return seq_input_dict, initial_seq_number
+
 def select_function(user_info):
     '''
     select a function based on user-provided input by dict mapping
@@ -746,6 +771,7 @@ def select_function(user_info):
         'BOLDV5': boldv5_to_memory,
         'EMBL': embl_to_memory,
         'GREENGENES': greengenes_to_memory,
+        'GREENGENES2': greengenes2_to_memory,
         'MIDORI': midori_to_memory,
         'MITOFISH': mitofish_to_memory,
         'NCBI': ncbi_to_memory,

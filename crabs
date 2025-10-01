@@ -124,6 +124,14 @@ click.rich_click.OPTION_GROUPS = {
             "deduplicate": False
         },
         {
+            "name": "Download GreenGenes2 Database",
+            "options": [
+                "--download-greengenes2",
+                "--output",
+            ],
+            "deduplicate": False
+        },
+        {
             "name": "Download MIDORI2 Database",
             "options": [
                 "--download-midori",
@@ -336,6 +344,7 @@ click.rich_click.OPTION_GROUPS = {
 @click.option("--download-bold", "download_bold_", is_flag = True, help = "Function to download BOLD database")
 @click.option("--download-embl", "download_embl_", is_flag = True, help = "Function to download EMBL database")
 @click.option("--download-greengenes", "download_greengenes_", is_flag = True, help = "Function to download GreenGenes database")
+@click.option("--download-greengenes2", "download_greengenes2_", is_flag = True, help = "Function to downlaod GreenGenes2 database")
 @click.option("--download-midori", "download_midori_", is_flag = True, help = "Function to download MIDORI2 database")
 @click.option("--download-mitofish", "download_mitofish_", is_flag = True, help = "Function to download MitoFish database")
 @click.option("--download-ncbi", "download_ncbi_", is_flag = True, help = "Function to download NCBI database")
@@ -436,6 +445,7 @@ def crabs(**kwargs):
     download_bold_ = kwargs.get("download_bold_")
     download_embl_ = kwargs.get("download_embl_")
     download_greengenes_ = kwargs.get("download_greengenes_")
+    download_greengenes2_ = kwargs.get("download_greengenes2_")
     download_midori_ = kwargs.get("download_midori_")
     download_mitofish_ = kwargs.get("download_mitofish_")
     download_ncbi_ = kwargs.get("download_ncbi_")
@@ -657,6 +667,28 @@ def crabs(**kwargs):
             else:
                 gunzip_with_progress(console, columns, output_directory, file, outputfilename, append = True)
             os.remove(f'{output_directory}{file}')
+
+########################
+# DOWNLOAD GREENGENES2 #
+########################
+    if download_greengenes2_:
+        # print function to console
+        console.print(f"[cyan]|            Function[/] | Download GreenGenes2 database")
+        # check if all parameters have been provided
+        check_params(console, {'"--output"': output_})
+        # set url, output directory, and filename
+        url = 'https://ftp.microbio.me/greengenes_release/current/2024.09.seqs.fna.gz'
+        output_directory = f'{os.path.dirname(output_)}/'
+        if output_directory == '/':
+            output_directory = ''
+        zipfilename = url.split('/')[-1]
+        outputfilename = output_.split('/')[-1]
+        # download the zip file
+        download_file(console, columns, url, output_directory, zipfilename)
+        # unzip the downloaded file
+        gunzip_with_progress(console, columns, output_directory, zipfilename, outputfilename, append = False)
+        # remove intermediary files
+        os.remove(f'{output_directory}{zipfilename}')
 
 ####################
 # DOWNLOAD MIDORI2 #
