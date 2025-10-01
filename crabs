@@ -694,15 +694,16 @@ def crabs(**kwargs):
         check_params(console, {'"--output"': output_})
         # set url, output_directory, and filename
         url = 'http://mitofish.aori.u-tokyo.ac.jp/species/detail/download/?filename=download%2F/complete_partial_mitogenomes.zip'
+        url2 = 'https://mitofish.aori.u-tokyo.ac.jp/download/fullseq/latest/mitofishdb.fa.gz'
         output_directory = f'{os.path.dirname(output_)}/'
         if output_directory == '/':
             output_directory = ''
-        zipfilename = url.split('/')[-1]
+        zipfilename = url2.split('/')[-1]
         outputfilename = output_.split('/')[-1]
         # download the zip file
-        download_file(console, columns, url, output_directory, zipfilename)
+        download_file(console, columns, url2, output_directory, zipfilename)
         # unzip the downloaded file
-        unzip_with_progress(console, columns, output_directory, zipfilename, outputfilename)
+        gunzip_with_progress(console, columns, output_directory, zipfilename, outputfilename, append = False)
         # remove intermediary files
         os.remove(f'{output_directory}{zipfilename}')
 

@@ -636,6 +636,7 @@ crabs --completeness-table --input crabs_testing/subset.txt --output crabs_testi
 
 ## 6. Version updates
 
+* `crabs --version v 1.11.0`: update to the latest version of the MITOFISH database (`--download-mitofish`; `--import --import-format mitofish`)
 * `crabs --version v 1.10.0`: sequences are now downloaded from BOLD V5 as standard (`--download-bold`), while BOLD V3 sequences can be downloaded through the `--version-v3` parameter (legacy). Due to the different formats between V3 and V5, `--import-format` now requires users to specify **BOLDV3** or **BOLDV5**.
 * `crabs --version v 1.9.0`: support for increasing buffer size during *in silico* PCR analysis (`--in-silico-pcr --buffer-size`).
 * `crabs --version v 1.8.0`: support for extracting amplicons using a single primer-binding region (`--in-silico-pcr --relaxed`).

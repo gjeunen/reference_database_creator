@@ -595,29 +595,18 @@ def mitofish_to_memory(task, progress_bar, input_):
     '''
     initial_seq_number = 0
     seq_input_dict = collections.defaultdict(dict)
-    count = 0
-    seq_name = ''
-    species_name = ''
-    sequence = ''
     with open(input_, 'r', encoding = 'utf-8', errors = 'ignore') as infile:
-        for line in infile:
-            progress_bar.update(task, advance = len(line.encode('utf-8')))
-            line = line.rstrip('\n')
-            count += 1
-            if line.startswith('>'):
+        while True:
+            header = infile.readline().rstrip('\n').lstrip('>')
+            if not header:
+                break
+            sequence = infile.readline().rstrip('\n')
+
+            headers = header.split(';')
+            for item in headers:
                 initial_seq_number += 1
-                if count > 1:
-                    seq_input_dict[seq_name]['sequence'] = sequence
-                    seq_input_dict[seq_name]['taxid'] = species_name
-                    seq_name = ''
-                    species_name = ''
-                    sequence = ''
-                seq_name = line.split('|')[1]
-                species_name = line.split('|')[2].split(' ')[0].replace('_', ' ')
-            else:
-                sequence += line
-    seq_input_dict[seq_name]['taxid'] = species_name
-    seq_input_dict[seq_name]['sequence'] = sequence
+                seq_input_dict[item]['taxid'] = item
+                seq_input_dict[item]['sequence'] = sequence
     return seq_input_dict, initial_seq_number
 
 def ncbi_to_memory(task, progress_bar, input_):
