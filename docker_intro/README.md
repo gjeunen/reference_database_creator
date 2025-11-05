@@ -8,11 +8,11 @@ Note: the below examples will work for Mac or Linux. We will add examples for Wi
 
 ## Help command
 
-After installing any software, most of us will try it out with a help command. Here is an example using crabs on Docker. (All following commands assume that you have already pulled the docker image using `docker pull quay.io/swordfish/crabs:1.9.0.0`.)
+After installing any software, most of us will try it out with a help command. Here is an example using crabs on Docker. (All following commands assume that you have already pulled the docker image using `docker pull quay.io/swordfish/crabs:1.12.0.0`.)
 
 ```
 docker run --rm -it \
-  quay.io/swordfish/crabs:1.9.0.0 \
+  quay.io/swordfish/crabs:1.12.0.0 \
   crabs -h
 ```
 
@@ -46,7 +46,7 @@ Then run the docker command:
 docker run --rm -it \
   -v $(pwd):/data \
   --workdir="/data" \
-  quay.io/swordfish/crabs:1.9.0.0 \
+  quay.io/swordfish/crabs:1.12.0.0 \
   crabs --download-ncbi \
   --database nucleotide \
   --query '"Amanita"[Organism] AND Internal Transcribed Spacer[All Fields] AND ("1"[SLEN] : "1000"[SLEN])' \
@@ -85,7 +85,7 @@ Then, from this directory, we download the taxonomy files:
 docker run --rm -it \
   -v $(pwd):/data \
   --workdir="/data" \
-  quay.io/swordfish/crabs:1.9.0.0 \
+  quay.io/swordfish/crabs:1.12.0.0 \
   crabs --download-taxonomy \
     --output ./
 
@@ -115,7 +115,7 @@ docker run --rm -it \
   -v $(pwd):/data \
   -v ${TAX}:/src \
   --workdir="/data" \
-  quay.io/swordfish/crabs:1.9.0.0 \
+  quay.io/swordfish/crabs:1.12.0.0 \
   crabs --import \
     --import-format NCBI \
     --input amanita.fasta \
@@ -146,7 +146,7 @@ Here is an example command to just get the ITS1 region from our downloaded seque
 docker run --rm -it \
   -v $(pwd):/data \
   --workdir="/data" \
-  quay.io/swordfish/crabs:1.9.0.0 \
+  quay.io/swordfish/crabs:1.12.0.0 \
   crabs --in-silico-pcr \
   --input amanita_crabs.txt \
   --output amanita_crabs_its1.txt \
@@ -162,7 +162,7 @@ docker run --rm -it \
 docker run --rm -it \
   -v $(pwd):/data \
   --workdir="/data" \
-  quay.io/swordfish/crabs:1.9.0.0 \
+  quay.io/swordfish/crabs:1.12.0.0 \
   crabs --pairwise-global-alignment \
   --input amanita_crabs.txt \
   --amplicons amanita_crabs_its1.txt \
