@@ -646,6 +646,7 @@ crabs --completeness-table --input crabs_testing/subset.txt --output crabs_testi
 
 ## 6. Version updates
 
+* `crabs --version v 1.12.1`: bug fix --> automatic parsing of incorrectly-formatted sequences when exporting to BLAST format (`--export`)
 * `crabs --version v 1.12.0`: support for downloading the GreenGenes2 database (`--download-greengenes2`; `--import --import-format greengenes2`)
 * `crabs --version v 1.11.0`: update to the latest version of the MITOFISH database (`--download-mitofish`; `--import --import-format mitofish`)
 * `crabs --version v 1.10.0`: sequences are now downloaded from BOLD V5 as standard (`--download-bold`), while BOLD V3 sequences can be downloaded through the `--version-v3` parameter (legacy). Due to the different formats between V3 and V5, `--import-format` now requires users to specify **BOLDV3** or **BOLDV5**.

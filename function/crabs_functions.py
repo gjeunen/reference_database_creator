@@ -1290,8 +1290,9 @@ def blast_tax(console, columns, input_, output_):
                 progress_bar.update(task, advance = len(line))
                 line = line.rstrip('\n')
                 line_parts = line.split('\t')
-                seq_input_dict[line_parts[0][0:50]] = f'>{line_parts[0][0:50]}\n{line_parts[-1]}\n'
-                map_dict[line_parts[0][0:50]] = line_parts[2]
+                if line_parts[2] != 'NA':
+                    seq_input_dict[line_parts[0][0:50]] = f'>{line_parts[0][0:50]}\n{line_parts[-1]}\n'
+                    map_dict[line_parts[0][0:50]] = line_parts[2]
     # add sequences for which we don't have a taxonomic ID to a separate dict
     missing_accessions = {}
     for acc in seq_input_dict:
