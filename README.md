@@ -6,7 +6,7 @@ CRABS (<ins>C</ins>reating <ins>R</ins>eference databases for <ins>A</ins>mplico
 
 ## 2. Major update: CRABS *v 1.0.0*
 
-We are excited to announce that CRABS has seen a major update and code redesign based on user feedback, which we hope will improve the user experience of building your very own local reference database!
+WE are excited to announce that CRABS has seen a major update and code redesign based on user feedback, which we hope will improve the user experience of building your very own local reference database!
 
 Please find below a list of features and improvements added to CRABS *v 1.0.0*:
 
