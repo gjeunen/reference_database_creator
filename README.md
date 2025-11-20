@@ -294,7 +294,17 @@ crabs --download-greengenes2 --output greengenes2.fasta
 
 ![CRABS GreenGenes](figures_readme/crabs_greengenes.png)
 
-#### 5.1.6 `--download-midori`
+#### 5.1.6 `--download-meta-fish-lib`
+
+The Meta-Fish-Lib database can be downloaded through [GitHub](https://github.com/genner-lab/meta-fish-lib). This database is stored as a single gzipped .csv file. CRABS will automatically unzip the downloaded file. The output directory and file name can be specified using the `--output` parameter.
+
+```{code-block} bash
+crabs --download-meta-fish-lib --output metafishlib.csv
+```
+
+![crabs metafishlib](figures_readme/crabs_download_metafishlib.png)
+
+#### 5.1.7 `--download-midori`
 
 The MIDORI and MIDORI2 databases can be downloaded through the [dedicated website](https://www.reference-midori.info/download.php). Since multiple database versions, gene regions, and database types are available, CRABS requires some specific information to download the correct version. This information can be passed through using the `--gb-number` (MIDORI database number and date in the format of "XXX_YYYY-MM-DD"; supported database versions range currently between 237_2020-04-18 and 264_2024-12-14; note that new database versions will be automatically supported by CRABS until format changes occur), `--gene` (the gene region of the sequence data; MIDORI currently splits databases into 14 gene regions, including A6, A8, CO1, CO2, CO3, Cytb, ND1, ND2, ND3, ND4, ND5, ND6, lrRNA, and srRNA), and `--gb-type` (MIDORI database type, including "longest", "total", and "uniq") parameters. The easiest way to determine the values for these parameters is to visit the [website](https://www.reference-midori.info/download.php). Besides these specific parameters, the output folder and file can be specified using the `--output` parameter. The screenshot below indicates where all information can be found on the MIDORI website.
 
@@ -306,7 +316,7 @@ When using the MIDORI database to generate your own local reference database, pl
 crabs --download-midori --output cytb_total_264.fasta --gb-number 264_2024-12-14 --gene Cytb --gb-type total
 ```
 
-#### 5.1.7 `--download-mitofish`
+#### 5.1.8 `--download-mitofish`
 
 CRABS can also download the [MitoFish database](http://mitofish.aori.u-tokyo.ac.jp). This database is a single two-line fasta file. The output directory and file name can be specified using the `--output` parameter.
 
@@ -316,7 +326,7 @@ crabs --download-mitofish --output crabs_testing/mitofish.fasta
 
 ![crabs download mitofish](figures_readme/crabs_download_mitofish.png)
 
-#### 5.1.8 `--download-ncbi`
+#### 5.1.9 `--download-ncbi`
 
 Sequences from the [NCBI database](https://www.ncbi.nlm.nih.gov/) are downloaded through the [Entrez Programming Utilities](https://www.ncbi.nlm.nih.gov/books/NBK25497/). NCBI allows the downloading of data from various databases, which users can specify with the `--database` parameter. For most users, the `--database nucleotide` database will be most appropriate for building a local reference database.
 
@@ -332,7 +342,7 @@ crabs --download-ncbi --query '("Chondrichthyes"[Organism] OR Chondrichthyes[All
 
 ![crabs download ncbi output](figures_readme/crabs_download_ncbi_output.png)
 
-#### 5.1.9 `--download-silva`
+#### 5.1.10 `--download-silva`
 
 The fasta version of the [SILVA database](https://ftp.arb-silva.de/) is downloaded through the dedicated FTP server. SILVA allows the downloading of different versions of the database, which users can specify with the `--db-version` parameter. As of writing, the latest version is 138.2. Besides versions, the SILVA database is also split up in two different gene regions, including one database containing the 16S/18S ribosomal RNA sequences (`--gene SSU`) and one database containing the 23S/28S ribosomal RNA sequences (`--gene LSU`). Finally, databases can be downloaded in full (`--db-type full`) or subsetted based on a 99% criterion applied to remove redundant sequences (`--db-type subset`). More information about the databases can be found on [SILVA's website](https://www.arb-silva.de/download/arb-files/).
 
@@ -344,7 +354,7 @@ crabs --download-silva --output silva_138.2_LSU_subset.fasta --gene LSU --db-typ
 
 ![CRABS silva](figures_readme/crabs_silva.png)
 
-#### 5.1.10 Downloading the UNITE database
+#### 5.1.11 Downloading the UNITE database
 
 The current version of CRABS does not support the direct download of the [UNITE database](https://unite.ut.ee/repository.php), as it is stored via a DOI link requiring user authentication. Until we resolve this issue, we recommend downloading the UNITE database directly from the website using this [link](https://unite.ut.ee/repository.php). Below is a step-by-step instruction to download different versions of the UNITE database. While CRABS cannot currently download the UNITE database, CRABS can import the UNITE database using the code below.
 
@@ -646,6 +656,7 @@ crabs --completeness-table --input crabs_testing/subset.txt --output crabs_testi
 
 ## 6. Version updates
 
+* `crabs --version v 1.13.0`: support for downloading the Meta-Fish-Lib database (`--download-meta-fish-lib`).
 * `crabs --version v 1.12.1`: bug fix --> automatic parsing of incorrectly-formatted sequences when exporting to BLAST format (`--export`)
 * `crabs --version v 1.12.0`: support for downloading the GreenGenes2 database (`--download-greengenes2`; `--import --import-format greengenes2`)
 * `crabs --version v 1.11.0`: update to the latest version of the MITOFISH database (`--download-mitofish`; `--import --import-format mitofish`)

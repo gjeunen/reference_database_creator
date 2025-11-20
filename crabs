@@ -132,6 +132,14 @@ click.rich_click.OPTION_GROUPS = {
             "deduplicate": False
         },
         {
+            "name": "Download Meta-Fish-Lib",
+            "options": [
+                "--download-meta-fish-lib",
+                "--output",
+            ],
+            "deduplicate": False
+        },
+        {
             "name": "Download MIDORI2 Database",
             "options": [
                 "--download-midori",
@@ -345,6 +353,7 @@ click.rich_click.OPTION_GROUPS = {
 @click.option("--download-embl", "download_embl_", is_flag = True, help = "Function to download EMBL database")
 @click.option("--download-greengenes", "download_greengenes_", is_flag = True, help = "Function to download GreenGenes database")
 @click.option("--download-greengenes2", "download_greengenes2_", is_flag = True, help = "Function to downlaod GreenGenes2 database")
+@click.option("--download-meta-fish-lib", "download_meta_fish_lib_", is_flag = True, help = "Function to download the Meta-Fish-Lib database")
 @click.option("--download-midori", "download_midori_", is_flag = True, help = "Function to download MIDORI2 database")
 @click.option("--download-mitofish", "download_mitofish_", is_flag = True, help = "Function to download MitoFish database")
 @click.option("--download-ncbi", "download_ncbi_", is_flag = True, help = "Function to download NCBI database")
@@ -450,6 +459,7 @@ def crabs(**kwargs):
     download_mitofish_ = kwargs.get("download_mitofish_")
     download_ncbi_ = kwargs.get("download_ncbi_")
     download_silva_ = kwargs.get("download_silva_")
+    download_meta_fish_lib_ = kwargs.get("download_meta_fish_lib_")
     import_ = kwargs.get("import_")
     merge_ = kwargs.get("merge_")
     in_silico_pcr_ = kwargs.get("in_silico_pcr_")
@@ -678,6 +688,28 @@ def crabs(**kwargs):
         check_params(console, {'"--output"': output_})
         # set url, output directory, and filename
         url = 'https://ftp.microbio.me/greengenes_release/current/2024.09.seqs.fna.gz'
+        output_directory = f'{os.path.dirname(output_)}/'
+        if output_directory == '/':
+            output_directory = ''
+        zipfilename = url.split('/')[-1]
+        outputfilename = output_.split('/')[-1]
+        # download the zip file
+        download_file(console, columns, url, output_directory, zipfilename)
+        # unzip the downloaded file
+        gunzip_with_progress(console, columns, output_directory, zipfilename, outputfilename, append = False)
+        # remove intermediary files
+        os.remove(f'{output_directory}{zipfilename}')
+
+##########################
+# DOWNLOAD META-FISH-LIB #
+##########################
+    if download_meta_fish_lib_:
+        # print function to console
+        console.print(f"[cyan]|            Function[/] | Download Meta-Fish-Lib database")
+        # check if all parameters have been provided
+        check_params(console, {'"--output"': output_})
+        # set url, output_directory, and filename
+        url = 'https://raw.githubusercontent.com/genner-lab/meta-fish-lib/main/assets/reference-library-master.csv.gz'
         output_directory = f'{os.path.dirname(output_)}/'
         if output_directory == '/':
             output_directory = ''

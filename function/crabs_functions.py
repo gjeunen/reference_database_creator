@@ -123,7 +123,7 @@ def download_file(console, columns, url, output_directory, filename):
     '''
     Download a file from a given URL and save it to a local file.
     '''
-    response = requests.get(url, stream=True)
+    response = requests.get(url, stream=True, verify=True)
     if response.status_code != 200:
         console.print(f"[cyan]|               ERROR[/] | [bold yellow]HTTP error code {response.status_code}: {response.reason}, aborting analysis...[/]\n")
         exit()
