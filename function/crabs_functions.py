@@ -3,7 +3,7 @@
 ##################
 # IMPORT MODULES #
 ##################
-import requests, tarfile, rich, os, zipfile, shutil, ftplib, fnmatch, collections, tempfile, time, re
+import requests, tarfile, rich, os, zipfile, shutil, ftplib, fnmatch, collections, tempfile, time, re, csv
 import rich.progress
 import rich_click as click
 import subprocess as sp
@@ -762,6 +762,30 @@ def greengenes2_to_memory(task, progress_bar, input_):
                 seq_input_dict[header]['taxid'] = header
     return seq_input_dict, initial_seq_number
 
+def metafishlib_to_memory(task, progress_bar, input_):
+    '''
+    reads Meta-Fish-Lib csv database to memory and returns a dict
+    '''
+    initial_seq_number = -1
+    seq_input_dict = collections.defaultdict(dict)
+    with open(input_, 'r', encoding = 'utf-8', errors = 'ignore', newline = '') as infile:
+        csv_reader = csv.reader(infile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        for line in csv_reader:
+            initial_seq_number += 1
+            progress_bar.update(task, advance = len(','.join(line).encode('utf-8')))
+            if initial_seq_number != 0:
+                sequence = line[24].upper()
+                species_name = line[9]
+                if line[0] == 'GENBANK':
+                    seq_name = line[2].split('.')[0].split('-')[0]
+                elif line[0] == 'BOLD':
+                    seq_name = line[2].split('.')[0].split('-')[0]
+                    if seq_name.startswith('Pending') or seq_name == '':
+                        seq_name = 'crabs_' + str(initial_seq_number) + f"_{species_name.replace(' ', '_')}"
+                seq_input_dict[seq_name]['taxid'] = species_name
+                seq_input_dict[seq_name]['sequence'] = sequence
+    return seq_input_dict, initial_seq_number
+
 def select_function(user_info):
     '''
     select a function based on user-provided input by dict mapping
@@ -772,6 +796,8 @@ def select_function(user_info):
         'EMBL': embl_to_memory,
         'GREENGENES': greengenes_to_memory,
         'GREENGENES2': greengenes2_to_memory,
+        'META-FISH-LIB': metafishlib_to_memory,
+        'METAFISHLIB': metafishlib_to_memory,
         'MIDORI': midori_to_memory,
         'MITOFISH': mitofish_to_memory,
         'NCBI': ncbi_to_memory,
