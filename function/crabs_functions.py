@@ -1105,7 +1105,7 @@ def filter_function(console, columns, input_, minimum_length_, maximum_length_, 
                         keep_sequence = False
                         no_spec_count['Sequences without species ID filter'] += 1
                     else:
-                        for item in [r'_sp\.r','_SP\.',r'_indet.', r'_sp.', r'_SP.']:
+                        for item in [r'_sp\.', r'_SP\.', r'_indet.', r'_sp.', r'_SP.']:
                             if item in line.split('\t')[-2]:
                                 keep_sequence = False
                                 no_spec_count['Sequences without species ID filter'] += 1
