@@ -3,7 +3,7 @@
 ##################
 # IMPORT MODULES #
 ##################
-import os, rich, rich.progress, collections, requests
+import os, rich, rich.progress, collections, requests, shutil
 import rich_click as click
 from function import __version__
 from function.crabs_functions import (check_params,
@@ -44,7 +44,7 @@ from function.crabs_functions import (check_params,
                                       cutadapt,
                                       cutadapt_relaxed,
                                       crabs_to_fasta,
-                                      list_to_fasta,
+                                      fasta_to_crabs,
                                       multiple_crabs_to_fasta,
                                       multiple_list_to_temp,
                                       usearch_global,
@@ -890,25 +890,25 @@ def crabs(**kwargs):
         overlap = str(min(len(forward_), len(reverse_)))
         adapter = forward_ + '...' + reverse_
         # transform input_ to fasta format in a temp file
-        temp_input_path, fasta_dict = crabs_to_fasta(console, columns, input_)
-        # run cutadapt
-        trimmed_seqs, untrimmed_seqs = cutadapt(console, columns, adapter, temp_input_path, fasta_dict, mismatch_, overlap, threads_, buffer_size_)
+        temp_input_path, nseq = crabs_to_fasta(console, columns, input_)
+        # run cutadapt - outputs are Tempfiles paths and counters
+        trimmed_seqs, untrimmed_seqs, ntrim, nuntrim = cutadapt(console, columns, adapter, temp_input_path, nseq, mismatch_, overlap, threads_, buffer_size_)
         # run cutadapt again if the relaxed_ parameter was provided
         if relaxed_:
-            temp_input_path2, fasta_dict2 = list_to_fasta(console, columns, untrimmed_seqs)
-            trimmed_seqs, untrimmed_seqs, relaxed_count = cutadapt_relaxed(console, columns, forward_, reverse_, temp_input_path2, fasta_dict2, mismatch_, overlap, threads_, trimmed_seqs, untrimmed_seqs, buffer_size_)
-        # write data to output
-        write_list_to_output(console, columns, trimmed_seqs, output_)
+            trimmed_seqs, untrimmed_seqs, relaxed_count, untrim_count = cutadapt_relaxed(console, columns, forward_, reverse_, untrimmed_seqs, nuntrim, mismatch_, overlap, threads_, trimmed_seqs, buffer_size_)
+        # move temp file to output location - no rich progress bar but it should be very fast except if moving to another file system
+        shutil.move(trimmed_seqs, output_)
         if untrimmed_:
-            write_list_to_output(console, columns, untrimmed_seqs, untrimmed_)
+            untrimmed_crabs, _ = fasta_to_crabs(console, columns, untrimmed_seqs)
+            shutil.move(untrimmed_crabs, untrimmed_)
         # remove temporary files
+        os.remove(untrimmed_seqs)
         os.remove(temp_input_path)
-        if relaxed_:
-            os.remove(temp_input_path2)
         # write log to Terminal window
-        console.print(f"[cyan]|             Results[/] | Extracted {len(trimmed_seqs)} amplicons from {len(fasta_dict)} sequences ({round(len(trimmed_seqs) / len(fasta_dict) * 100, 2)}%)")
+        ## TODO fix sequence file count
+        console.print(f"[cyan]|             Results[/] | Extracted {ntrim} amplicons from {nseq} sequences ({round(ntrim / nseq * 100, 2)}%)")
         if relaxed_:
-            console.print(f"[cyan]|             Results[/] | {relaxed_count} amplicons were extracted by only the forward or reverse primer ({round(relaxed_count / len(trimmed_seqs) * 100, 2)}%)")
+            console.print(f"[cyan]|             Results[/] | {relaxed_count} amplicons were extracted by only the forward or reverse primer ({round(relaxed_count / nseq * 100, 2)}%)")
 
 #############################
 # PAIRWISE GLOBAL ALIGNMENT #

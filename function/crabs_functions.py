@@ -1392,135 +1392,152 @@ def crabs_to_fasta(console, columns, input_):
     '''
     takes in a CRABS format document and outputs a fasta format temp file
     '''
-    fasta_list = []
-    fasta_dict = {}
-    with rich.progress.Progress(*columns) as progress_bar:
-        task = progress_bar.add_task(console = console, description = "[cyan]|         Import data[/] |", total=os.path.getsize(input_))
-        with open(input_, 'r') as infile:
-            for line in infile:
-                progress_bar.update(task, advance = len(line))
-                lineparts = line.rsplit('\t', 1)
-                fasta_string = f'>{lineparts[0]}\n{lineparts[1]}\n'
-                fasta_list.append(fasta_string)
-                fasta_dict[f'>{lineparts[0]}'] = lineparts[1]
-    with rich.progress.Progress(*columns) as progress_bar:
-        task = progress_bar.add_task(console = console, description = "[cyan]|  Transform to fasta[/] |", total=len(fasta_list))
-        with tempfile.NamedTemporaryFile(delete = False, mode = 'w') as temp_input:
-            temp_input_path = temp_input.name
-            for item in fasta_list:
-                progress_bar.update(task, advance = 1)
-                temp_input.write(item)
-            temp_input.flush()
-    return temp_input_path, fasta_dict
+    seq_counter = 0
+    with tempfile.NamedTemporaryFile(delete = False, mode = 'w') as temp_input:
+        temp_input_path = temp_input.name
+        with rich.progress.Progress(*columns) as progress_bar:
+            task = progress_bar.add_task(console = console, description = "[cyan]|     Import to fasta[/] |", total=os.path.getsize(input_))
+            with open(input_, 'r') as infile:
+                for line in infile:
+                    seq_counter += 1
+                    progress_bar.update(task, advance = len(line))
+                    lineparts = line.rsplit('\t', 1)
+                    fasta_string = f'>{lineparts[0]}\n{lineparts[1]}\n'
+                    temp_input.write(fasta_string)
+        temp_input.flush()
+    return temp_input_path, seq_counter
 
-def list_to_fasta(console, columns, seq_list):
-    '''
-    takes a list and writes it to a temp file in fasta format
-    '''
-    fasta_list = []
-    fasta_dict = {}
-    with rich.progress.Progress(*columns) as progress_bar:
-        task = progress_bar.add_task(console = console, description = "[cyan]| Transform untrimmed[/] |", total=len(seq_list)*2)
-        for item in seq_list:
-            progress_bar.update(task, advance = 1)
-            lineparts = item.rsplit('\t', 1)
-            fasta_string = f'>{lineparts[0]}\n{lineparts[1]}\n'
-            fasta_list.append(fasta_string)
-            fasta_dict[f'>{lineparts[0]}'] = lineparts[1]
-        with tempfile.NamedTemporaryFile(delete = False, mode = 'w') as temp_input:
-            temp_input_path = temp_input.name
-            for item in fasta_list:
-                progress_bar.update(task, advance = 1)
-                temp_input.write(item)
-            temp_input.flush()
-    return temp_input_path, fasta_dict
-
-def cutadapt(console, columns, adapter, input_, fasta_dict, mismatch_, overlap, threads_, buffer_size_):
+def cutadapt(console, columns, adapter, input_, nseq, mismatch_, overlap, threads_, buffer_size_):
     '''
     takes in user-provided parameters and runs the external program cutadapt
+    output trimmed seq as crabs file and untrimmed as fasta
     '''
-    trimmed_seqs = []
-    untrimmed_seqs = []
-    count = 0
+    trimmed_tmp = tempfile.NamedTemporaryFile(delete=False, mode='w')
+    cutadapt_untrimmed_tmp = tempfile.NamedTemporaryFile(delete=False)  # temp file for untrimmed reads - create closed so cutadapt can write to it
+    cutadapt_untrimmed_tmp.close()
+    trimmed_path = trimmed_tmp.name
+    cutadapt_untrimmed_path = cutadapt_untrimmed_tmp.name
+    ntrim = 0
+    nuntrim = 0
+    command = [
+        'cutadapt',
+        input_,
+        '--output', '-',
+        '--untrimmed-output', cutadapt_untrimmed_path,
+        '-g', adapter,
+        '--no-indels',
+        '-e', str(mismatch_),
+        '--overlap', overlap,
+        '--cores', str(threads_),
+        '--revcomp',
+        '--quiet'
+    ]
     if buffer_size_:
-        command = ['cutadapt', input_, '-g', adapter, '--no-indels', '-e', str(mismatch_), '--overlap', overlap, '--cores', str(threads_), '--revcomp', '--quiet', '--buffer-size', str(buffer_size_)]
-    else:
-        command = ['cutadapt', input_, '-g', adapter, '--no-indels', '-e', str(mismatch_), '--overlap', overlap, '--cores', str(threads_), '--revcomp', '--quiet']
+        command.extend(['--buffer-size', str(buffer_size_)])
     with rich.progress.Progress(*columns) as progress_bar:
-        task = progress_bar.add_task(console = console, description = "[cyan]|       In silico PCR[/] |", total=len(fasta_dict) * 2)
+        task = progress_bar.add_task(console = console, description = "[cyan]|       In silico PCR[/] |", total=nseq * 2)
         process = sp.Popen(command, stdout = sp.PIPE, stderr = sp.PIPE, text = True)
         stdout, stderr = process.communicate()
         if process.returncode != 0:
             stderr = stderr.rstrip('\n')
             console.print(f"[cyan]\n|               ERROR[/] | [bold yellow]Cutadapt failed with {stderr}, aborting analysis...[/]\n")
             exit()
+        header = None
         for output in stdout.splitlines():
-            progress_bar.update(task, advance = 1)
-            count += 1
-            if count % 2 != 0:
-                header = output.strip()
+            if output.startswith('>'):
+                ntrim += 1
+                header = output[1:].strip()
                 if header.endswith(' rc'):
                     header = header.removesuffix(' rc')
             else:
-                seq = output.strip() + '\n'
-                if seq.rstrip('\n') != fasta_dict[header].rstrip('\n'):
-                    trimmed_seqs.append(f'{header.lstrip(">")}\t{seq}')
-                else:
-                    untrimmed_seqs.append(f'{header.lstrip(">")}\t{seq}')
-    return trimmed_seqs, untrimmed_seqs
+                seq = output.strip()
+                trimmed_tmp.write(f'{header}\t{seq}\n')
+        progress_bar.update(task, advance = nseq * 2)  # no poiint in advancing the bar seq by seq here since the untrimmed sequences are written to file directly and counting lines in python is slow
+        trimmed_tmp.flush()
+        trimmed_tmp.close()
+    return trimmed_path, cutadapt_untrimmed_path, ntrim, nuntrim
 
-def cutadapt_relaxed(console, columns, forward_, reverse_, temp_input_path2, fasta_dict2, mismatch_, overlap, threads_, trimmed_seqs, untrimmed_seqs, buffer_size_):
+def cutadapt_relaxed(console, columns, forward_, reverse_, temp_input_path2, nseq, mismatch_, overlap, threads_, trimmed_seqs, buffer_size_):
     '''
     runs cutadapt for only the forward or reverse primer
+    output trimmed seq as crabs file and untrimmed as fasta
     '''
-    count = 0
-    relaxed_count = 0
-    headers_to_remove = set()
+    trimmed_tmp = tempfile.NamedTemporaryFile(delete=False, mode='w')
+    cutadapt_untrimmed_tmp = tempfile.NamedTemporaryFile(delete=False)  # temp file for untrimmed reads - create closed so cutadapt can write to it
+    cutadapt_untrimmed_tmp.close()
+    trimmed_path = trimmed_tmp.name
+    cutadapt_untrimmed_path = cutadapt_untrimmed_tmp.name
+    ntrim = 0
+    nuntrim = 0
+    command = [
+        'cutadapt',
+        temp_input_path2,
+        '--untrimmed-output', cutadapt_untrimmed_path,
+        '-g', forward_,
+        '-a', reverse_,
+        '--no-indels',
+        '-e', str(mismatch_),
+        '--overlap', overlap,
+        '--cores', str(threads_),
+        '--revcomp',
+        '--quiet'
+    ]
     if buffer_size_:
-        command = ['cutadapt', temp_input_path2, '-g', forward_, '-a', reverse_, '--no-indels', '-e', str(mismatch_), '--overlap', overlap, '--cores', str(threads_), '--revcomp', '--quiet', '--buffer-size', str(buffer_size_)]
-    else:
-        command = ['cutadapt', temp_input_path2, '-g', forward_, '-a', reverse_, '--no-indels', '-e', str(mismatch_), '--overlap', overlap, '--cores', str(threads_), '--revcomp', '--quiet']
+        command.extend(['--buffer-size', str(buffer_size_)])
     with rich.progress.Progress(*columns) as progress_bar:
-        task = progress_bar.add_task(console = console, description = "[cyan]|      relaxed IS PCR[/] |", total=len(fasta_dict2) * 2)
+        task = progress_bar.add_task(console = console, description = "[cyan]|      relaxed IS PCR[/] |", total=nseq * 2)
         process = sp.Popen(command, stdout = sp.PIPE, stderr = sp.PIPE, text = True)
         stdout, stderr = process.communicate()
         if process.returncode != 0:
             stderr = stderr.rstrip('\n')
             console.print(f"[cyan]\n|               ERROR[/] | [bold yellow]Cutadapt failed with {stderr}, aborting analysis...[/]\n")
             exit()
+        header = None
         for output in stdout.splitlines():
-            progress_bar.update(task, advance = 1)
-            count += 1
-            if count % 2 != 0:
-                header = output.strip()
+            if output.startswith('>'):
+                ntrim += 1
+                header = output[1:].strip()
                 if header.endswith(' rc'):
                     header = header.removesuffix(' rc')
             else:
-                seq = output.strip() + '\n'
-                if seq.rstrip('\n') != fasta_dict2[header].rstrip('\n'):
-                    relaxed_count += 1
-                    trimmed_seqs.append(f'{header.lstrip(">")}\t{seq}')
-                    headers_to_remove.add(header.lstrip(">"))
-    #untrimmed_seqs = [item for item in untrimmed_seqs if not any(item.startswith(h) for h in headers_to_remove)]
-    return trimmed_seqs, untrimmed_seqs, relaxed_count
+                seq = output.strip()
+                trimmed_tmp.write(f'{header}\t{seq}\n')
+        progress_bar.update(task, advance = nseq * 2)  # no poiint in advancing the bar seq by seq here since the untrimmed sequences are written to file directly and counting lines in python is slow
+        trimmed_tmp.flush()
+        trimmed_tmp.close()
+    with tempfile.NamedTemporaryFile(delete=False, mode='w') as mergedtrim:
+        mergedtrim_path = mergedtrim.name
+        for f in [trimmed_seqs, trimmed_path]:
+            with open(f,'r') as fd:
+                shutil.copyfileobj(fd, mergedtrim)
+    # remove temp trimmed fiels replaced by merged file
+    os.remove(trimmed_seqs)
+    os.remove(trimmed_path)
+    return mergedtrim_path, cutadapt_untrimmed_path, ntrim, nuntrim
 
-def fasta_to_list(console, columns, temp_out_path):
+def fasta_to_crabs(console, columns, input_):
     '''
-    takes a fasta file and returns a list 
+    streams a fasta in a temp file in crabs format
     '''
-    crabs_list = []
-    with rich.progress.Progress(*columns) as progress_bar:
-        task = progress_bar.add_task(console = console, description = "[cyan]|  Transform to CRABS[/] |", total=os.path.getsize(temp_out_path))
-        with open(temp_out_path, 'r') as infile:
-            for line in infile:
-                progress_bar.update(task, advance = len(line))
-                if line.startswith('>'):
-                    seq_header = line.lstrip('>').rstrip('\n') + '\t'
-                else:
-                    seq_header += line
-                    crabs_list.append(seq_header)
-    return crabs_list
-                    
+    seq_counter = 0
+    with tempfile.NamedTemporaryFile(delete = False, mode = 'w') as temp_input:
+        temp_input_path = temp_input.name
+        with rich.progress.Progress(*columns) as progress_bar:
+            task = progress_bar.add_task(console = console, description = "[cyan]| Transform untrimmed[/] |", total=os.path.getsize(input_))
+            with open(input_, 'r') as infile:
+                for line in input_:
+                    progress_bar.update(task, advance=len(line))
+                    header = None
+                    if line.startswith('>'):
+                        seq_counter += 1
+                        header = line[1:].strip()
+                        if header.endswith(' rc'):
+                            header = header.removesuffix(' rc')
+                    else:
+                        temp_input.write(f'{header}\t{line.strip()}\n')
+        temp_input.flush()
+    return temp_input_path, seq_counter
+
 def multiple_crabs_to_fasta(console, columns, file_list, size_select_):
     '''
     takes a list of files and returns a subset between the two
